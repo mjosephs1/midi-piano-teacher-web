@@ -1,24 +1,34 @@
-import logo from './logo.svg';
 import './App.css';
 import type { FC } from 'react';
+import { useEffect } from 'react';
+import { useMidi } from './midi/MidiContext';
+import { noteNumberToName } from './midi/noteUtils';
 
 const App: FC = () => {
+  const { pressedNotes, status } = useMidi();
+
+  useEffect(() => {
+    document.title = 'MIDI Piano Teacher';
+  }, []);
+
+  const statusMessage = {
+    unavailable: 'Web MIDI API not available in your browser',
+    denied: 'MIDI access denied. Please check browser permissions.',
+    listening: 'Listening...',
+  }[status];
+
+  const sortedNotes = Array.from(pressedNotes).sort((a, b) => a - b);
+  const noteNames = sortedNotes.map(noteNumberToName).join(' ');
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>MIDI Piano Teacher</h1>
+      <p className="status">{statusMessage}</p>
+      {status === 'listening' && (
+        <div className="notes-display">
+          {noteNames ? <p>{noteNames}</p> : <p className="empty">No notes pressed</p>}
+        </div>
+      )}
     </div>
   );
 };

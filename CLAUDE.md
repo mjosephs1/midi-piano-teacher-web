@@ -34,12 +34,15 @@ npm run build
 
 ```
 src/
-  ├── App.tsx                # Main component
+  ├── App.tsx                # Main home page component
   ├── App.css                # App styling
-  ├── index.tsx              # React root entry point
+  ├── index.tsx              # React root entry point (wraps App in MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
-  └── reportWebVitals.ts     # Web vitals reporting
+  ├── reportWebVitals.ts     # Web vitals reporting
+  └── midi/
+      ├── MidiContext.tsx    # MidiProvider and useMidi() hook
+      └── noteUtils.ts       # Utility to convert MIDI note numbers to names
 public/
   ├── index.html             # HTML entry point (served by dev server)
   └── [other static assets]
@@ -67,12 +70,46 @@ tsconfig.json               # TypeScript configuration
 - `tsconfig.json` configured with strict mode and React 19 JSX support
 - All source files use `.tsx` (for components) or `.ts` (for utilities) extensions
 
+## MIDI Architecture
+
+The MIDI detection system uses React Context to share MIDI state across the entire app, avoiding prop drilling and duplicated setup.
+
+### How it works
+1. **`MidiProvider`** (in `src/midi/MidiContext.tsx`) wraps the component tree at the root (`index.tsx`). It:
+   - Calls `navigator.requestMIDIAccess()` on mount to access connected MIDI devices
+   - Listens to `midimessage` events from all inputs
+   - Tracks currently-pressed notes as a `Set<number>` (MIDI note numbers 0–127)
+   - Stores a status string: `'listening'` (ready), `'denied'` (permission denied), or `'unavailable'` (API not supported)
+
+2. **`useMidi()` hook** — any component can call this to get:
+   ```tsx
+   const { pressedNotes, status } = useMidi();
+   ```
+   - `pressedNotes`: `Set<number>` of MIDI note numbers currently pressed
+   - `status`: One of `'listening' | 'denied' | 'unavailable'`
+
+3. **`noteNumberToName()`** (in `src/midi/noteUtils.ts`) converts MIDI note numbers to names:
+   - `noteNumberToName(60)` → `"C"`
+   - `noteNumberToName(61)` → `"C#"`
+   - Uses modulo 12 to get the note class, ignoring octave
+
+### Adding MIDI to a new component
+```tsx
+import { useMidi } from './midi/MidiContext';
+import { noteNumberToName } from './midi/noteUtils';
+
+export const MyComponent: FC = () => {
+  const { pressedNotes, status } = useMidi();
+  
+  const noteNames = Array.from(pressedNotes).map(noteNumberToName);
+  return <div>{noteNames.join(' ')}</div>;
+};
+```
+
+---
+
 ## Notes for Development
 
-- The project is in early stages with only boilerplate set up
-- As features are added, establish clear patterns for:
-  - Component organization (feature-based vs. component-type based directories)
-  - State management if needed (Context API, Redux, Zustand, etc.)
-  - MIDI input handling and music theory utilities
 - React Strict Mode is enabled in index.tsx to help catch potential bugs
 - Always add type annotations to component props and function parameters
+- Web MIDI API types are declared inline in `MidiContext.tsx` (not from a package) for simplicity
