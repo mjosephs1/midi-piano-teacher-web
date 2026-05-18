@@ -113,3 +113,14 @@ export const MyComponent: FC = () => {
 - React Strict Mode is enabled in index.tsx to help catch potential bugs
 - Always add type annotations to component props and function parameters
 - Web MIDI API types are declared inline in `MidiContext.tsx` (not from a package) for simplicity
+
+## Maintaining CLAUDE.md
+
+After every code change, update CLAUDE.md if the change warrants it. Specifically:
+- **Update Project Structure** if you add, delete, or move files or directories
+- **Update Architecture Notes** if you add a new architectural pattern, change a core pattern, or modify how components communicate
+- **Update MIDI Architecture** if you modify the MIDI system or add new MIDI features
+- **Update Development Commands** if you modify scripts in package.json or change how to run the project
+- **Add to Notes for Development** if you establish a new convention, pattern, or constraint that future Claude sessions should know about
+
+Keep the documentation in sync with the code so that future work proceeds with accurate context.
