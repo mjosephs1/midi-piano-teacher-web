@@ -12,8 +12,9 @@ This is a MIDI Piano Teacher web application built with React 19, TypeScript, an
 ```bash
 npm start
 ```
-- Launches the app at http://localhost:3000 with hot reloading
+- Starts the dev server at http://localhost:3000 (browser opens manually)
 - Changes to source files will automatically reload the page
+- The browser does not open automatically; navigate to http://localhost:3000 manually
 
 ### Running tests
 ```bash
