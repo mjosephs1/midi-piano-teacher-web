@@ -3,6 +3,15 @@ import './Settings.css';
 
 export const KEYBOARD_SIZES = [25, 37, 49, 61, 76, 88] as const;
 
+export const KEYBOARD_OFFSETS: Record<number, number> = {
+  25: 60,  // C4 (middle C)
+  37: 48,  // C3
+  49: 36,  // C2
+  61: 36,  // C2
+  76: 28,  // E1
+  88: 21,  // A0
+};
+
 export function getWhiteKeysFromTotalKeys(numKeys: number): number {
   const mapping: Record<number, number> = {
     25: 15,

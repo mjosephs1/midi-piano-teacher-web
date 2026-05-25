@@ -1,10 +1,11 @@
 import { useMidi } from './MidiContext';
-import { getWhiteKeysFromTotalKeys } from '../Settings';
-import './MidiPiano.css';
+import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS } from '../Settings';
+import './VirtualPiano.css';
 
-export function Piano({ numKeys = 88 }: { numKeys?: number } = {}) {
+export function VirtualPiano({ numKeys = 88 }: { numKeys?: number } = {}) {
     const { pressedNotes } = useMidi();
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
+    const offset = KEYBOARD_OFFSETS[numKeys] ?? 21;
     const blackKeyPattern = [true, true, false, true, true, true, false];
 
     // Scalable Interactive Piano
@@ -29,7 +30,7 @@ export function Piano({ numKeys = 88 }: { numKeys?: number } = {}) {
             const noteNumber = getKeyNumber(i);
           return <rect
             key={`white-${i}`}
-            className={`white-key ${pressedNotes.has(noteNumber) ? 'active' : ''}`}
+            className={`white-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''}`}
             x={i * whiteKeyWidth}
             y={0}
             width={whiteKeyWidth}
@@ -42,7 +43,7 @@ export function Piano({ numKeys = 88 }: { numKeys?: number } = {}) {
             return blackKeyPattern[i%7] && noteNumber < numKeys ? (
                 <rect
                     key={`black-${i}`}
-                    className={`black-key ${pressedNotes.has(noteNumber) ? 'active' : ''}`}
+                    className={`black-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''}`}
                     x={(i * whiteKeyWidth) + (whiteKeyWidth-(blackKeyWidth/2))}
                     y={0}
                     width={blackKeyWidth}

@@ -46,8 +46,8 @@ src/
   ├── reportWebVitals.ts     # Web vitals reporting
   └── midi/
       ├── MidiContext.tsx    # MidiProvider and useMidi() hook
-      ├── MidiPiano.tsx      # Visual piano component that displays and animates pressed keys
-      ├── MidiPiano.css      # Styling for the piano component
+      ├── VirtualPiano.tsx   # Visual piano component that displays and animates pressed keys
+      ├── VirtualPiano.css   # Styling for the piano component
       └── noteUtils.ts       # Utility to convert MIDI note numbers to names
 public/
   ├── index.html             # HTML entry point (served by dev server)
@@ -113,8 +113,8 @@ export const MyComponent: FC = () => {
 };
 ```
 
-### Piano Component (`MidiPiano.tsx`)
-The `Piano` component renders a visual representation of a piano keyboard using SVG and displays real-time feedback when keys are pressed via MIDI input.
+### VirtualPiano Component (`VirtualPiano.tsx`)
+The `VirtualPiano` component renders a visual representation of a piano keyboard using SVG and displays real-time feedback when keys are pressed via MIDI input.
 
 **Features:**
 - Renders a scalable piano keyboard with white and black keys
@@ -129,12 +129,15 @@ The `Piano` component renders a visual representation of a piano keyboard using 
 **Props:**
 - `numKeys` (default: `88`) — total number of keys to display on the piano (25, 37, 49, 61, 76, or 88)
 
+**MIDI Offset Mapping:**
+The `VirtualPiano` component uses the `KEYBOARD_OFFSETS` map (exported from `src/Settings.tsx`) to correctly align virtual keys with real MIDI note numbers from physical keyboards. Each keyboard size has a starting note, and the offset maps that starting note to the virtual piano's key positions. This ensures that pressing the lowest key on a physical keyboard highlights the leftmost key on the virtual piano.
+
 **Usage:**
 ```tsx
-import { Piano } from './midi/MidiPiano';
+import { VirtualPiano } from './midi/VirtualPiano';
 
 export const App: FC = () => {
-  return <Piano numKeys={88} />;
+  return <VirtualPiano numKeys={88} />;
 };
 ```
 

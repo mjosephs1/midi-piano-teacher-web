@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useMidi } from './midi/MidiContext';
-import { Piano } from './midi/MidiPiano';
+import { VirtualPiano } from './midi/VirtualPiano';
 import { noteNumberToName } from './midi/noteUtils';
 
 interface HomeProps {
@@ -25,7 +25,7 @@ export const Home: FC<HomeProps> = ({ numKeys }) => {
         <p className="status">{statusMessage}</p>
       )}
       <div>
-        <Piano numKeys={numKeys} />
+        <VirtualPiano numKeys={numKeys} />
       </div>
       {status === 'listening' && (
         <div className="notes-display">
