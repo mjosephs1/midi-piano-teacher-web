@@ -2,6 +2,7 @@ import './App.css';
 import type { FC } from 'react';
 import { useEffect } from 'react';
 import { useMidi } from './midi/MidiContext';
+import { Piano } from './midi/MidiPiano'
 import { noteNumberToName } from './midi/noteUtils';
 
 const App: FC = () => {
@@ -23,7 +24,12 @@ const App: FC = () => {
   return (
     <div className="App">
       <h1>MIDI Piano Teacher</h1>
-      <p className="status">{statusMessage}</p>
+      {status !== 'listening' && (
+        <p className="status">{statusMessage}</p>
+      )}
+      <div>
+        <Piano />
+      </div>
       {status === 'listening' && (
         <div className="notes-display">
           {noteNames ? <p>{noteNames}</p> : <p className="empty">No notes pressed</p>}
