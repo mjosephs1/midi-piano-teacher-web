@@ -8,9 +8,40 @@
   justify-content: center;
 }
 
-.App h1 {
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
   margin-bottom: 1rem;
+}
+
+.app-header h1 {
+  margin: 0;
   font-size: 2.5rem;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #333;
+  border: 2px solid #333;
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.nav-links a:hover {
+  background: #f0f0f0;
 }
 
 .App .status {

@@ -35,9 +35,12 @@ npm run build
 
 ```
 src/
-  ├── App.tsx                # Main home page component
+  ├── App.tsx                # Main router and layout component
   ├── App.css                # App styling
-  ├── index.tsx              # React root entry point (wraps App in MidiProvider)
+  ├── Home.tsx               # Home page route with piano display
+  ├── Settings.tsx           # Settings page route
+  ├── Settings.css           # Settings page styling
+  ├── index.tsx              # React root entry point (wraps app in Router and MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
   ├── reportWebVitals.ts     # Web vitals reporting
@@ -60,6 +63,7 @@ tsconfig.json               # TypeScript configuration
 - **Styling**: Uses CSS files alongside components. Consider establishing a consistent styling approach as the project grows (CSS modules, Tailwind, etc.).
 - **Testing**: Uses React Testing Library and Jest. Tests should focus on user behavior rather than implementation details.
 - **Build Tool**: Create React App handles webpack, Babel, ESLint, and TypeScript compilation. The configuration is abstracted away unless you `eject` (one-way operation).
+- **Routing**: Uses React Router (`react-router-dom`) for client-side routing. Routes are defined in `App.tsx` using `Routes` and `Route` components. Navigation links use React Router's `Link` component to enable browser history and bookmarkable URLs.
 
 ## ESLint & Code Standards
 
@@ -116,22 +120,78 @@ The `Piano` component renders a visual representation of a piano keyboard using 
 - Renders a scalable piano keyboard with white and black keys
 - Uses `useMidi()` hook to get currently-pressed notes and highlights them
 - **Scalable**: The `scaleFactor` variable (currently `50`) controls the keyboard size; adjust to resize all keyboard dimensions proportionally
-- **Configurable**: The `numWhiteKeys` prop (default: 21) controls how many white keys to display
+- **Configurable**: The `numKeys` prop (default: 88) controls the total number of keys to display
+- **Automatic mapping**: Internally maps total keys to white keys (e.g., 88 keys → 52 white keys)
 - **Visual feedback**: Active keys change color when pressed:
   - White keys turn light green (`#90EE90`) when active
   - Black keys turn red (`#FF6B6B`) when active
 
 **Props:**
-- `numWhiteKeys` (default: `21`) — number of white keys to display on the piano
+- `numKeys` (default: `88`) — total number of keys to display on the piano (25, 37, 49, 61, 76, or 88)
 
 **Usage:**
 ```tsx
 import { Piano } from './midi/MidiPiano';
 
 export const App: FC = () => {
-  return <Piano numWhiteKeys={21} />;
+  return <Piano numKeys={88} />;
 };
 ```
+
+### Routing Architecture
+
+The app uses **React Router** for client-side routing. The structure is:
+
+1. **`index.tsx`** wraps the app in `<BrowserRouter>` to enable routing
+2. **`App.tsx`** contains:
+   - The header with navigation links (`<Link>` components)
+   - State management for `numKeys` (keyboard size preference)
+   - The `<Routes>` definition with all application routes
+3. **Routes:**
+   - `/` → `<Home>` component
+   - `/settings` → `<Settings>` component
+
+**Adding a new route:**
+```tsx
+// 1. Create a new component (e.g., MyPage.tsx)
+// 2. Add it to App.tsx Routes:
+<Route path="/my-page" element={<MyPage />} />
+// 3. Add a navigation link in the header:
+<Link to="/my-page">My Page</Link>
+```
+
+### Home Component (`Home.tsx`)
+
+The `Home` component renders the main piano interface. It receives the current keyboard size preference as a prop and displays:
+- MIDI status message
+- Piano keyboard visualization
+- Real-time note display when MIDI is active
+
+**Props:**
+- `numKeys: number` — the selected keyboard size from parent `App.tsx`
+
+### Settings Component (`Settings.tsx`)
+The `Settings` component provides a user interface for selecting keyboard size. It is a controlled component that receives the current setting and a change callback as props.
+
+**Features:**
+- Dropdown with 6 preset keyboard sizes: 25, 37, 49, 61, 76, 88 keys
+- Shows user-friendly labels ("25 keys", "88 keys", etc.)
+- Current selection is always displayed in the dropdown
+
+**Props:**
+- `numKeys: number` — the currently selected total key count
+- `onNumKeysChange: (numKeys: number) => void` — callback when user selects a different size
+- `keyboardSizes: readonly number[]` — array of available total key counts
+
+**Helper function:**
+- `getWhiteKeysFromTotalKeys(numKeys: number): number` — converts total keys to white keys for internal use in `Piano`
+
+**State Management:**
+The `Settings` component has no local state. The parent `App.tsx` owns the `numKeys` state:
+- Initial value is read from `localStorage` (key: `midiPianoNumKeys`) on component mount
+- Default value is 88 keys
+- On every change, the new value is persisted to `localStorage`
+- Both localStorage reads and writes are wrapped in try/catch to handle unavailability (e.g., private browsing)
 
 ---
 

@@ -1,40 +1,61 @@
 import './App.css';
 import type { FC } from 'react';
-import { useEffect } from 'react';
-import { useMidi } from './midi/MidiContext';
-import { Piano } from './midi/MidiPiano'
-import { noteNumberToName } from './midi/noteUtils';
+import { useEffect, useState } from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import { Home } from './Home';
+import { Settings, KEYBOARD_SIZES } from './Settings';
+
+const STORAGE_KEY = 'midiPianoNumKeys';
 
 const App: FC = () => {
-  const { pressedNotes, status } = useMidi();
+  const [numKeys, setNumKeys] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored !== null) {
+        const parsed = parseInt(stored, 10);
+        if (!isNaN(parsed)) return parsed;
+      }
+    } catch {
+      // localStorage unavailable
+    }
+    return 88;
+  });
 
   useEffect(() => {
     document.title = 'MIDI Piano Teacher';
   }, []);
 
-  const statusMessage = {
-    unavailable: 'Web MIDI API not available in your browser',
-    denied: 'MIDI access denied. Please check browser permissions.',
-    listening: 'Listening...',
-  }[status];
-
-  const sortedNotes = Array.from(pressedNotes).sort((a, b) => a - b);
-  const noteNames = sortedNotes.map(noteNumberToName).join(' ');
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(numKeys));
+    } catch {
+      // localStorage unavailable, skip persistence
+    }
+  }, [numKeys]);
 
   return (
     <div className="App">
-      <h1>MIDI Piano Teacher</h1>
-      {status !== 'listening' && (
-        <p className="status">{statusMessage}</p>
-      )}
-      <div>
-        <Piano />
-      </div>
-      {status === 'listening' && (
-        <div className="notes-display">
-          {noteNames ? <p>{noteNames}</p> : <p className="empty">No notes pressed</p>}
-        </div>
-      )}
+      <header className="app-header">
+        <h1>MIDI Piano Teacher</h1>
+        <nav className="nav-links">
+          <Link to="/">Home</Link>
+          <Link to="/settings">Settings</Link>
+        </nav>
+      </header>
+
+      <Routes>
+        <Route path="/" element={<Home numKeys={numKeys} />} />
+        <Route
+          path="/settings"
+          element={
+            <Settings
+              numKeys={numKeys}
+              onNumKeysChange={setNumKeys}
+              keyboardSizes={KEYBOARD_SIZES}
+            />
+          }
+        />
+      </Routes>
     </div>
   );
 };

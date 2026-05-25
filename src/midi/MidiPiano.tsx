@@ -1,8 +1,10 @@
 import { useMidi } from './MidiContext';
+import { getWhiteKeysFromTotalKeys } from '../Settings';
 import './MidiPiano.css';
 
-export function Piano({ numWhiteKeys = 21 }) {
+export function Piano({ numKeys = 88 }: { numKeys?: number } = {}) {
     const { pressedNotes } = useMidi();
+    const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
     const blackKeyPattern = [true, true, false, true, true, true, false];
 
     // Scalable Interactive Piano
