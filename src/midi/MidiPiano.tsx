@@ -39,7 +39,7 @@ export function Piano({ numKeys = 88 }: { numKeys?: number } = {}) {
         {
         Array.from({ length: numWhiteKeys }).map((_, i) => {
             const noteNumber = getKeyNumber(i) + 1;
-            return blackKeyPattern[i%7] ? (
+            return blackKeyPattern[i%7] && noteNumber < numKeys ? (
                 <rect
                     key={`black-${i}`}
                     className={`black-key ${pressedNotes.has(noteNumber) ? 'active' : ''}`}
