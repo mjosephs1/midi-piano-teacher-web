@@ -43,6 +43,8 @@ src/
   ├── reportWebVitals.ts     # Web vitals reporting
   └── midi/
       ├── MidiContext.tsx    # MidiProvider and useMidi() hook
+      ├── MidiPiano.tsx      # Visual piano component that displays and animates pressed keys
+      ├── MidiPiano.css      # Styling for the piano component
       └── noteUtils.ts       # Utility to convert MIDI note numbers to names
 public/
   ├── index.html             # HTML entry point (served by dev server)
@@ -104,6 +106,30 @@ export const MyComponent: FC = () => {
   
   const noteNames = Array.from(pressedNotes).map(noteNumberToName);
   return <div>{noteNames.join(' ')}</div>;
+};
+```
+
+### Piano Component (`MidiPiano.tsx`)
+The `Piano` component renders a visual representation of a piano keyboard using SVG and displays real-time feedback when keys are pressed via MIDI input.
+
+**Features:**
+- Renders a scalable piano keyboard with white and black keys
+- Uses `useMidi()` hook to get currently-pressed notes and highlights them
+- **Scalable**: The `scaleFactor` variable (currently `50`) controls the keyboard size; adjust to resize all keyboard dimensions proportionally
+- **Configurable**: The `numWhiteKeys` prop (default: 21) controls how many white keys to display
+- **Visual feedback**: Active keys change color when pressed:
+  - White keys turn light green (`#90EE90`) when active
+  - Black keys turn red (`#FF6B6B`) when active
+
+**Props:**
+- `numWhiteKeys` (default: `21`) — number of white keys to display on the piano
+
+**Usage:**
+```tsx
+import { Piano } from './midi/MidiPiano';
+
+export const App: FC = () => {
+  return <Piano numWhiteKeys={21} />;
 };
 ```
 
