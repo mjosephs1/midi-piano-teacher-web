@@ -6,6 +6,7 @@ import { Home } from './Home';
 import { Settings, KEYBOARD_SIZES } from './Settings';
 import { ChordVisualizer } from './ChordVisualizer';
 import { PracticeChords } from './PracticeChords';
+import { PracticeMode } from './PracticeMode';
 
 const STORAGE_KEY = 'midiPianoNumKeys';
 
@@ -66,6 +67,7 @@ const App: FC = () => {
           }
         />
         <Route path="/practice-chords" element={<PracticeChords />} />
+        <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
       </Routes>
     </div>
   );

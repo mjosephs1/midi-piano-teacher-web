@@ -44,6 +44,12 @@ src/
   ├── ChordVisualizer.css    # Styling for the chord visualizer page
   ├── PracticeChords.tsx     # Practice Chords hub page with practice mode buttons
   ├── PracticeChords.css     # Styling for the Practice Chords page
+  ├── PracticeMode.tsx       # Practice Mode page — displays target chord and advancing queue
+  ├── PracticeMode.css       # Styling for the Practice Mode page
+  ├── ChordQueue.tsx         # Component displaying 5 advancing chord cards
+  ├── ChordQueue.css         # Styling for the chord queue component
+  ├── PracticeConfiguration.tsx  # Controlled component for selecting practice chord groups
+  ├── PracticeConfiguration.css  # Styling for practice configuration component
   ├── index.tsx              # React root entry point (wraps app in Router and MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
@@ -185,6 +191,8 @@ The app uses **React Router** for client-side routing. The structure is:
    - `/` → `<Home>` component
    - `/settings` → `<Settings>` component
    - `/chord-visualizer` → `<ChordVisualizer>` component
+   - `/practice-chords` → `<PracticeChords>` component (hub page)
+   - `/practice-chords/practice` → `<PracticeMode>` component
 
 **Adding a new route:**
 ```tsx
@@ -262,7 +270,7 @@ The `PracticeChords` component is a hub page that provides navigation to differe
 
 **Features:**
 - Hub page with three practice mode buttons: Practice, Timed Mode, and Tempo Mode
-- Each button links to a future practice mode page
+- Each button links to a practice mode page (Practice is implemented; Timed and Tempo are future placeholders)
 - Minimal, self-contained component with no MIDI integration or state management
 
 **State:**
@@ -270,10 +278,72 @@ The `PracticeChords` component is a hub page that provides navigation to differe
 
 **Route:**
 - `/practice-chords` (registered in `App.tsx`)
-- Child routes (placeholder, not yet registered):
-  - `/practice-chords/practice` — future Practice mode
+- Implemented sub-routes:
+  - `/practice-chords/practice` → `<PracticeMode>` (active practice mode)
+- Future sub-routes (placeholder):
   - `/practice-chords/timed` — future Timed Mode
   - `/practice-chords/tempo` — future Tempo Mode
+
+### PracticeMode Component (`PracticeMode.tsx`)
+The `PracticeMode` component is a practice page where users advance through a queue of chords by playing them on their MIDI keyboard. It displays a visual piano showing the target chord, a queue of 5 upcoming chords, and controls for selecting which chord groups to include in the practice session.
+
+**Features:**
+- Displays a `VirtualPiano` showing the fingering for the current target chord (static display, not live MIDI)
+- Shows a horizontal queue of 5 chord cards; the leftmost card is the target to play
+- When the user plays the target chord on their MIDI keyboard, the queue advances (target disappears, new chord added on the right)
+- Includes a `PracticeConfiguration` panel at the bottom for toggling which chord groups are included in the practice session
+- Settings persist across sessions via `localStorage` (key: `midiPianoPracticeChordGroups`)
+
+**Props:**
+- `numKeys: number` — the selected keyboard size from parent `App.tsx`
+
+**State:**
+- `selectedGroups: Set<string>` — set of chord group names (e.g., `"Major"`, `"Minor 7"`) to include in the practice queue. Initialized from `localStorage` with default `new Set(['Major'])`. Persisted on every change.
+- `currentChordNotes: Set<number>` — MIDI note numbers for the current target chord, set by the `ChordQueue` component and passed to `VirtualPiano`
+
+**Route:**
+- `/practice-chords/practice` (registered in `App.tsx`)
+
+### ChordQueue Component (`ChordQueue.tsx`)
+The `ChordQueue` component displays a horizontal row of 5 chord cards. It maintains a queue of random chords from the selected chord groups and detects when the user plays the target (leftmost) chord, advancing the queue.
+
+**Features:**
+- Displays 5 chord cards in a horizontal flex row
+- The leftmost card (current target) is highlighted in red and scaled up
+- Listens to `pressedChords` from `useMidi()` hook to detect when user plays the target chord
+- On match, advances the queue: removes the leftmost card and appends a new random card on the right
+- Regenerates all 5 cards when `selectedGroups` changes
+- Prevents immediate re-triggering by excluding the just-matched chord from the new random generation
+
+**Props:**
+- `selectedGroups: Set<string>` — set of chord group names to sample from when generating random chords
+- `onCurrentChordChange: (notes: Set<number>) => void` — callback fired when the target chord changes (on mount, after advance, or when `selectedGroups` changes). Receives the MIDI note set for the target chord.
+
+**Implementation Details:**
+- Uses a helper function `generateChordItem(selectedGroups, exclude?)` to randomly select a `{ rootIndex: 0-11, patternName: string }` from the enabled chord groups. The optional `exclude` parameter prevents re-generating the same chord name.
+- Computes MIDI note numbers using base note 60 (C4) and pattern intervals: `new Set(pattern.intervals.map(i => 60 + rootIndex + i))`. This range (60–82) is visible on all keyboard sizes.
+- Chord matching: compares `pressedChords` string (e.g., `"G Minor"`) with target name `NOTE_NAMES[rootIndex] + " " + patternName`.
+- Three `useEffect` hooks:
+  1. Regenerate all 5 items when `selectedGroups` changes
+  2. Compute and notify parent of current chord notes when queue changes
+  3. Detect chord match and advance queue when `pressedChords` or queue changes
+
+### PracticeConfiguration Component (`PracticeConfiguration.tsx`)
+The `PracticeConfiguration` component is a controlled component for selecting which chord groups to practice. It displays a grid of toggle buttons, one for each of the 11 chord patterns.
+
+**Features:**
+- Toggle buttons for each chord pattern: Major, Minor, Diminished, Augmented, Sus2, Sus4, Dominant 7, Major 7, Minor 7, Diminished 7, Half-dim 7
+- Buttons show the chord name and its shorthand (e.g., "Major / maj")
+- Selected chords are highlighted in red; non-selected are gray
+- Enforces a minimum of one selected chord group (prevents deselecting the last one)
+- The only-selected chord is visually dimmed (`cursor: not-allowed`, reduced opacity) to signal it cannot be deselected
+
+**Props:**
+- `selectedGroups: Set<string>` — the currently selected set of chord group names
+- `onSelectedGroupsChange: (groups: Set<string>) => void` — callback fired when the user toggles a button
+
+**Usage in PracticeMode:**
+The `PracticeConfiguration` is placed at the bottom of the `PracticeMode` page. When the user changes the selection, the callback updates `PracticeMode`'s `selectedGroups` state, which triggers `ChordQueue` to regenerate its 5 items from the new group set.
 
 ---
 

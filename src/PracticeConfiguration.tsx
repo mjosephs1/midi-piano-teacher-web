@@ -1,38 +1,21 @@
-import { FC, useState, useEffect } from 'react';
+import { FC } from 'react';
 import { CHORD_PATTERNS } from './midi/noteUtils';
 import './PracticeConfiguration.css';
 
-const STORAGE_KEY = 'midiPianoPracticeChordGroups';
+interface PracticeConfigurationProps {
+  selectedGroups: Set<string>;
+  onSelectedGroupsChange: (groups: Set<string>) => void;
+}
 
-export const PracticeConfiguration: FC = () => {
-  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored !== null) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return new Set(parsed);
-      }
-    } catch {
-      // localStorage unavailable
-    }
-    return new Set(['Major']);
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...selectedGroups]));
-    } catch {
-      // localStorage unavailable
-    }
-  }, [selectedGroups]);
-
+export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
+  selectedGroups,
+  onSelectedGroupsChange,
+}) => {
   const toggleGroup = (name: string) => {
-    setSelectedGroups(prev => {
-      if (prev.has(name) && prev.size === 1) return prev;
-      const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
-      return next;
-    });
+    if (selectedGroups.has(name) && selectedGroups.size === 1) return;
+    const next = new Set(selectedGroups);
+    next.has(name) ? next.delete(name) : next.add(name);
+    onSelectedGroupsChange(next);
   };
 
   return (
