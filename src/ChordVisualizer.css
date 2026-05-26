@@ -1,0 +1,46 @@
+.chord-visualizer-page {
+  padding: 20px;
+}
+
+.chord-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.chord-grid-header,
+.chord-row {
+  display: grid;
+  grid-template-columns: 120px repeat(12, 1fr);
+  align-items: center;
+  gap: 4px;
+}
+
+.chord-row-label,
+.chord-col-header {
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 8px 4px;
+}
+
+.chord-btn {
+  padding: 8px 4px;
+  font-size: 12px;
+  border: 1px solid #999;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.chord-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.chord-btn.selected {
+  background-color: #E04040;
+  border-color: #a20404;
+  font-weight: bold;
+}

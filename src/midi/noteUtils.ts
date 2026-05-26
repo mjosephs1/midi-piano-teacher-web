@@ -1,26 +1,27 @@
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 export const noteNumberToName = (noteNumber: number): string => {
   return NOTE_NAMES[noteNumber % 12];
 };
 
-interface ChordPattern {
+export interface ChordPattern {
   name: string;
+  shorthand: string;
   intervals: number[];
 }
 
-const CHORD_PATTERNS: ChordPattern[] = [
-  { name: 'Major 7', intervals: [0, 4, 7, 11] },
-  { name: 'Dominant 7', intervals: [0, 4, 7, 10] },
-  { name: 'Minor 7', intervals: [0, 3, 7, 10] },
-  { name: 'Diminished 7', intervals: [0, 3, 6, 9] },
-  { name: 'Half-dim 7', intervals: [0, 3, 6, 10] },
-  { name: 'Major', intervals: [0, 4, 7] },
-  { name: 'Minor', intervals: [0, 3, 7] },
-  { name: 'Diminished', intervals: [0, 3, 6] },
-  { name: 'Augmented', intervals: [0, 4, 8] },
-  { name: 'Sus2', intervals: [0, 2, 7] },
-  { name: 'Sus4', intervals: [0, 5, 7] },
+export const CHORD_PATTERNS: ChordPattern[] = [
+  { name: 'Major', shorthand: 'maj', intervals: [0, 4, 7] },
+  { name: 'Minor', shorthand: 'm', intervals: [0, 3, 7] },
+  { name: 'Diminished', shorthand: 'dim', intervals: [0, 3, 6] },
+  { name: 'Augmented', shorthand: 'aug', intervals: [0, 4, 8] },
+  { name: 'Sus2', shorthand: 'sus2', intervals: [0, 2, 7] },
+  { name: 'Sus4', shorthand: 'sus4', intervals: [0, 5, 7] },
+  { name: 'Dominant 7', shorthand: '7', intervals: [0, 4, 7, 10] },
+  { name: 'Major 7', shorthand: 'maj7', intervals: [0, 4, 7, 11] },
+  { name: 'Minor 7', shorthand: 'm7', intervals: [0, 3, 7, 10] },
+  { name: 'Diminished 7', shorthand: 'dim7', intervals: [0, 3, 6, 9] },
+  { name: 'Half-dim 7', shorthand: 'ø7', intervals: [0, 3, 6, 10] },
 ];
 
 export const detectChord = (pressedNotes: Set<number>): string | null => {

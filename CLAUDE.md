@@ -40,6 +40,8 @@ src/
   ├── Home.tsx               # Home page route with piano display
   ├── Settings.tsx           # Settings page route
   ├── Settings.css           # Settings page styling
+  ├── ChordVisualizer.tsx    # Chord visualizer page with interactive chord button grid
+  ├── ChordVisualizer.css    # Styling for the chord visualizer page
   ├── index.tsx              # React root entry point (wraps app in Router and MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
@@ -101,7 +103,12 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `noteNumberToName(61)` → `"C#"`
    - Uses modulo 12 to get the note class, ignoring octave
 
-4. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
+4. **Exported chord data** (in `src/midi/noteUtils.ts`):
+   - `NOTE_NAMES: string[]` — array of pitch class names: `['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']`
+   - `ChordPattern` type — interface with `name: string` and `intervals: number[]`
+   - `CHORD_PATTERNS: ChordPattern[]` — array of 11 chord patterns: Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7, Major, Minor, Diminished, Augmented, Sus2, Sus4
+
+5. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
    - Takes a `Set<number>` of MIDI note numbers and returns a chord name string or `null`
    - Returns `null` if fewer than 3 unique pitch classes are pressed
    - Normalizes notes to pitch classes (modulo 12) and tries each as a potential root
@@ -175,6 +182,7 @@ The app uses **React Router** for client-side routing. The structure is:
 3. **Routes:**
    - `/` → `<Home>` component
    - `/settings` → `<Settings>` component
+   - `/chord-visualizer` → `<ChordVisualizer>` component
 
 **Adding a new route:**
 ```tsx
@@ -223,6 +231,29 @@ The `Settings` component has no local state. The parent `App.tsx` owns the `numK
 - Default value is 88 keys
 - On every change, the new value is persisted to `localStorage`
 - Both localStorage reads and writes are wrapped in try/catch to handle unavailability (e.g., private browsing)
+
+### ChordVisualizer Component (`ChordVisualizer.tsx`)
+The `ChordVisualizer` component provides an interactive tool for exploring chord fingerings on the piano. It displays a grid of chord buttons that, when clicked, highlight the corresponding notes on a 25-key virtual piano.
+
+**Features:**
+- Interactive grid of chord buttons organized by chord type (rows) and root note (columns)
+- 11 chord types: Major, Minor, Major 7, Dominant 7, Minor 7, Diminished, Diminished 7, Half-dim 7, Augmented, Sus2, Sus4
+- 12 root notes per chord type: C through B (C, C#, D, D#, E, F, F#, G, G#, A, A#, B)
+- Real-time visual feedback on the virtual piano when a chord button is selected
+- Selected chord button is highlighted to show active selection
+
+**State:**
+- `chordNotes: Set<number>` — MIDI note numbers to display on the piano
+- `selectedChord: { rootIndex: number; patternIndex: number } | null` — tracks the currently selected button for highlighting
+
+**Implementation:**
+The component uses `KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]]` (which equals 60, middle C) as the base note. When a chord button is clicked:
+1. The root note is calculated as `BASE_NOTE + rootIndex`
+2. The chord pattern's intervals are applied: `pattern.intervals.map(i => rootMidi + i)`
+3. The resulting note set is passed to the `VirtualPiano` component for display
+
+**Route:**
+- `/chord-visualizer` (registered in `App.tsx`)
 
 ---
 

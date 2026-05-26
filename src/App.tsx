@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Home } from './Home';
 import { Settings, KEYBOARD_SIZES } from './Settings';
+import { ChordVisualizer } from './ChordVisualizer';
 
 const STORAGE_KEY = 'midiPianoNumKeys';
 
@@ -40,6 +41,7 @@ const App: FC = () => {
         <nav className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/settings">Settings</Link>
+          <Link to="/chord-visualizer">Chord Visualizer</Link>
         </nav>
       </header>
 
@@ -53,6 +55,12 @@ const App: FC = () => {
               onNumKeysChange={setNumKeys}
               keyboardSizes={KEYBOARD_SIZES}
             />
+          }
+        />
+      <Route
+          path="/chord-visualizer"
+          element={
+            <ChordVisualizer/>
           }
         />
       </Routes>
