@@ -123,11 +123,11 @@ export const MyComponent: FC = () => {
 ```
 
 ### VirtualPiano Component (`VirtualPiano.tsx`)
-The `VirtualPiano` component renders a visual representation of a piano keyboard using SVG and displays real-time feedback when keys are pressed via MIDI input.
+The `VirtualPiano` component renders a visual representation of a piano keyboard using SVG and displays real-time feedback when keys are pressed.
 
 **Features:**
 - Renders a scalable piano keyboard with white and black keys
-- Uses `useMidi()` hook to get currently-pressed notes and highlights them
+- Highlights pressed keys based on the `pressedNotes` prop (decoupled from MIDI input)
 - **Scalable**: The `scaleFactor` variable (currently `50`) controls the keyboard size; adjust to resize all keyboard dimensions proportionally
 - **Configurable**: The `numKeys` prop (default: 88) controls the total number of keys to display
 - **Automatic mapping**: Internally maps total keys to white keys (e.g., 88 keys → 52 white keys)
@@ -137,6 +137,7 @@ The `VirtualPiano` component renders a visual representation of a piano keyboard
 
 **Props:**
 - `numKeys` (default: `88`) — total number of keys to display on the piano (25, 37, 49, 61, 76, or 88)
+- `pressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers that are currently pressed
 
 **MIDI Offset Mapping:**
 The `VirtualPiano` component uses the `KEYBOARD_OFFSETS` map (exported from `src/Settings.tsx`) to correctly align virtual keys with real MIDI note numbers from physical keyboards. Each keyboard size has a starting note, and the offset maps that starting note to the virtual piano's key positions. This ensures that pressing the lowest key on a physical keyboard highlights the leftmost key on the virtual piano.
@@ -144,9 +145,21 @@ The `VirtualPiano` component uses the `KEYBOARD_OFFSETS` map (exported from `src
 **Usage:**
 ```tsx
 import { VirtualPiano } from './midi/VirtualPiano';
+import { useMidi } from './midi/MidiContext';
 
 export const App: FC = () => {
-  return <VirtualPiano numKeys={88} />;
+  const { pressedNotes } = useMidi();
+  return <VirtualPiano numKeys={88} pressedNotes={pressedNotes} />;
+};
+```
+
+Alternatively, to use the piano without MIDI input (e.g., for demos or programmatic control):
+```tsx
+import { VirtualPiano } from './midi/VirtualPiano';
+
+export const Demo: FC = () => {
+  const highlightedNotes = new Set([60, 64, 67]); // C major chord
+  return <VirtualPiano numKeys={88} pressedNotes={highlightedNotes} />;
 };
 ```
 

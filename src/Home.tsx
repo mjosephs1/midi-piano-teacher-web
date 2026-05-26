@@ -25,7 +25,7 @@ export const Home: FC<HomeProps> = ({ numKeys }) => {
         <p className="status">{statusMessage}</p>
       )}
       <div>
-        <VirtualPiano numKeys={numKeys} />
+        <VirtualPiano numKeys={numKeys} pressedNotes={pressedNotes} />
       </div>
       {status === 'listening' && (
         <div className="notes-display">

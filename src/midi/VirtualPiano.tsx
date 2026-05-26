@@ -1,9 +1,12 @@
-import { useMidi } from './MidiContext';
 import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS } from '../Settings';
 import './VirtualPiano.css';
 
-export function VirtualPiano({ numKeys = 88 }: { numKeys?: number } = {}) {
-    const { pressedNotes } = useMidi();
+interface VirtualPianoProps {
+  numKeys?: number;
+  pressedNotes?: Set<number>;
+}
+
+export function VirtualPiano({ numKeys = 88, pressedNotes = new Set() }: VirtualPianoProps = {}) {
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
     const offset = KEYBOARD_OFFSETS[numKeys] ?? 21;
     const blackKeyPattern = [true, true, false, true, true, true, false];
