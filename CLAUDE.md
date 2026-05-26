@@ -48,7 +48,7 @@ src/
       ├── MidiContext.tsx    # MidiProvider and useMidi() hook
       ├── VirtualPiano.tsx   # Visual piano component that displays and animates pressed keys
       ├── VirtualPiano.css   # Styling for the piano component
-      └── noteUtils.ts       # Utility to convert MIDI note numbers to names
+      └── noteUtils.ts       # Utilities: note number to name conversion and chord detection
 public/
   ├── index.html             # HTML entry point (served by dev server)
   └── [other static assets]
@@ -90,15 +90,24 @@ The MIDI detection system uses React Context to share MIDI state across the enti
 
 2. **`useMidi()` hook** — any component can call this to get:
    ```tsx
-   const { pressedNotes, status } = useMidi();
+   const { pressedNotes, status, pressedChords } = useMidi();
    ```
    - `pressedNotes`: `Set<number>` of MIDI note numbers currently pressed
    - `status`: One of `'listening' | 'denied' | 'unavailable'`
+   - `pressedChords`: `string | null` — the name of the detected chord (e.g., `"C Major"`), or `null` if no valid chord is pressed
 
 3. **`noteNumberToName()`** (in `src/midi/noteUtils.ts`) converts MIDI note numbers to names:
    - `noteNumberToName(60)` → `"C"`
    - `noteNumberToName(61)` → `"C#"`
    - Uses modulo 12 to get the note class, ignoring octave
+
+4. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
+   - Takes a `Set<number>` of MIDI note numbers and returns a chord name string or `null`
+   - Returns `null` if fewer than 3 unique pitch classes are pressed
+   - Normalizes notes to pitch classes (modulo 12) and tries each as a potential root
+   - Matches intervals against known chord patterns: Major, Minor, Diminished, Augmented, Sus2, Sus4, and 7th variants (Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7)
+   - Returns chord name with root (e.g., `"C Major"`, `"D Minor 7"`)
+   - Handles inversions correctly (e.g., first-inversion C Major [E, G, C] returns `"C Major"`)
 
 ### Adding MIDI to a new component
 ```tsx
@@ -169,9 +178,15 @@ The `Home` component renders the main piano interface. It receives the current k
 - MIDI status message
 - Piano keyboard visualization
 - Real-time note display when MIDI is active
+- Detected chord name (if a valid chord is being played)
 
 **Props:**
 - `numKeys: number` — the selected keyboard size from parent `App.tsx`
+
+**Note Display:**
+The component displays two sections when MIDI is active:
+- **Notes section**: Space-separated pitch class names of all pressed keys (e.g., `"C E G"`)
+- **Chord section**: The detected chord name if 3+ unique pitch classes form a recognized chord pattern (e.g., `"C Major"`); otherwise blank
 
 ### Settings Component (`Settings.tsx`)
 The `Settings` component provides a user interface for selecting keyboard size. It is a controlled component that receives the current setting and a change callback as props.

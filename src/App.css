@@ -58,8 +58,8 @@
   min-width: 300px;
 }
 
-.notes-display p {
-  font-size: 2rem;
+.notes-section p {
+  font-size: 1.5rem;
   font-weight: bold;
   margin: 0;
   letter-spacing: 0.5rem;
@@ -67,4 +67,17 @@
 
 .notes-display .empty {
   color: #ccc;
+}
+
+.chord-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.chord-section p {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
 }
