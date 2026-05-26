@@ -1,0 +1,57 @@
+.practice-config {
+  padding: 16px 0;
+}
+
+.practice-config-label {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.chord-group-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chord-group-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 16px;
+  border: 1px solid #999;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  min-width: 72px;
+}
+
+.chord-group-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.chord-group-btn.selected {
+  background-color: #E04040;
+  border-color: #a20404;
+}
+
+.chord-group-btn.selected .chord-group-name,
+.chord-group-btn.selected .chord-group-shorthand {
+  color: #fff;
+}
+
+.chord-group-btn.only-selected {
+  cursor: not-allowed;
+}
+
+.chord-group-name {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.chord-group-shorthand {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
