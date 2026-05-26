@@ -42,6 +42,8 @@ src/
   ├── Settings.css           # Settings page styling
   ├── ChordVisualizer.tsx    # Chord visualizer page with interactive chord button grid
   ├── ChordVisualizer.css    # Styling for the chord visualizer page
+  ├── PracticeChords.tsx     # Practice Chords hub page with practice mode buttons
+  ├── PracticeChords.css     # Styling for the Practice Chords page
   ├── index.tsx              # React root entry point (wraps app in Router and MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
@@ -254,6 +256,24 @@ The component uses `KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]]` (which equals 60, middl
 
 **Route:**
 - `/chord-visualizer` (registered in `App.tsx`)
+
+### PracticeChords Component (`PracticeChords.tsx`)
+The `PracticeChords` component is a hub page that provides navigation to different practice modes. It displays a vertical list of buttons linking to different practice modes.
+
+**Features:**
+- Hub page with three practice mode buttons: Practice, Timed Mode, and Tempo Mode
+- Each button links to a future practice mode page
+- Minimal, self-contained component with no MIDI integration or state management
+
+**State:**
+- None — this is a presentation component with no local state
+
+**Route:**
+- `/practice-chords` (registered in `App.tsx`)
+- Child routes (placeholder, not yet registered):
+  - `/practice-chords/practice` — future Practice mode
+  - `/practice-chords/timed` — future Timed Mode
+  - `/practice-chords/tempo` — future Tempo Mode
 
 ---
 

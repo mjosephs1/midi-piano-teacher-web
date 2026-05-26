@@ -5,6 +5,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import { Home } from './Home';
 import { Settings, KEYBOARD_SIZES } from './Settings';
 import { ChordVisualizer } from './ChordVisualizer';
+import { PracticeChords } from './PracticeChords';
 
 const STORAGE_KEY = 'midiPianoNumKeys';
 
@@ -42,6 +43,7 @@ const App: FC = () => {
           <Link to="/">Home</Link>
           <Link to="/settings">Settings</Link>
           <Link to="/chord-visualizer">Chord Visualizer</Link>
+          <Link to="/practice-chords">Practice Chords</Link>
         </nav>
       </header>
 
@@ -63,6 +65,7 @@ const App: FC = () => {
             <ChordVisualizer/>
           }
         />
+        <Route path="/practice-chords" element={<PracticeChords />} />
       </Routes>
     </div>
   );
