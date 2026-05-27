@@ -1,8 +1,17 @@
+.chord-queue-wrapper {
+  overflow: hidden;
+  position: relative;
+}
+
 .chord-queue {
   display: flex;
   flex-direction: row;
   gap: 12px;
   align-items: stretch;
+}
+
+.chord-queue.advancing {
+  animation: slideInFromRight 0.2s ease-out;
 }
 
 .chord-card {
@@ -17,23 +26,36 @@
   background-color: #f5f5f5;
   font-size: 14px;
   text-align: center;
-  transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+  transition: background-color 0.15s, border-color 0.15s;
 }
 
-.chord-card.current {
-  background-color: #E04040;
-  border-color: #a20404;
+.chord-card-fading {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-color: #4CAF50;
+  border-color: #2E7D32;
   color: #fff;
-  font-weight: bold;
-  transform: scale(1.06);
+  animation: slideOutLeft 0.2s ease-out forwards;
 }
 
-.chord-card-root {
-  font-size: 20px;
+@keyframes slideOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-92px);
+  }
+}
+
+.chord-card-label {
+  font-size: 18px;
   font-weight: bold;
 }
 
-.chord-card-type {
-  font-size: 12px;
-  margin-top: 4px;
+@keyframes slideInFromRight {
+  from { transform: translateX(92px); }
+  to { transform: translateX(0); }
 }
