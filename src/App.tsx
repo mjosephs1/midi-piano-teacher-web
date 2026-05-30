@@ -7,6 +7,7 @@ import { Settings, KEYBOARD_SIZES } from './Settings';
 import { ChordVisualizer } from './ChordVisualizer';
 import { PracticeChords } from './PracticeChords';
 import { PracticeMode } from './PracticeMode';
+import { TimedMode } from './TimedMode';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 
@@ -91,6 +92,7 @@ const App: FC = () => {
         <Route path="/chord-visualizer" element={<ChordVisualizer/>} />
         <Route path="/practice-chords" element={<PracticeChords />} />
         <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
+        <Route path="/practice-chords/timed" element={<TimedMode numKeys={numKeys} />} />
       </Routes>
     </div>
   );

@@ -46,6 +46,8 @@ src/
   ├── PracticeChords.css     # Styling for the Practice Chords page
   ├── PracticeMode.tsx       # Practice Mode page — displays target chord and advancing queue
   ├── PracticeMode.css       # Styling for the Practice Mode page
+  ├── TimedMode.tsx          # Timed Mode page — initial page with Play and Configure buttons
+  ├── TimedMode.css          # Styling for the Timed Mode page
   ├── ChordQueue.tsx         # Component displaying 5 advancing chord cards
   ├── ChordQueue.css         # Styling for the chord queue component
   ├── PracticeConfiguration.tsx  # Controlled component for selecting practice chord groups
@@ -271,7 +273,7 @@ The `PracticeChords` component is a hub page that provides navigation to differe
 
 **Features:**
 - Hub page with three practice mode buttons: Practice, Timed Mode, and Tempo Mode
-- Each button links to a practice mode page (Practice is implemented; Timed and Tempo are future placeholders)
+- Each button links to a practice mode page (Practice and Timed are implemented; Tempo is a future placeholder)
 - Minimal, self-contained component with no MIDI integration or state management
 
 **State:**
@@ -281,8 +283,8 @@ The `PracticeChords` component is a hub page that provides navigation to differe
 - `/practice-chords` (registered in `App.tsx`)
 - Implemented sub-routes:
   - `/practice-chords/practice` → `<PracticeMode>` (active practice mode)
+  - `/practice-chords/timed` → `<TimedMode>` (timed practice mode)
 - Future sub-routes (placeholder):
-  - `/practice-chords/timed` — future Timed Mode
   - `/practice-chords/tempo` — future Tempo Mode
 
 ### PracticeMode Component (`PracticeMode.tsx`)
@@ -292,7 +294,7 @@ The `PracticeMode` component is a practice page where users advance through a qu
 - Displays a `VirtualPiano` showing the fingering for the current target chord (static display, not live MIDI)
 - Shows a horizontal queue of 5 chord cards; the leftmost card is the target to play
 - When the user plays the target chord on their MIDI keyboard, the queue advances (target disappears, new chord added on the right)
-- Includes a `PracticeConfiguration` panel at the bottom for toggling which chord groups are included in the practice session
+- Includes a `PracticeConfiguration` panel toggled by a gear icon button for selecting chord groups and sharps filter
 - Settings persist across sessions via `localStorage` (key: `midiPianoPracticeChordGroups`)
 
 **Props:**
@@ -302,9 +304,29 @@ The `PracticeMode` component is a practice page where users advance through a qu
 - `selectedGroups: Set<string>` — set of chord group names (e.g., `"Major"`, `"Minor 7"`) to include in the practice queue. Initialized from `localStorage` with default `new Set(['Major'])`. Persisted on every change.
 - `sharpsFilter: SharpsFilter` — controls which root notes appear in practice chords. One of `'no-sharps'` (natural notes only), `'with-sharps'` (all notes, default), or `'sharps-only'` (sharps only). Initialized from `localStorage` key `midiPianoPracticeSharpFilter` with default `'with-sharps'`. Persisted on every change.
 - `currentChordNotes: Set<number>` — MIDI note numbers for the current target chord, set by the `ChordQueue` component and passed to `VirtualPiano`
+- `configOpen: boolean` — controls visibility of the `PracticeConfiguration` modal
 
 **Route:**
 - `/practice-chords/practice` (registered in `App.tsx`)
+
+### TimedMode Component (`TimedMode.tsx`)
+The `TimedMode` component is an initial timed practice page that displays the `PracticeConfiguration` component directly on the page along with a "Play" button. The page provides configuration controls for selecting chord groups and sharps filter.
+
+**Features:**
+- Title "Timed Mode" at the top
+- `PracticeConfiguration` component displayed directly on the page (no modal)
+- "Start" button with `faPlay` icon positioned below the configuration (inert for now, awaiting timer functionality)
+- Settings persist across sessions via `localStorage` (keys: `midiPianoTimedChordGroups`, `midiPianoTimedSharpFilter`)
+
+**Props:**
+- `numKeys: number` — the selected keyboard size from parent `App.tsx` (reserved for future use)
+
+**State:**
+- `selectedGroups: Set<string>` — set of chord group names. Initialized from `localStorage` with default `new Set(['Major'])`. Persisted on every change.
+- `sharpsFilter: SharpsFilter` — controls which root notes appear in generated chords. Initialized from `localStorage` with default `'with-sharps'`. Persisted on every change.
+
+**Route:**
+- `/practice-chords/timed` (registered in `App.tsx`)
 
 ### ChordQueue Component (`ChordQueue.tsx`)
 The `ChordQueue` component displays a horizontal row of 5 chord cards. It maintains a queue of random chords from the selected chord groups and detects when the user plays the target (leftmost) chord, advancing the queue.
