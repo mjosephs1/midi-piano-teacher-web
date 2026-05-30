@@ -55,3 +55,29 @@
   color: #666;
   margin-top: 2px;
 }
+
+.sharps-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sharps-btn {
+  padding: 10px 16px;
+  border: 1px solid #999;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-size: 14px;
+}
+
+.sharps-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.sharps-btn.selected {
+  background-color: #E04040;
+  border-color: #a20404;
+  color: #fff;
+}

@@ -1,15 +1,19 @@
 import { FC } from 'react';
-import { CHORD_PATTERNS } from './midi/noteUtils';
+import { CHORD_PATTERNS, SharpsFilter } from './midi/noteUtils';
 import './PracticeConfiguration.css';
 
 interface PracticeConfigurationProps {
   selectedGroups: Set<string>;
   onSelectedGroupsChange: (groups: Set<string>) => void;
+  sharpsFilter: SharpsFilter;
+  onSharpsFilterChange: (filter: SharpsFilter) => void;
 }
 
 export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
   selectedGroups,
   onSelectedGroupsChange,
+  sharpsFilter,
+  onSharpsFilterChange,
 }) => {
   const toggleGroup = (name: string) => {
     if (selectedGroups.has(name) && selectedGroups.size === 1) return;
@@ -17,6 +21,12 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
     next.has(name) ? next.delete(name) : next.add(name);
     onSelectedGroupsChange(next);
   };
+
+  const sharpsOptions: { label: string; value: SharpsFilter }[] = [
+    { label: 'No Sharps', value: 'no-sharps' },
+    { label: 'With Sharps', value: 'with-sharps' },
+    { label: 'Sharps Only', value: 'sharps-only' },
+  ];
 
   return (
     <div className="practice-config">
@@ -36,6 +46,18 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
             </button>
           );
         })}
+      </div>
+      <h3 className="practice-config-label">Sharps</h3>
+      <div className="sharps-buttons">
+        {sharpsOptions.map(option => (
+          <button
+            key={option.value}
+            className={`sharps-btn${sharpsFilter === option.value ? ' selected' : ''}`}
+            onClick={() => onSharpsFilterChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
     </div>
   );

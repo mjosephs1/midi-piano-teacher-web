@@ -1,5 +1,7 @@
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+export type SharpsFilter = 'no-sharps' | 'with-sharps' | 'sharps-only';
+
 export const noteNumberToName = (noteNumber: number): string => {
   return NOTE_NAMES[noteNumber % 12];
 };

@@ -115,6 +115,7 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `NOTE_NAMES: string[]` — array of pitch class names: `['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']`
    - `ChordPattern` type — interface with `name: string` and `intervals: number[]`
    - `CHORD_PATTERNS: ChordPattern[]` — array of 11 chord patterns: Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7, Major, Minor, Diminished, Augmented, Sus2, Sus4
+   - `SharpsFilter` type — union type `'no-sharps' | 'with-sharps' | 'sharps-only'` used to control which root notes are available for chord generation in practice mode
 
 5. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
    - Takes a `Set<number>` of MIDI note numbers and returns a chord name string or `null`
@@ -299,6 +300,7 @@ The `PracticeMode` component is a practice page where users advance through a qu
 
 **State:**
 - `selectedGroups: Set<string>` — set of chord group names (e.g., `"Major"`, `"Minor 7"`) to include in the practice queue. Initialized from `localStorage` with default `new Set(['Major'])`. Persisted on every change.
+- `sharpsFilter: SharpsFilter` — controls which root notes appear in practice chords. One of `'no-sharps'` (natural notes only), `'with-sharps'` (all notes, default), or `'sharps-only'` (sharps only). Initialized from `localStorage` key `midiPianoPracticeSharpFilter` with default `'with-sharps'`. Persisted on every change.
 - `currentChordNotes: Set<number>` — MIDI note numbers for the current target chord, set by the `ChordQueue` component and passed to `VirtualPiano`
 
 **Route:**
@@ -317,33 +319,34 @@ The `ChordQueue` component displays a horizontal row of 5 chord cards. It mainta
 
 **Props:**
 - `selectedGroups: Set<string>` — set of chord group names to sample from when generating random chords
-- `onCurrentChordChange: (notes: Set<number>) => void` — callback fired when the target chord changes (on mount, after advance, or when `selectedGroups` changes). Receives the MIDI note set for the target chord.
+- `sharpsFilter: SharpsFilter` — controls which root notes (0–11) are available for random selection: `'no-sharps'` excludes C#, D#, F#, G#, A# (indices 1, 3, 6, 8, 10); `'sharps-only'` keeps only those; `'with-sharps'` allows all 12
+- `onCurrentChordChange: (notes: Set<number>) => void` — callback fired when the target chord changes (on mount, after advance, or when `selectedGroups` or `sharpsFilter` changes). Receives the MIDI note set for the target chord.
 
 **Implementation Details:**
-- Uses a helper function `generateChordItem(selectedGroups, exclude?)` to randomly select a `{ rootIndex: 0-11, patternName: string }` from the enabled chord groups. The optional `exclude` parameter prevents re-generating the same chord name.
+- Uses a helper function `generateChordItem(selectedGroups, sharpsFilter, exclude?)` to randomly select a `{ rootIndex, patternName }` from the enabled chord groups and available root indices. The optional `exclude` parameter prevents re-generating the same chord name.
+- Helper function `getAvailableRootIndices(sharpsFilter)` returns the set of available root indices (0–11) based on the filter.
 - Computes MIDI note numbers using base note 60 (C4) and pattern intervals: `new Set(pattern.intervals.map(i => 60 + rootIndex + i))`. This range (60–82) is visible on all keyboard sizes.
 - Chord matching: compares `pressedChords` string (e.g., `"G Minor"`) with target name `NOTE_NAMES[rootIndex] + " " + patternName`.
 - Three `useEffect` hooks:
-  1. Regenerate all 5 items when `selectedGroups` changes
+  1. Regenerate all 5 items when `selectedGroups` or `sharpsFilter` changes
   2. Compute and notify parent of current chord notes when queue changes
   3. Detect chord match and advance queue when `pressedChords` or queue changes
 
 ### PracticeConfiguration Component (`PracticeConfiguration.tsx`)
-The `PracticeConfiguration` component is a controlled component for selecting which chord groups to practice. It displays a grid of toggle buttons, one for each of the 11 chord patterns.
+The `PracticeConfiguration` component is a controlled component for selecting which chord groups to practice and which root notes to include. It displays a grid of toggle buttons for chord patterns and a radio-style group of buttons for the sharps filter.
 
 **Features:**
-- Toggle buttons for each chord pattern: Major, Minor, Diminished, Augmented, Sus2, Sus4, Dominant 7, Major 7, Minor 7, Diminished 7, Half-dim 7
-- Buttons show the chord name and its shorthand (e.g., "Major / maj")
-- Selected chords are highlighted in red; non-selected are gray
-- Enforces a minimum of one selected chord group (prevents deselecting the last one)
-- The only-selected chord is visually dimmed (`cursor: not-allowed`, reduced opacity) to signal it cannot be deselected
+- **Chord Groups section**: Toggle buttons for each chord pattern: Major, Minor, Diminished, Augmented, Sus2, Sus4, Dominant 7, Major 7, Minor 7, Diminished 7, Half-dim 7. Buttons show the chord name and its shorthand (e.g., "Major / maj"). Selected chords are highlighted in red; non-selected are gray. Enforces a minimum of one selected chord group (prevents deselecting the last one). The only-selected chord is visually dimmed to signal it cannot be deselected.
+- **Sharps section**: Three mutually-exclusive buttons ("No Sharps", "With Sharps", "Sharps Only") that control which root notes (C–B) appear in generated chords. Exactly one is always selected. Selected button is highlighted in red; others are gray. Radio-style behavior (no minimum enforcement needed).
 
 **Props:**
 - `selectedGroups: Set<string>` — the currently selected set of chord group names
-- `onSelectedGroupsChange: (groups: Set<string>) => void` — callback fired when the user toggles a button
+- `onSelectedGroupsChange: (groups: Set<string>) => void` — callback fired when the user toggles a chord group button
+- `sharpsFilter: SharpsFilter` — the currently selected sharps filter
+- `onSharpsFilterChange: (filter: SharpsFilter) => void` — callback fired when the user selects a sharps filter option
 
 **Usage in PracticeMode:**
-The `PracticeConfiguration` is placed at the bottom of the `PracticeMode` page. When the user changes the selection, the callback updates `PracticeMode`'s `selectedGroups` state, which triggers `ChordQueue` to regenerate its 5 items from the new group set.
+The `PracticeConfiguration` is placed inside a collapsible panel (toggled by a gear icon button) at the top right of the `PracticeMode` page. When the user changes either the `selectedGroups` or `sharpsFilter` selections, the respective callbacks update `PracticeMode`'s state, which triggers `ChordQueue` to regenerate its 5 items from the new group set and available root indices.
 
 ---
 

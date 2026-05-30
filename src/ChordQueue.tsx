@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react';
-import { CHORD_PATTERNS, NOTE_NAMES } from './midi/noteUtils';
+import { CHORD_PATTERNS, NOTE_NAMES, SharpsFilter } from './midi/noteUtils';
 import { useMidi } from './midi/MidiContext';
 import './ChordQueue.css';
 
@@ -13,17 +13,31 @@ interface ChordQueueItem {
 
 interface ChordQueueProps {
   selectedGroups: Set<string>;
+  sharpsFilter: SharpsFilter;
   onCurrentChordChange: (notes: Set<number>) => void;
 }
 
 let itemIdCounter = 0;
 
-function generateChordItem(selectedGroups: Set<string>, exclude?: string): ChordQueueItem {
+function getAvailableRootIndices(sharpsFilter: SharpsFilter): number[] {
+  const SHARP_INDICES = [1, 3, 6, 8, 10]; // C#, D#, F#, G#, A#
+  const ALL_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+  if (sharpsFilter === 'no-sharps') {
+    return ALL_INDICES.filter(i => !SHARP_INDICES.includes(i));
+  } else if (sharpsFilter === 'sharps-only') {
+    return SHARP_INDICES;
+  }
+  return ALL_INDICES;
+}
+
+function generateChordItem(selectedGroups: Set<string>, sharpsFilter: SharpsFilter, exclude?: string): ChordQueueItem {
   const allowed = CHORD_PATTERNS.filter(p => selectedGroups.has(p.name));
+  const availableRoots = getAvailableRootIndices(sharpsFilter);
   let item: ChordQueueItem;
   do {
     const pattern = allowed[Math.floor(Math.random() * allowed.length)];
-    const rootIndex = Math.floor(Math.random() * 12);
+    const rootIndex = availableRoots[Math.floor(Math.random() * availableRoots.length)];
     item = { id: itemIdCounter++, rootIndex, patternName: pattern.name };
   } while (exclude !== undefined && `${NOTE_NAMES[item.rootIndex]} ${item.patternName}` === exclude);
   return item;
@@ -35,9 +49,9 @@ function computeChordNotes(item: ChordQueueItem): Set<number> {
   return new Set(pattern.intervals.map(i => MIDI_BASE + item.rootIndex + i));
 }
 
-export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, onCurrentChordChange }) => {
+export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, onCurrentChordChange }) => {
   const [queue, setQueue] = useState<ChordQueueItem[]>(() =>
-    Array.from({ length: 5 }, () => generateChordItem(selectedGroups))
+    Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter))
   );
 
   const [isFlashing, setIsFlashing] = useState(false);
@@ -50,10 +64,10 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, onCurrentChord
 
   const { pressedChords } = useMidi();
 
-  // Regenerate queue when selectedGroups changes
+  // Regenerate queue when selectedGroups or sharpsFilter changes
   useEffect(() => {
-    setQueue(Array.from({ length: 5 }, () => generateChordItem(selectedGroups)));
-  }, [selectedGroups]);
+    setQueue(Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter)));
+  }, [selectedGroups, sharpsFilter]);
 
   // Notify parent when current chord changes
   useEffect(() => {
@@ -99,7 +113,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, onCurrentChord
       const rightmostChordName = `${NOTE_NAMES[prev[4].rootIndex]} ${prev[4].patternName}`;
       return [
         ...prev.slice(1),
-        generateChordItem(selectedGroups, rightmostChordName),
+        generateChordItem(selectedGroups, sharpsFilter, rightmostChordName),
       ];
     });
 
@@ -120,7 +134,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, onCurrentChord
     }, 200);
 
     return () => clearTimeout(animationTimeout);
-  }, [isAdvancing, selectedGroups]);
+  }, [isAdvancing, selectedGroups, sharpsFilter]);
 
   return (
     <div className="chord-queue-wrapper">
