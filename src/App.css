@@ -1,18 +1,24 @@
 .App {
   text-align: center;
-  padding: 2rem;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+}
+
+.App > :not(.app-header) {
+  padding: 2rem;
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 1200px;
 }
 
 .app-header {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-bottom: 1rem;
+  width: 100%;
+  background-color: #f5f0e8;
+  padding: 1rem 2rem;
+  box-sizing: border-box;
 }
 
 .app-header h1 {
