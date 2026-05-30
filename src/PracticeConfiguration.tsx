@@ -30,7 +30,7 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
 
   return (
     <div className="practice-config">
-      <h3 className="practice-config-label">Chord Groups</h3>
+      <h3 className="practice-config-label">Select Chord Groups</h3>
       <div className="chord-group-buttons">
         {CHORD_PATTERNS.map(pattern => {
           const isSelected = selectedGroups.has(pattern.name);
