@@ -37,7 +37,10 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
   return (
     <div className="practice-mode-page">
       <VirtualPiano numKeys={numKeys} pressedNotes={currentChordNotes} />
-      <ChordQueue selectedGroups={selectedGroups} onCurrentChordChange={setCurrentChordNotes} />
+      <div className="chord-queue-section">
+        <div className="chord-queue-label">Play this</div>
+        <ChordQueue selectedGroups={selectedGroups} onCurrentChordChange={setCurrentChordNotes} />
+      </div>
       <PracticeConfiguration
         selectedGroups={selectedGroups}
         onSelectedGroupsChange={setSelectedGroups}

@@ -132,16 +132,22 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, onCurrentChord
         </div>
       )}
       <div className={`chord-queue${isAdvancing ? ' advancing' : ''}`}>
-        {queue.map((item) => (
-          <div
-            key={item.id}
-            className="chord-card"
-          >
-            <span className="chord-card-label">
-              {NOTE_NAMES[item.rootIndex]}{CHORD_PATTERNS.find(p => p.name === item.patternName)?.shorthand ?? ''}
-            </span>
-          </div>
-        ))}
+        {queue.map((item, index) => {
+          const opacity = queue.length === 1
+            ? 1
+            : 1 - (index / (queue.length - 1)) * 0.7;
+          return (
+            <div
+              key={item.id}
+              className={`chord-card${index === 0 ? ' chord-card-target' : ''}`}
+              style={{ opacity }}
+            >
+              <span className="chord-card-label">
+                {NOTE_NAMES[item.rootIndex]}{CHORD_PATTERNS.find(p => p.name === item.patternName)?.shorthand ?? ''}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
