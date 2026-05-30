@@ -7,6 +7,14 @@ import { Settings, KEYBOARD_SIZES } from './Settings';
 import { ChordVisualizer } from './ChordVisualizer';
 import { PracticeChords } from './PracticeChords';
 import { PracticeMode } from './PracticeMode';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+
+/* import all the icons in Free Solid, Free Regular, and Brands styles */
+import { faGear } from '@fortawesome/free-solid-svg-icons'
+
+library.add(faGear)
+
 
 const STORAGE_KEY = 'midiPianoNumKeys';
 
@@ -42,9 +50,12 @@ const App: FC = () => {
         <h1>MIDI Piano Teacher</h1>
         <nav className="nav-links">
           <Link to="/">Home</Link>
-          <Link to="/settings">Settings</Link>
           <Link to="/chord-visualizer">Chord Visualizer</Link>
           <Link to="/practice-chords">Practice Chords</Link>
+          <Link to="/settings" className="settings-link">
+            <FontAwesomeIcon icon={faGear} />
+            Settings
+          </Link>
         </nav>
       </header>
 
