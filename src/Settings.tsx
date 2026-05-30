@@ -41,7 +41,7 @@ export const Settings: FC<SettingsProps> = ({
 
   return (
     <div className="settings-page">
-      <h2>Settings</h2>
+      {/* <h2>Settings</h2> */}
       <div className="settings-row">
         <label htmlFor="keyboard-size">Keyboard Size</label>
         <select

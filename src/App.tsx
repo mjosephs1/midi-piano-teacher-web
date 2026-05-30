@@ -1,6 +1,6 @@
 import './App.css';
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Home } from './Home';
 import { Settings, KEYBOARD_SIZES } from './Settings';
@@ -31,6 +31,8 @@ const App: FC = () => {
     }
     return 88;
   });
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsWrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.title = 'MIDI Piano Teacher';
@@ -44,6 +46,16 @@ const App: FC = () => {
     }
   }, [numKeys]);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsWrapperRef.current && !settingsWrapperRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="App">
       <header className="app-header">
@@ -52,31 +64,31 @@ const App: FC = () => {
           <Link to="/">Home</Link>
           <Link to="/chord-visualizer">Chord Visualizer</Link>
           <Link to="/practice-chords">Practice Chords</Link>
-          <Link to="/settings" className="settings-link">
+        </nav>
+        <div className="settings-wrapper" ref={settingsWrapperRef}>
+          <button
+            className="settings-button"
+            onClick={() => setSettingsOpen(prev => !prev)}
+            aria-expanded={settingsOpen}
+          >
             <FontAwesomeIcon icon={faGear} />
             Settings
-          </Link>
-        </nav>
+          </button>
+          {settingsOpen && (
+            <div className="settings-panel">
+              <Settings
+                numKeys={numKeys}
+                onNumKeysChange={setNumKeys}
+                keyboardSizes={KEYBOARD_SIZES}
+              />
+            </div>
+          )}
+        </div>
       </header>
 
       <Routes>
         <Route path="/" element={<Home numKeys={numKeys} />} />
-        <Route
-          path="/settings"
-          element={
-            <Settings
-              numKeys={numKeys}
-              onNumKeysChange={setNumKeys}
-              keyboardSizes={KEYBOARD_SIZES}
-            />
-          }
-        />
-      <Route
-          path="/chord-visualizer"
-          element={
-            <ChordVisualizer/>
-          }
-        />
+        <Route path="/chord-visualizer" element={<ChordVisualizer/>} />
         <Route path="/practice-chords" element={<PracticeChords />} />
         <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
       </Routes>

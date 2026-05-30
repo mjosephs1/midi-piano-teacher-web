@@ -51,27 +51,40 @@
   background: #f0f0f0;
 }
 
-.settings-link {
+.settings-wrapper {
   position: absolute;
   right: 2rem;
+}
+
+.settings-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  border: none;
+  border: 2px solid #333;
+  border-radius: 6px;
   background: transparent;
-  padding: 0;
-}
-
-.settings-link:hover {
-  background: transparent;
-}
-
-.settings-link svg {
-  background: transparent;
-}
-
-.settings-icon {
+  padding: 0.4rem 1rem;
+  font-size: 1rem;
   color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.settings-button:hover {
+  background: #f0f0f0;
+}
+
+.settings-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: white;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 100;
+  min-width: 240px;
 }
 
 .App .status {
