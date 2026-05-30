@@ -28,7 +28,7 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set() }: Virtual
     }
 
     return (
-      <svg viewBox={svgDimensions} width="1000" height="200">
+      <svg className="virtual-piano" viewBox={svgDimensions} width="1000" height="200">
         {Array.from({ length: numWhiteKeys }).map((_, i) => {
             const noteNumber = getKeyNumber(i);
           return <rect
