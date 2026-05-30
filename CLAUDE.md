@@ -310,20 +310,28 @@ The `PracticeMode` component is a practice page where users advance through a qu
 - `/practice-chords/practice` (registered in `App.tsx`)
 
 ### TimedMode Component (`TimedMode.tsx`)
-The `TimedMode` component is an initial timed practice page that displays the `PracticeConfiguration` component directly on the page along with a "Play" button. The page provides configuration controls for selecting chord groups and sharps filter.
+The `TimedMode` component is a timed practice mode that uses a four-stage state machine to control the user flow: CONFIGURE → COUNTDOWN → STARTED → RESULTS. Users configure chord groups, trigger a countdown, play chords for 60 seconds while their score increments, and then view results with options to play again or reconfigure.
 
-**Features:**
-- Title "Timed Mode" at the top
-- `PracticeConfiguration` component displayed directly on the page (no modal)
-- "Start" button with `faPlay` icon positioned below the configuration (inert for now, awaiting timer functionality)
-- Settings persist across sessions via `localStorage` (keys: `midiPianoTimedChordGroups`, `midiPianoTimedSharpFilter`)
+**State Machine Stages:**
+- **CONFIGURE**: Initial configuration screen with `PracticeConfiguration` and "Start" button.
+- **COUNTDOWN**: 4-second countdown with fading text ("3", "2", "1", "Begin"). Each step animates with a fade-in/fade-out effect.
+- **STARTED**: Active game session showing HUD (Stop button, Timer, Score) and `ChordQueue`. Timer counts down from 60 seconds. Each matched chord increments score.
+- **RESULTS**: Final score display with options to "Try Again" (returns to COUNTDOWN) or "Back" (returns to CONFIGURE).
 
 **Props:**
 - `numKeys: number` — the selected keyboard size from parent `App.tsx` (reserved for future use)
 
 **State:**
-- `selectedGroups: Set<string>` — set of chord group names. Initialized from `localStorage` with default `new Set(['Major'])`. Persisted on every change.
-- `sharpsFilter: SharpsFilter` — controls which root notes appear in generated chords. Initialized from `localStorage` with default `'with-sharps'`. Persisted on every change.
+- `selectedGroups: Set<string>` — set of chord group names. Initialized from `localStorage` key `midiPianoTimedChordGroups`, default `new Set(['Major'])`. Persisted on every change.
+- `sharpsFilter: SharpsFilter` — controls which root notes appear in generated chords. Initialized from `localStorage` key `midiPianoTimedSharpFilter`, default `'with-sharps'`. Persisted on every change.
+- `stage: TimedStage` — one of `'CONFIGURE' | 'COUNTDOWN' | 'STARTED' | 'RESULTS'`. Controls which UI is rendered.
+- `countdownStep: number` — 0–3, indexes into `['3', '2', '1', 'Begin']`. Incremented every second during COUNTDOWN.
+- `timeLeft: number` — starts at 60, decrements every second during STARTED. When it reaches 0, transitions to RESULTS.
+- `score: number` — incremented by 1 each time `ChordQueue` calls the `onChordMatched` callback. Reset to 0 when entering STARTED.
+
+**Timers:**
+- **Countdown timer**: `setInterval` fires every 1 second, increments `countdownStep`. When `countdownStep` reaches 3 ("Begin"), the next second triggers transition to STARTED.
+- **Game timer**: `setInterval` fires every 1 second, decrements `timeLeft`. When `timeLeft` reaches 0, transitions to RESULTS.
 
 **Route:**
 - `/practice-chords/timed` (registered in `App.tsx`)
@@ -343,6 +351,7 @@ The `ChordQueue` component displays a horizontal row of 5 chord cards. It mainta
 - `selectedGroups: Set<string>` — set of chord group names to sample from when generating random chords
 - `sharpsFilter: SharpsFilter` — controls which root notes (0–11) are available for random selection: `'no-sharps'` excludes C#, D#, F#, G#, A# (indices 1, 3, 6, 8, 10); `'sharps-only'` keeps only those; `'with-sharps'` allows all 12
 - `onCurrentChordChange: (notes: Set<number>) => void` — callback fired when the target chord changes (on mount, after advance, or when `selectedGroups` or `sharpsFilter` changes). Receives the MIDI note set for the target chord.
+- `onChordMatched?: () => void` — optional callback fired when the user successfully plays the target chord. Fired just before the queue advances.
 
 **Implementation Details:**
 - Uses a helper function `generateChordItem(selectedGroups, sharpsFilter, exclude?)` to randomly select a `{ rootIndex, patternName }` from the enabled chord groups and available root indices. The optional `exclude` parameter prevents re-generating the same chord name.
