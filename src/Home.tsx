@@ -30,7 +30,7 @@ export const Home: FC<HomeProps> = ({ numKeys }) => {
       {status === 'listening' && (
         <div className="notes-display">
           <div className="notes-section">
-            {noteNames ? <p>{noteNames}</p> : <p className="empty">No notes pressed</p>}
+            {noteNames ? <p>{noteNames}</p> : <p className="empty">Play Something!</p>}
           </div>
           <div className="chord-section">
             <p>{pressedChords || ' '}</p>
