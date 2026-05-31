@@ -86,3 +86,44 @@
   border-color: #a20404;
   color: #fff;
 }
+
+.hands-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hands-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 16px;
+  border: 1px solid #999;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-size: 14px;
+  gap: 6px;
+}
+
+.hands-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.hands-btn.selected {
+  background-color: #E04040;
+  border-color: #a20404;
+  color: #fff;
+}
+
+.hands-btn-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.both-hands-icon {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}

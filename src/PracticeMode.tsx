@@ -2,7 +2,7 @@ import { FC, useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
-import { SharpsFilter } from './midi/noteUtils';
+import { SharpsFilter, HandsMode } from './midi/noteUtils';
 import { VirtualPiano } from './midi/VirtualPiano';
 import { ChordQueue } from './ChordQueue';
 import { PracticeConfiguration } from './PracticeConfiguration';
@@ -16,6 +16,7 @@ interface PracticeModeProps {
 
 const STORAGE_KEY = 'midiPianoPracticeChordGroups';
 const SHARPS_FILTER_KEY = 'midiPianoPracticeSharpFilter';
+const HANDS_MODE_KEY = 'midiPianoPracticeHandsMode';
 
 export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(() => {
@@ -43,6 +44,18 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
     return 'with-sharps';
   });
 
+  const [handsMode, setHandsMode] = useState<HandsMode>(() => {
+    try {
+      const stored = localStorage.getItem(HANDS_MODE_KEY);
+      if (stored === 'left' || stored === 'both' || stored === 'right') {
+        return stored;
+      }
+    } catch {
+      // localStorage unavailable
+    }
+    return 'right';
+  });
+
   const [currentChordNotes, setCurrentChordNotes] = useState<Set<number>>(new Set());
   const [configOpen, setConfigOpen] = useState(false);
   const configWrapperRef = useRef<HTMLDivElement>(null);
@@ -62,6 +75,14 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
       // localStorage unavailable
     }
   }, [sharpsFilter]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HANDS_MODE_KEY, handsMode);
+    } catch {
+      // localStorage unavailable
+    }
+  }, [handsMode]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -100,6 +121,8 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
                 onSelectedGroupsChange={setSelectedGroups}
                 sharpsFilter={sharpsFilter}
                 onSharpsFilterChange={setSharpsFilter}
+                handsMode={handsMode}
+                onHandsModeChange={setHandsMode}
               />
             </div>
           )}
@@ -108,7 +131,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
       <VirtualPiano numKeys={numKeys} pressedNotes={currentChordNotes} />
       <div className="chord-queue-section">
         <div className="chord-queue-label">Play this</div>
-        <ChordQueue selectedGroups={selectedGroups} sharpsFilter={sharpsFilter} onCurrentChordChange={setCurrentChordNotes} />
+        <ChordQueue selectedGroups={selectedGroups} sharpsFilter={sharpsFilter} handsMode={handsMode} onCurrentChordChange={setCurrentChordNotes} />
       </div>
     </div>
   );

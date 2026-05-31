@@ -2,7 +2,7 @@ import { FC, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPlay, faStop, faRotateRight } from '@fortawesome/free-solid-svg-icons';
-import { SharpsFilter } from './midi/noteUtils';
+import { SharpsFilter, HandsMode } from './midi/noteUtils';
 import { PracticeConfiguration } from './PracticeConfiguration';
 import { ChordQueue } from './ChordQueue';
 import './TimedMode.css';
@@ -17,6 +17,7 @@ interface TimedModeProps {
 
 const STORAGE_KEY = 'midiPianoTimedChordGroups';
 const SHARPS_FILTER_KEY = 'midiPianoTimedSharpFilter';
+const HANDS_MODE_KEY = 'midiPianoTimedHandsMode';
 const COUNTDOWN_LABELS = ['3', '2', '1', 'Begin'];
 
 export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
@@ -45,6 +46,18 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
     return 'with-sharps';
   });
 
+  const [handsMode, setHandsMode] = useState<HandsMode>(() => {
+    try {
+      const stored = localStorage.getItem(HANDS_MODE_KEY);
+      if (stored === 'left' || stored === 'both' || stored === 'right') {
+        return stored;
+      }
+    } catch {
+      // localStorage unavailable
+    }
+    return 'right';
+  });
+
   const [stage, setStage] = useState<TimedStage>('CONFIGURE');
   const [countdownStep, setCountdownStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
@@ -66,6 +79,14 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
       // localStorage unavailable
     }
   }, [sharpsFilter]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HANDS_MODE_KEY, handsMode);
+    } catch {
+      // localStorage unavailable
+    }
+  }, [handsMode]);
 
   // Countdown logic
   useEffect(() => {
@@ -143,6 +164,8 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
             onSelectedGroupsChange={setSelectedGroups}
             sharpsFilter={sharpsFilter}
             onSharpsFilterChange={setSharpsFilter}
+            handsMode={handsMode}
+            onHandsModeChange={setHandsMode}
           />
           <button className="timed-play-button" onClick={handleStartClick}>
             Start <FontAwesomeIcon icon={faPlay} />
@@ -173,6 +196,7 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
           <ChordQueue
             selectedGroups={selectedGroups}
             sharpsFilter={sharpsFilter}
+            handsMode={handsMode}
             onCurrentChordChange={() => {}}
             onChordMatched={handleChordMatched}
             onChordMistake={handleChordMistake}

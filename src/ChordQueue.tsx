@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react';
-import { CHORD_PATTERNS, NOTE_NAMES, SharpsFilter } from './midi/noteUtils';
+import { CHORD_PATTERNS, NOTE_NAMES, SharpsFilter, HandsMode } from './midi/noteUtils';
 import { useMidi } from './midi/MidiContext';
 import './ChordQueue.css';
 
@@ -14,6 +14,7 @@ interface ChordQueueItem {
 interface ChordQueueProps {
   selectedGroups: Set<string>;
   sharpsFilter: SharpsFilter;
+  handsMode: HandsMode;
   onCurrentChordChange: (notes: Set<number>) => void;
   onChordMatched?: () => void;
   onChordMistake?: () => void;
@@ -51,7 +52,7 @@ function computeChordNotes(item: ChordQueueItem): Set<number> {
   return new Set(pattern.intervals.map(i => MIDI_BASE + item.rootIndex + i));
 }
 
-export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, onCurrentChordChange, onChordMatched, onChordMistake }) => {
+export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, handsMode, onCurrentChordChange, onChordMatched, onChordMistake }) => {
   const [queue, setQueue] = useState<ChordQueueItem[]>(() =>
     Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter))
   );
@@ -64,7 +65,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, 
   const lastMatchedChordRef = useRef<string | null>(null);
   const fadingOutCardRef = useRef<ChordQueueItem | null>(null);
 
-  const { pressedChords } = useMidi();
+  const { pressedChords, pressedNotes } = useMidi();
 
   // Regenerate queue when selectedGroups or sharpsFilter changes
   useEffect(() => {
@@ -79,10 +80,28 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, 
 
   // Detect chord match and trigger flash
   useEffect(() => {
-    if (!pressedChords) return;
+    if (!pressedChords && handsMode !== 'both') return;
+    if (handsMode === 'both' && pressedNotes.size === 0) return;
+
     const target = `${NOTE_NAMES[queue[0].rootIndex]} ${queue[0].patternName}`;
     if (isTransitioningRef.current) return;
-    if (pressedChords !== target) {
+
+    let isMatch = false;
+    if (handsMode === 'both') {
+      // For both hands mode: only check for mistakes if 6+ notes are pressed
+      if (pressedNotes.size < 6) return;
+      // Check that each pitch class appears at least twice
+      const targetNotes = computeChordNotes(queue[0]);
+      const targetPCs = new Set(Array.from(targetNotes).map(n => n % 12));
+      isMatch = [...targetPCs].every(pc =>
+        Array.from(pressedNotes).filter(n => n % 12 === pc).length >= 2
+      );
+    } else {
+      // For left/right modes: use chord name matching
+      isMatch = pressedChords === target;
+    }
+
+    if (!isMatch) {
       onChordMistake?.();
       return;
     }
@@ -94,7 +113,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, 
     onChordMatched?.();
     setIsFlashing(true);
     setIsAdvancing(true);
-  }, [pressedChords, queue]);
+  }, [pressedChords, pressedNotes, handsMode, queue]);
 
   // Detect if a new chord is pressed while transitioning
   useEffect(() => {

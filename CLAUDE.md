@@ -118,6 +118,7 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `ChordPattern` type — interface with `name: string` and `intervals: number[]`
    - `CHORD_PATTERNS: ChordPattern[]` — array of 11 chord patterns: Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7, Major, Minor, Diminished, Augmented, Sus2, Sus4
    - `SharpsFilter` type — union type `'no-sharps' | 'with-sharps' | 'sharps-only'` used to control which root notes are available for chord generation in practice mode
+   - `HandsMode` type — union type `'left' | 'both' | 'right'` used to control how many octaves of each note must be pressed simultaneously during chord matching
 
 5. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
    - Takes a `Set<number>` of MIDI note numbers and returns a chord name string or `null`
@@ -350,34 +351,42 @@ The `ChordQueue` component displays a horizontal row of 5 chord cards. It mainta
 **Props:**
 - `selectedGroups: Set<string>` — set of chord group names to sample from when generating random chords
 - `sharpsFilter: SharpsFilter` — controls which root notes (0–11) are available for random selection: `'no-sharps'` excludes C#, D#, F#, G#, A# (indices 1, 3, 6, 8, 10); `'sharps-only'` keeps only those; `'with-sharps'` allows all 12
+- `handsMode: HandsMode` — controls chord matching behavior: `'left'` or `'right'` matches based on chord name detection; `'both'` requires that each pitch class in the target chord appears at least twice (in different octaves) among pressed notes
 - `onCurrentChordChange: (notes: Set<number>) => void` — callback fired when the target chord changes (on mount, after advance, or when `selectedGroups` or `sharpsFilter` changes). Receives the MIDI note set for the target chord.
 - `onChordMatched?: () => void` — optional callback fired when the user successfully plays the target chord. Fired just before the queue advances.
+- `onChordMistake?: () => void` — optional callback fired when the user plays a chord that doesn't match the target.
 
 **Implementation Details:**
 - Uses a helper function `generateChordItem(selectedGroups, sharpsFilter, exclude?)` to randomly select a `{ rootIndex, patternName }` from the enabled chord groups and available root indices. The optional `exclude` parameter prevents re-generating the same chord name.
 - Helper function `getAvailableRootIndices(sharpsFilter)` returns the set of available root indices (0–11) based on the filter.
 - Computes MIDI note numbers using base note 60 (C4) and pattern intervals: `new Set(pattern.intervals.map(i => 60 + rootIndex + i))`. This range (60–82) is visible on all keyboard sizes.
-- Chord matching: compares `pressedChords` string (e.g., `"G Minor"`) with target name `NOTE_NAMES[rootIndex] + " " + patternName`.
-- Three `useEffect` hooks:
+- **Chord matching logic** varies by `handsMode`:
+  - For `'left'` and `'right'`: compares `pressedChords` string (e.g., `"G Minor"`) with target name `NOTE_NAMES[rootIndex] + " " + patternName`
+  - For `'both'`: extracts pitch classes from the target chord, then checks that every pitch class is present at least twice (in different octaves) among `pressedNotes`. Formula: `[...targetPCs].every(pc => Array.from(pressedNotes).filter(n => n % 12 === pc).length >= 2)`
+- Four `useEffect` hooks:
   1. Regenerate all 5 items when `selectedGroups` or `sharpsFilter` changes
   2. Compute and notify parent of current chord notes when queue changes
-  3. Detect chord match and advance queue when `pressedChords` or queue changes
+  3. Detect chord match and advance queue when `pressedChords`, `pressedNotes`, `handsMode`, or queue changes
+  4. Detect if a new chord is pressed during a transition (for chaining matches)
 
 ### PracticeConfiguration Component (`PracticeConfiguration.tsx`)
-The `PracticeConfiguration` component is a controlled component for selecting which chord groups to practice and which root notes to include. It displays a grid of toggle buttons for chord patterns and a radio-style group of buttons for the sharps filter.
+The `PracticeConfiguration` component is a controlled component for selecting which chord groups to practice, which root notes to include, and which hand(s) to use. It displays a grid of toggle buttons for chord patterns, a radio-style group of buttons for the sharps filter, and a radio-style group of buttons for hand selection.
 
 **Features:**
 - **Chord Groups section**: Toggle buttons for each chord pattern: Major, Minor, Diminished, Augmented, Sus2, Sus4, Dominant 7, Major 7, Minor 7, Diminished 7, Half-dim 7. Buttons show the chord name and its shorthand (e.g., "Major / maj"). Selected chords are highlighted in red; non-selected are gray. Enforces a minimum of one selected chord group (prevents deselecting the last one). The only-selected chord is visually dimmed to signal it cannot be deselected.
 - **Sharps section**: Three mutually-exclusive buttons ("No Sharps", "With Sharps", "Sharps Only") that control which root notes (C–B) appear in generated chords. Exactly one is always selected. Selected button is highlighted in red; others are gray. Radio-style behavior (no minimum enforcement needed).
+- **Select Hands section**: Three mutually-exclusive buttons ("Left" with flipped hand icon, "Both Hands" with two hands, "Right" with normal hand icon) that control how chord matching works. Exactly one is always selected. Default is "Right". Uses FontAwesome `faHand` icon with `transform: scaleX(-1)` on the Left button to create a mirrored appearance.
 
 **Props:**
 - `selectedGroups: Set<string>` — the currently selected set of chord group names
 - `onSelectedGroupsChange: (groups: Set<string>) => void` — callback fired when the user toggles a chord group button
 - `sharpsFilter: SharpsFilter` — the currently selected sharps filter
 - `onSharpsFilterChange: (filter: SharpsFilter) => void` — callback fired when the user selects a sharps filter option
+- `handsMode: HandsMode` — the currently selected hands mode
+- `onHandsModeChange: (mode: HandsMode) => void` — callback fired when the user selects a hands mode option
 
-**Usage in PracticeMode:**
-The `PracticeConfiguration` is placed inside a collapsible panel (toggled by a gear icon button) at the top right of the `PracticeMode` page. When the user changes either the `selectedGroups` or `sharpsFilter` selections, the respective callbacks update `PracticeMode`'s state, which triggers `ChordQueue` to regenerate its 5 items from the new group set and available root indices.
+**Usage in PracticeMode and TimedMode:**
+The `PracticeConfiguration` is placed inside a collapsible panel (toggled by a gear icon button) in both modes. When the user changes selections, the respective callbacks update parent state, which triggers `ChordQueue` to regenerate its 5 items and adjust matching behavior based on the new settings.
 
 ---
 

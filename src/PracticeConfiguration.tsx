@@ -1,5 +1,7 @@
 import { FC } from 'react';
-import { CHORD_PATTERNS, SharpsFilter } from './midi/noteUtils';
+import { CHORD_PATTERNS, SharpsFilter, HandsMode } from './midi/noteUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHand } from '@fortawesome/free-solid-svg-icons';
 import './PracticeConfiguration.css';
 
 interface PracticeConfigurationProps {
@@ -7,6 +9,8 @@ interface PracticeConfigurationProps {
   onSelectedGroupsChange: (groups: Set<string>) => void;
   sharpsFilter: SharpsFilter;
   onSharpsFilterChange: (filter: SharpsFilter) => void;
+  handsMode: HandsMode;
+  onHandsModeChange: (mode: HandsMode) => void;
 }
 
 export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
@@ -14,6 +18,8 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
   onSelectedGroupsChange,
   sharpsFilter,
   onSharpsFilterChange,
+  handsMode,
+  onHandsModeChange,
 }) => {
   const toggleGroup = (name: string) => {
     if (selectedGroups.has(name) && selectedGroups.size === 1) return;
@@ -58,6 +64,33 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
             {option.label}
           </button>
         ))}
+      </div>
+      <h3 className="practice-config-label">Select Hands</h3>
+      <div className="hands-buttons">
+        <button
+          className={`hands-btn${handsMode === 'left' ? ' selected' : ''}`}
+          onClick={() => onHandsModeChange('left')}
+        >
+          <FontAwesomeIcon icon={faHand} style={{ transform: 'scaleX(-1)' }} />
+          <span className="hands-btn-label">Left</span>
+        </button>
+        <button
+          className={`hands-btn${handsMode === 'both' ? ' selected' : ''}`}
+          onClick={() => onHandsModeChange('both')}
+        >
+          <div className="both-hands-icon">
+            <FontAwesomeIcon icon={faHand} style={{ transform: 'scaleX(-1)' }} />
+            <FontAwesomeIcon icon={faHand} />
+          </div>
+          <span className="hands-btn-label">Both Hands</span>
+        </button>
+        <button
+          className={`hands-btn${handsMode === 'right' ? ' selected' : ''}`}
+          onClick={() => onHandsModeChange('right')}
+        >
+          <FontAwesomeIcon icon={faHand} />
+          <span className="hands-btn-label">Right</span>
+        </button>
       </div>
     </div>
   );
