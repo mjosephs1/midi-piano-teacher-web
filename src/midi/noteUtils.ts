@@ -3,6 +3,18 @@ export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A',
 export type SharpsFilter = 'no-sharps' | 'with-sharps' | 'sharps-only';
 export type HandsMode = 'left' | 'both' | 'right';
 
+export const TIMED_HISTORY_KEY = 'midiPianoTimedHistory';
+
+export type TimedResult = {
+  score: number;
+  mistakes: number;
+  timestamp: string;
+};
+
+export type TimedHistory = {
+  [configKey: string]: TimedResult[];
+};
+
 export class PracticeConfig {
   static readonly STORAGE_KEY = 'midiPianoPracticeConfig';
 
@@ -26,6 +38,11 @@ export class PracticeConfig {
       sharpsFilter: this.sharpsFilter,
       handsMode: this.handsMode,
     };
+  }
+
+  toString(): string {
+    const groups = [...this.selectedGroups].sort().join(',');
+    return `${groups}|${this.sharpsFilter}|${this.handsMode}`;
   }
 
   static fromJson(data: unknown): PracticeConfig | null {

@@ -122,8 +122,12 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `PracticeConfig` class — encapsulates practice session settings (`selectedGroups: Set<string>`, `sharpsFilter: SharpsFilter`, `handsMode: HandsMode`) in a single object for cleaner prop passing. Constructor accepts optional parameters with sensible defaults: `new PracticeConfig(new Set(['Major']), 'with-sharps', 'right')`. Provides:
      - Static constant `STORAGE_KEY = 'midiPianoPracticeConfig'` — used by both PracticeMode and TimedMode for globally-shared settings persistence
      - `toJson()`: Returns a plain object with serializable fields for localStorage storage
+     - `toString()`: Returns a deterministic string key (e.g., `"Major,Minor|with-sharps|right"`) for use as a history key in localStorage. Sorts `selectedGroups` to ensure consistent keys regardless of selection order.
      - `fromJson(data)`: Static method that validates and deserializes from a plain object; returns `PracticeConfig | null`
-     Used by `PracticeConfiguration`, `ChordQueue`, and both practice mode components to pass configuration consistently.
+   - `TIMED_HISTORY_KEY` constant: `'midiPianoTimedHistory'` — used by TimedMode to store result history in localStorage
+   - `TimedResult` type: Object with `score: number`, `mistakes: number`, and `timestamp: string` (ISO 8601 format)
+   - `TimedHistory` type: Object with config string keys mapping to arrays of `TimedResult` entries
+   - All exported from `src/midi/noteUtils.ts`. Used by `PracticeConfiguration`, `ChordQueue`, and both practice mode components to pass configuration consistently.
 
 5. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
    - Takes a `Set<number>` of MIDI note numbers and returns a chord name string or `null`
@@ -337,6 +341,12 @@ The `TimedMode` component is a timed practice mode that uses a four-stage state 
 **Timers:**
 - **Countdown timer**: `setInterval` fires every 1 second, increments `countdownStep`. When `countdownStep` reaches 3 ("Begin"), the next second triggers transition to STARTED.
 - **Game timer**: `setInterval` fires every 1 second, decrements `timeLeft`. When `timeLeft` reaches 0, transitions to RESULTS.
+
+**Result History:**
+- When entering RESULTS stage, each run's `score`, `mistakes`, and timestamp are automatically saved to localStorage under `TIMED_HISTORY_KEY` (`'midiPianoTimedHistory'`)
+- History is keyed by `config.toString()` (e.g., `"Major|with-sharps|right"`) so that results are grouped by configuration
+- Multiple runs with the same config append new entries to the same array; different configs create separate entries
+- History persists across sessions and can be viewed in browser DevTools (Application → Local Storage → `midiPianoTimedHistory`)
 
 **Route:**
 - `/practice-chords/timed` (registered in `App.tsx`)

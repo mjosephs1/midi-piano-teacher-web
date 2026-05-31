@@ -2,7 +2,7 @@ import { FC, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPlay, faStop, faRotateRight } from '@fortawesome/free-solid-svg-icons';
-import { PracticeConfig } from './midi/noteUtils';
+import { PracticeConfig, TimedHistory, TimedResult, TIMED_HISTORY_KEY } from './midi/noteUtils';
 import { PracticeConfiguration } from './PracticeConfiguration';
 import { ChordQueue } from './ChordQueue';
 import './TimedMode.css';
@@ -80,6 +80,22 @@ export const TimedMode: FC = () => {
     }, 1000);
 
     return () => clearInterval(interval);
+  }, [stage]);
+
+  // Save results to history when entering RESULTS stage
+  useEffect(() => {
+    if (stage !== 'RESULTS') return;
+    try {
+      const raw = localStorage.getItem(TIMED_HISTORY_KEY);
+      const history: TimedHistory = raw ? JSON.parse(raw) : {};
+      const key = config.toString();
+      const entry: TimedResult = { score, mistakes, timestamp: new Date().toISOString() };
+      history[key] = [...(history[key] ?? []), entry];
+      localStorage.setItem(TIMED_HISTORY_KEY, JSON.stringify(history));
+    } catch {
+      // silently ignore unavailable storage
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
 
   const handleChordMatched = () => {
