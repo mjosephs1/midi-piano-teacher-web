@@ -49,6 +49,7 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
   const [countdownStep, setCountdownStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [score, setScore] = useState(0);
+  const [mistakes, setMistakes] = useState(0);
 
   useEffect(() => {
     try {
@@ -89,6 +90,7 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
     if (stage !== 'STARTED') return;
 
     setScore(0);
+    setMistakes(0);
     setTimeLeft(60);
 
     const interval = setInterval(() => {
@@ -107,6 +109,10 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
 
   const handleChordMatched = () => {
     setScore(prev => prev + 1);
+  };
+
+  const handleChordMistake = () => {
+    setMistakes(prev => prev + 1);
   };
 
   const handleStartClick = () => {
@@ -159,13 +165,17 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
               Stop <FontAwesomeIcon icon={faStop} />
             </button>
             <div className="timed-timer">{timeLeft}s</div>
-            <div className="timed-score">Score: {score}</div>
+            <div className="timed-hud-right">
+              <div className="timed-score">Score: {score}</div>
+              <div className="timed-mistakes">Mistakes: {mistakes}</div>
+            </div>
           </div>
           <ChordQueue
             selectedGroups={selectedGroups}
             sharpsFilter={sharpsFilter}
             onCurrentChordChange={() => {}}
             onChordMatched={handleChordMatched}
+            onChordMistake={handleChordMistake}
           />
         </>
       )}
@@ -174,6 +184,10 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
         <div className="timed-results">
           <div className="timed-final-score">{score}</div>
           <div className="timed-results-label">chords in 60 seconds</div>
+          <div className="timed-results-mistakes">{mistakes} mistake{mistakes !== 1 ? 's' : ''}</div>
+          <div className="timed-results-accuracy">
+            Accuracy: {score + mistakes === 0 ? '100' : Math.round((score / (score + mistakes)) * 100)}%
+          </div>
           <div className="timed-results-buttons">
             <button className="timed-results-button" onClick={handlePlayAgainClick}>
               Try Again <FontAwesomeIcon icon={faRotateRight} />

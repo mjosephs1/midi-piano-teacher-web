@@ -16,6 +16,7 @@ interface ChordQueueProps {
   sharpsFilter: SharpsFilter;
   onCurrentChordChange: (notes: Set<number>) => void;
   onChordMatched?: () => void;
+  onChordMistake?: () => void;
 }
 
 let itemIdCounter = 0;
@@ -50,7 +51,7 @@ function computeChordNotes(item: ChordQueueItem): Set<number> {
   return new Set(pattern.intervals.map(i => MIDI_BASE + item.rootIndex + i));
 }
 
-export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, onCurrentChordChange, onChordMatched }) => {
+export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, onCurrentChordChange, onChordMatched, onChordMistake }) => {
   const [queue, setQueue] = useState<ChordQueueItem[]>(() =>
     Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter))
   );
@@ -80,8 +81,11 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, 
   useEffect(() => {
     if (!pressedChords) return;
     const target = `${NOTE_NAMES[queue[0].rootIndex]} ${queue[0].patternName}`;
-    if (pressedChords !== target) return;
     if (isTransitioningRef.current) return;
+    if (pressedChords !== target) {
+      onChordMistake?.();
+      return;
+    }
 
     isTransitioningRef.current = true;
     lastMatchedChordRef.current = target;
