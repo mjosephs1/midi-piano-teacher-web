@@ -2,7 +2,7 @@ import { FC, useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
-import { SharpsFilter, HandsMode } from './midi/noteUtils';
+import { PracticeConfig } from './midi/noteUtils';
 import { VirtualPiano } from './midi/VirtualPiano';
 import { ChordQueue } from './ChordQueue';
 import { PracticeConfiguration } from './PracticeConfiguration';
@@ -14,46 +14,19 @@ interface PracticeModeProps {
   numKeys: number;
 }
 
-const STORAGE_KEY = 'midiPianoPracticeChordGroups';
-const SHARPS_FILTER_KEY = 'midiPianoPracticeSharpFilter';
-const HANDS_MODE_KEY = 'midiPianoPracticeHandsMode';
-
 export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
-  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(() => {
+  const [config, setConfig] = useState<PracticeConfig>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
       if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return new Set(parsed);
+        const loaded = PracticeConfig.fromJson(parsed);
+        if (loaded) return loaded;
       }
     } catch {
-      // localStorage unavailable
+      // localStorage unavailable or invalid JSON
     }
-    return new Set(['Major']);
-  });
-
-  const [sharpsFilter, setSharpsFilter] = useState<SharpsFilter>(() => {
-    try {
-      const stored = localStorage.getItem(SHARPS_FILTER_KEY);
-      if (stored === 'no-sharps' || stored === 'sharps-only' || stored === 'with-sharps') {
-        return stored;
-      }
-    } catch {
-      // localStorage unavailable
-    }
-    return 'with-sharps';
-  });
-
-  const [handsMode, setHandsMode] = useState<HandsMode>(() => {
-    try {
-      const stored = localStorage.getItem(HANDS_MODE_KEY);
-      if (stored === 'left' || stored === 'both' || stored === 'right') {
-        return stored;
-      }
-    } catch {
-      // localStorage unavailable
-    }
-    return 'right';
+    return new PracticeConfig();
   });
 
   const [currentChordNotes, setCurrentChordNotes] = useState<Set<number>>(new Set());
@@ -62,27 +35,11 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...selectedGroups]));
+      localStorage.setItem(PracticeConfig.STORAGE_KEY, JSON.stringify(config.toJson()));
     } catch {
       // localStorage unavailable
     }
-  }, [selectedGroups]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SHARPS_FILTER_KEY, sharpsFilter);
-    } catch {
-      // localStorage unavailable
-    }
-  }, [sharpsFilter]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(HANDS_MODE_KEY, handsMode);
-    } catch {
-      // localStorage unavailable
-    }
-  }, [handsMode]);
+  }, [config]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -117,12 +74,8 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
             <div className="practice-config-panel">
               <h3 className="practice-config-title">Practice Mode Settings</h3>
               <PracticeConfiguration
-                selectedGroups={selectedGroups}
-                onSelectedGroupsChange={setSelectedGroups}
-                sharpsFilter={sharpsFilter}
-                onSharpsFilterChange={setSharpsFilter}
-                handsMode={handsMode}
-                onHandsModeChange={setHandsMode}
+                config={config}
+                onPracticeConfigChange={setConfig}
               />
             </div>
           )}
@@ -131,7 +84,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
       <VirtualPiano numKeys={numKeys} pressedNotes={currentChordNotes} />
       <div className="chord-queue-section">
         <div className="chord-queue-label">Play this</div>
-        <ChordQueue selectedGroups={selectedGroups} sharpsFilter={sharpsFilter} handsMode={handsMode} onCurrentChordChange={setCurrentChordNotes} />
+        <ChordQueue config={config} onCurrentChordChange={setCurrentChordNotes} />
       </div>
     </div>
   );

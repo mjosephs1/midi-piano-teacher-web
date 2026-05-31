@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react';
-import { CHORD_PATTERNS, NOTE_NAMES, SharpsFilter, HandsMode } from './midi/noteUtils';
+import { CHORD_PATTERNS, NOTE_NAMES, PracticeConfig } from './midi/noteUtils';
 import { useMidi } from './midi/MidiContext';
 import './ChordQueue.css';
 
@@ -12,9 +12,7 @@ interface ChordQueueItem {
 }
 
 interface ChordQueueProps {
-  selectedGroups: Set<string>;
-  sharpsFilter: SharpsFilter;
-  handsMode: HandsMode;
+  config: PracticeConfig;
   onCurrentChordChange: (notes: Set<number>) => void;
   onChordMatched?: () => void;
   onChordMistake?: () => void;
@@ -22,7 +20,7 @@ interface ChordQueueProps {
 
 let itemIdCounter = 0;
 
-function getAvailableRootIndices(sharpsFilter: SharpsFilter): number[] {
+function getAvailableRootIndices(sharpsFilter: string): number[] {
   const SHARP_INDICES = [1, 3, 6, 8, 10]; // C#, D#, F#, G#, A#
   const ALL_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
@@ -34,7 +32,7 @@ function getAvailableRootIndices(sharpsFilter: SharpsFilter): number[] {
   return ALL_INDICES;
 }
 
-function generateChordItem(selectedGroups: Set<string>, sharpsFilter: SharpsFilter, exclude?: string): ChordQueueItem {
+function generateChordItem(selectedGroups: Set<string>, sharpsFilter: string, exclude?: string): ChordQueueItem {
   const allowed = CHORD_PATTERNS.filter(p => selectedGroups.has(p.name));
   const availableRoots = getAvailableRootIndices(sharpsFilter);
   let item: ChordQueueItem;
@@ -52,7 +50,9 @@ function computeChordNotes(item: ChordQueueItem): Set<number> {
   return new Set(pattern.intervals.map(i => MIDI_BASE + item.rootIndex + i));
 }
 
-export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, handsMode, onCurrentChordChange, onChordMatched, onChordMistake }) => {
+export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, onChordMatched, onChordMistake }) => {
+  const { selectedGroups, sharpsFilter, handsMode } = config;
+
   const [queue, setQueue] = useState<ChordQueueItem[]>(() =>
     Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter))
   );
@@ -67,7 +67,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ selectedGroups, sharpsFilter, 
 
   const { pressedChords, pressedNotes } = useMidi();
 
-  // Regenerate queue when selectedGroups or sharpsFilter changes
+  // Regenerate queue when config changes
   useEffect(() => {
     setQueue(Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter)));
   }, [selectedGroups, sharpsFilter]);

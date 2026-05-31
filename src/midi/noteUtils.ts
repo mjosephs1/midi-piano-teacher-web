@@ -3,6 +3,47 @@ export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A',
 export type SharpsFilter = 'no-sharps' | 'with-sharps' | 'sharps-only';
 export type HandsMode = 'left' | 'both' | 'right';
 
+export class PracticeConfig {
+  static readonly STORAGE_KEY = 'midiPianoPracticeConfig';
+
+  selectedGroups: Set<string>;
+  sharpsFilter: SharpsFilter;
+  handsMode: HandsMode;
+
+  constructor(
+    selectedGroups: Set<string> = new Set(['Major']),
+    sharpsFilter: SharpsFilter = 'with-sharps',
+    handsMode: HandsMode = 'right'
+  ) {
+    this.selectedGroups = selectedGroups;
+    this.sharpsFilter = sharpsFilter;
+    this.handsMode = handsMode;
+  }
+
+  toJson(): { selectedGroups: string[]; sharpsFilter: SharpsFilter; handsMode: HandsMode } {
+    return {
+      selectedGroups: [...this.selectedGroups],
+      sharpsFilter: this.sharpsFilter,
+      handsMode: this.handsMode,
+    };
+  }
+
+  static fromJson(data: unknown): PracticeConfig | null {
+    if (!data || typeof data !== 'object') return null;
+
+    const obj = data as Record<string, unknown>;
+    const selectedGroups = obj.selectedGroups;
+    const sharpsFilter = obj.sharpsFilter;
+    const handsMode = obj.handsMode;
+
+    if (!Array.isArray(selectedGroups) || selectedGroups.length === 0) return null;
+    if (sharpsFilter !== 'no-sharps' && sharpsFilter !== 'sharps-only' && sharpsFilter !== 'with-sharps') return null;
+    if (handsMode !== 'left' && handsMode !== 'both' && handsMode !== 'right') return null;
+
+    return new PracticeConfig(new Set(selectedGroups), sharpsFilter, handsMode);
+  }
+}
+
 export const noteNumberToName = (noteNumber: number): string => {
   return NOTE_NAMES[noteNumber % 12];
 };

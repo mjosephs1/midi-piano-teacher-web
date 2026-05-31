@@ -92,7 +92,7 @@ const App: FC = () => {
         <Route path="/chord-visualizer" element={<ChordVisualizer/>} />
         <Route path="/practice-chords" element={<PracticeChords />} />
         <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
-        <Route path="/practice-chords/timed" element={<TimedMode numKeys={numKeys} />} />
+        <Route path="/practice-chords/timed" element={<TimedMode />} />
       </Routes>
     </div>
   );

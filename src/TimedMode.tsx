@@ -2,7 +2,7 @@ import { FC, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPlay, faStop, faRotateRight } from '@fortawesome/free-solid-svg-icons';
-import { SharpsFilter, HandsMode } from './midi/noteUtils';
+import { PracticeConfig } from './midi/noteUtils';
 import { PracticeConfiguration } from './PracticeConfiguration';
 import { ChordQueue } from './ChordQueue';
 import './TimedMode.css';
@@ -11,51 +11,21 @@ library.add(faPlay, faStop, faRotateRight);
 
 type TimedStage = 'CONFIGURE' | 'COUNTDOWN' | 'STARTED' | 'RESULTS';
 
-interface TimedModeProps {
-  numKeys: number;
-}
-
-const STORAGE_KEY = 'midiPianoTimedChordGroups';
-const SHARPS_FILTER_KEY = 'midiPianoTimedSharpFilter';
-const HANDS_MODE_KEY = 'midiPianoTimedHandsMode';
 const COUNTDOWN_LABELS = ['3', '2', '1', 'Begin'];
 
-export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
-  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(() => {
+export const TimedMode: FC = () => {
+  const [config, setConfig] = useState<PracticeConfig>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
       if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return new Set(parsed);
+        const loaded = PracticeConfig.fromJson(parsed);
+        if (loaded) return loaded;
       }
     } catch {
-      // localStorage unavailable
+      // localStorage unavailable or invalid JSON
     }
-    return new Set(['Major']);
-  });
-
-  const [sharpsFilter, setSharpsFilter] = useState<SharpsFilter>(() => {
-    try {
-      const stored = localStorage.getItem(SHARPS_FILTER_KEY);
-      if (stored === 'no-sharps' || stored === 'sharps-only' || stored === 'with-sharps') {
-        return stored;
-      }
-    } catch {
-      // localStorage unavailable
-    }
-    return 'with-sharps';
-  });
-
-  const [handsMode, setHandsMode] = useState<HandsMode>(() => {
-    try {
-      const stored = localStorage.getItem(HANDS_MODE_KEY);
-      if (stored === 'left' || stored === 'both' || stored === 'right') {
-        return stored;
-      }
-    } catch {
-      // localStorage unavailable
-    }
-    return 'right';
+    return new PracticeConfig();
   });
 
   const [stage, setStage] = useState<TimedStage>('CONFIGURE');
@@ -66,27 +36,11 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...selectedGroups]));
+      localStorage.setItem(PracticeConfig.STORAGE_KEY, JSON.stringify(config.toJson()));
     } catch {
       // localStorage unavailable
     }
-  }, [selectedGroups]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SHARPS_FILTER_KEY, sharpsFilter);
-    } catch {
-      // localStorage unavailable
-    }
-  }, [sharpsFilter]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(HANDS_MODE_KEY, handsMode);
-    } catch {
-      // localStorage unavailable
-    }
-  }, [handsMode]);
+  }, [config]);
 
   // Countdown logic
   useEffect(() => {
@@ -160,12 +114,8 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
         <>
           <h2>Timed Mode</h2>
           <PracticeConfiguration
-            selectedGroups={selectedGroups}
-            onSelectedGroupsChange={setSelectedGroups}
-            sharpsFilter={sharpsFilter}
-            onSharpsFilterChange={setSharpsFilter}
-            handsMode={handsMode}
-            onHandsModeChange={setHandsMode}
+            config={config}
+            onPracticeConfigChange={setConfig}
           />
           <button className="timed-play-button" onClick={handleStartClick}>
             Start <FontAwesomeIcon icon={faPlay} />
@@ -194,9 +144,7 @@ export const TimedMode: FC<TimedModeProps> = ({ numKeys }) => {
             </div>
           </div>
           <ChordQueue
-            selectedGroups={selectedGroups}
-            sharpsFilter={sharpsFilter}
-            handsMode={handsMode}
+            config={config}
             onCurrentChordChange={() => {}}
             onChordMatched={handleChordMatched}
             onChordMistake={handleChordMistake}

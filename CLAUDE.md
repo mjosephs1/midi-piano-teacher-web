@@ -119,6 +119,11 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `CHORD_PATTERNS: ChordPattern[]` — array of 11 chord patterns: Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7, Major, Minor, Diminished, Augmented, Sus2, Sus4
    - `SharpsFilter` type — union type `'no-sharps' | 'with-sharps' | 'sharps-only'` used to control which root notes are available for chord generation in practice mode
    - `HandsMode` type — union type `'left' | 'both' | 'right'` used to control how many octaves of each note must be pressed simultaneously during chord matching
+   - `PracticeConfig` class — encapsulates practice session settings (`selectedGroups: Set<string>`, `sharpsFilter: SharpsFilter`, `handsMode: HandsMode`) in a single object for cleaner prop passing. Constructor accepts optional parameters with sensible defaults: `new PracticeConfig(new Set(['Major']), 'with-sharps', 'right')`. Provides:
+     - Static constant `STORAGE_KEY = 'midiPianoPracticeConfig'` — used by both PracticeMode and TimedMode for globally-shared settings persistence
+     - `toJson()`: Returns a plain object with serializable fields for localStorage storage
+     - `fromJson(data)`: Static method that validates and deserializes from a plain object; returns `PracticeConfig | null`
+     Used by `PracticeConfiguration`, `ChordQueue`, and both practice mode components to pass configuration consistently.
 
 5. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
    - Takes a `Set<number>` of MIDI note numbers and returns a chord name string or `null`
@@ -295,15 +300,14 @@ The `PracticeMode` component is a practice page where users advance through a qu
 - Displays a `VirtualPiano` showing the fingering for the current target chord (static display, not live MIDI)
 - Shows a horizontal queue of 5 chord cards; the leftmost card is the target to play
 - When the user plays the target chord on their MIDI keyboard, the queue advances (target disappears, new chord added on the right)
-- Includes a `PracticeConfiguration` panel toggled by a gear icon button for selecting chord groups and sharps filter
-- Settings persist across sessions via `localStorage` (key: `midiPianoPracticeChordGroups`)
+- Includes a `PracticeConfiguration` panel toggled by a gear icon button for selecting chord groups, sharps filter, and hands mode
+- Settings persist globally via `localStorage` (shared across PracticeMode and TimedMode) as a serialized `PracticeConfig` object
 
 **Props:**
 - `numKeys: number` — the selected keyboard size from parent `App.tsx`
 
 **State:**
-- `selectedGroups: Set<string>` — set of chord group names (e.g., `"Major"`, `"Minor 7"`) to include in the practice queue. Initialized from `localStorage` with default `new Set(['Major'])`. Persisted on every change.
-- `sharpsFilter: SharpsFilter` — controls which root notes appear in practice chords. One of `'no-sharps'` (natural notes only), `'with-sharps'` (all notes, default), or `'sharps-only'` (sharps only). Initialized from `localStorage` key `midiPianoPracticeSharpFilter` with default `'with-sharps'`. Persisted on every change.
+- `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode` in a single object. Initialized from global `PracticeConfig.STORAGE_KEY` with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Serialized and persisted on every change.
 - `currentChordNotes: Set<number>` — MIDI note numbers for the current target chord, set by the `ChordQueue` component and passed to `VirtualPiano`
 - `configOpen: boolean` — controls visibility of the `PracticeConfiguration` modal
 
@@ -320,15 +324,15 @@ The `TimedMode` component is a timed practice mode that uses a four-stage state 
 - **RESULTS**: Final score display with options to "Try Again" (returns to COUNTDOWN) or "Back" (returns to CONFIGURE).
 
 **Props:**
-- `numKeys: number` — the selected keyboard size from parent `App.tsx` (reserved for future use)
+- None — TimedMode is self-contained and does not receive props from parent
 
 **State:**
-- `selectedGroups: Set<string>` — set of chord group names. Initialized from `localStorage` key `midiPianoTimedChordGroups`, default `new Set(['Major'])`. Persisted on every change.
-- `sharpsFilter: SharpsFilter` — controls which root notes appear in generated chords. Initialized from `localStorage` key `midiPianoTimedSharpFilter`, default `'with-sharps'`. Persisted on every change.
+- `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode` in a single object. Initialized from global `PracticeConfig.STORAGE_KEY` (shared with PracticeMode) with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Serialized and persisted on every change.
 - `stage: TimedStage` — one of `'CONFIGURE' | 'COUNTDOWN' | 'STARTED' | 'RESULTS'`. Controls which UI is rendered.
 - `countdownStep: number` — 0–3, indexes into `['3', '2', '1', 'Begin']`. Incremented every second during COUNTDOWN.
 - `timeLeft: number` — starts at 60, decrements every second during STARTED. When it reaches 0, transitions to RESULTS.
 - `score: number` — incremented by 1 each time `ChordQueue` calls the `onChordMatched` callback. Reset to 0 when entering STARTED.
+- `mistakes: number` — incremented by 1 each time `ChordQueue` calls the `onChordMistake` callback. Reset to 0 when entering STARTED.
 
 **Timers:**
 - **Countdown timer**: `setInterval` fires every 1 second, increments `countdownStep`. When `countdownStep` reaches 3 ("Begin"), the next second triggers transition to STARTED.
@@ -345,14 +349,12 @@ The `ChordQueue` component displays a horizontal row of 5 chord cards. It mainta
 - The leftmost card (current target) is highlighted in red and scaled up
 - Listens to `pressedChords` from `useMidi()` hook to detect when user plays the target chord
 - On match, advances the queue: removes the leftmost card and appends a new random card on the right
-- Regenerates all 5 cards when `selectedGroups` changes
+- Regenerates all 5 cards when `config.selectedGroups` or `config.sharpsFilter` changes
 - Prevents immediate re-triggering by excluding the just-matched chord from the new random generation
 
 **Props:**
-- `selectedGroups: Set<string>` — set of chord group names to sample from when generating random chords
-- `sharpsFilter: SharpsFilter` — controls which root notes (0–11) are available for random selection: `'no-sharps'` excludes C#, D#, F#, G#, A# (indices 1, 3, 6, 8, 10); `'sharps-only'` keeps only those; `'with-sharps'` allows all 12
-- `handsMode: HandsMode` — controls chord matching behavior: `'left'` or `'right'` matches based on chord name detection; `'both'` requires that each pitch class in the target chord appears at least twice (in different octaves) among pressed notes
-- `onCurrentChordChange: (notes: Set<number>) => void` — callback fired when the target chord changes (on mount, after advance, or when `selectedGroups` or `sharpsFilter` changes). Receives the MIDI note set for the target chord.
+- `config: PracticeConfig` — encapsulates practice settings: `selectedGroups` (set of chord group names to sample from), `sharpsFilter` (controls available root notes: `'no-sharps'` excludes C#, D#, F#, G#, A# (indices 1, 3, 6, 8, 10); `'sharps-only'` keeps only those; `'with-sharps'` allows all 12), and `handsMode` (controls chord matching: `'left'` or `'right'` matches by chord name; `'both'` requires each pitch class appear at least twice in different octaves)
+- `onCurrentChordChange: (notes: Set<number>) => void` — callback fired when the target chord changes (on mount, after advance, or when config changes). Receives the MIDI note set for the target chord.
 - `onChordMatched?: () => void` — optional callback fired when the user successfully plays the target chord. Fired just before the queue advances.
 - `onChordMistake?: () => void` — optional callback fired when the user plays a chord that doesn't match the target.
 
@@ -378,15 +380,11 @@ The `PracticeConfiguration` component is a controlled component for selecting wh
 - **Select Hands section**: Three mutually-exclusive buttons ("Left" with flipped hand icon, "Both Hands" with two hands, "Right" with normal hand icon) that control how chord matching works. Exactly one is always selected. Default is "Right". Uses FontAwesome `faHand` icon with `transform: scaleX(-1)` on the Left button to create a mirrored appearance.
 
 **Props:**
-- `selectedGroups: Set<string>` — the currently selected set of chord group names
-- `onSelectedGroupsChange: (groups: Set<string>) => void` — callback fired when the user toggles a chord group button
-- `sharpsFilter: SharpsFilter` — the currently selected sharps filter
-- `onSharpsFilterChange: (filter: SharpsFilter) => void` — callback fired when the user selects a sharps filter option
-- `handsMode: HandsMode` — the currently selected hands mode
-- `onHandsModeChange: (mode: HandsMode) => void` — callback fired when the user selects a hands mode option
+- `config: PracticeConfig` — the current practice configuration object encapsulating `selectedGroups`, `sharpsFilter`, and `handsMode`
+- `onPracticeConfigChange: (config: PracticeConfig) => void` — callback fired when the user makes any configuration change (toggles a chord group, selects a sharps filter option, or selects a hands mode). Receives the updated `PracticeConfig` object.
 
 **Usage in PracticeMode and TimedMode:**
-The `PracticeConfiguration` is placed inside a collapsible panel (toggled by a gear icon button) in both modes. When the user changes selections, the respective callbacks update parent state, which triggers `ChordQueue` to regenerate its 5 items and adjust matching behavior based on the new settings.
+The `PracticeConfiguration` is placed inside a collapsible panel (toggled by a gear icon button) in `PracticeMode`, and on the main CONFIGURE screen in `TimedMode`. When the user changes selections, the callback updates parent state with a new `PracticeConfig` object, which triggers `ChordQueue` to regenerate its 5 items and adjust matching behavior based on the new settings.
 
 ---
 
