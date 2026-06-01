@@ -80,7 +80,6 @@ const App: FC = () => {
             aria-expanded={settingsOpen}
           >
             <FontAwesomeIcon icon={faGear} />
-            Settings
           </button>
           {settingsOpen && (
             <div className="settings-panel">
