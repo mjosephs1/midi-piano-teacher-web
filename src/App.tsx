@@ -12,9 +12,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 
 /* import all the icons in Free Solid, Free Regular, and Brands styles */
-import { faGear } from '@fortawesome/free-solid-svg-icons'
+import { faGear, faCircleUser } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faGear)
+library.add(faGear, faCircleUser)
 
 
 const STORAGE_KEY = 'midiPianoNumKeys';
@@ -73,23 +73,34 @@ const App: FC = () => {
             </div>
           </div>
         </nav>
-        <div className="settings-wrapper" ref={settingsWrapperRef}>
-          <button
-            className="settings-button"
-            onClick={() => setSettingsOpen(prev => !prev)}
-            aria-expanded={settingsOpen}
-          >
-            <FontAwesomeIcon icon={faGear} />
-          </button>
-          {settingsOpen && (
-            <div className="settings-panel">
-              <Settings
-                numKeys={numKeys}
-                onNumKeysChange={setNumKeys}
-                keyboardSizes={KEYBOARD_SIZES}
-              />
+        <div className="header-buttons">
+          <div className="settings-wrapper" ref={settingsWrapperRef}>
+            <button
+              className="settings-button"
+              onClick={() => setSettingsOpen(prev => !prev)}
+              aria-expanded={settingsOpen}
+            >
+              <FontAwesomeIcon icon={faGear} />
+            </button>
+            {settingsOpen && (
+              <div className="settings-panel">
+                <Settings
+                  numKeys={numKeys}
+                  onNumKeysChange={setNumKeys}
+                  keyboardSizes={KEYBOARD_SIZES}
+                />
+              </div>
+            )}
+          </div>
+          <div className="user-menu">
+            <button className="settings-button">
+              <FontAwesomeIcon icon={faCircleUser} />
+            </button>
+            <div className="user-menu-dropdown">
+              <Link to="/practice-chords/high-scores">High Scores</Link>
+              <span className="user-menu-item-disabled">Progress</span>
             </div>
-          )}
+          </div>
         </div>
       </header>
 

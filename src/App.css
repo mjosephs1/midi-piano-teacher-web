@@ -102,9 +102,16 @@
   align-self: auto;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  align-self: stretch;
+  margin-left: auto;
+}
+
 .settings-wrapper {
   position: relative;
-  margin-left: auto;
   display: flex;
   align-items: stretch;
   align-self: stretch;
@@ -117,8 +124,8 @@
   border: none;
   border-radius: 0;
   background: transparent;
-  padding: 0 1rem;
-  font-size: 1rem;
+  padding: 0 0.75rem;
+  font-size: 1.2rem;
   color: #000;
   cursor: pointer;
   white-space: nowrap;
@@ -178,4 +185,55 @@
   font-weight: bold;
   margin: 0;
   color: #333;
+}
+
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+}
+
+.user-menu:hover .settings-button {
+  color: #b02828;
+}
+
+.user-menu-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  flex-direction: column;
+  background-color: #f5f0e8;
+  border: 1px solid #d0c8bc;
+  border-top: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  z-index: 200;
+  min-width: 100%;
+}
+
+.user-menu:hover .user-menu-dropdown {
+  display: flex;
+}
+
+.user-menu-dropdown a {
+  padding: 0.6rem 1rem;
+  white-space: nowrap;
+  align-self: auto;
+  text-decoration: none;
+  color: #000;
+  transition: background-color 0.2s;
+}
+
+.user-menu-dropdown a:hover {
+  background: #e8e3db;
+}
+
+.user-menu-item-disabled {
+  display: flex;
+  padding: 0.6rem 1rem;
+  white-space: nowrap;
+  color: #aaa;
+  cursor: default;
+  user-select: none;
 }
