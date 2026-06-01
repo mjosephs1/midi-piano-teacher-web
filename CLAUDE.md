@@ -278,7 +278,7 @@ The `ChordExplorer` component provides an interactive tool for exploring chord f
 - `selectedChord: { rootIndex: number; patternIndex: number } | null` — tracks the currently selected button for highlighting
 
 **Implementation:**
-The component uses `KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]]` (which equals 60, middle C) as the base note. When a chord button is clicked:
+The component uses `KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]]` (which equals 48, C3) as the base note. When a chord button is clicked:
 1. The root note is calculated as `BASE_NOTE + rootIndex`
 2. The chord pattern's intervals are applied: `pattern.intervals.map(i => rootMidi + i)`
 3. The resulting note set is passed to the `VirtualPiano` component for display
