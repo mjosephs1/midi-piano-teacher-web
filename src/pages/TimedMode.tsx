@@ -129,12 +129,7 @@ export const TimedMode: FC = () => {
     <div className="timed-mode-page">
       {stage === 'CONFIGURE' && (
         <>
-          <div className="timed-title-row">
-            <h2>Timed Mode</h2>
-            <Link to="/practice-chords/high-scores" className="timed-icon-btn">
-              <FontAwesomeIcon icon={faRankingStar} />
-            </Link>
-          </div>
+          <h2>Timed Mode</h2>
           <PracticeConfiguration
             config={config}
             onPracticeConfigChange={setConfig}
@@ -186,6 +181,9 @@ export const TimedMode: FC = () => {
             <button className="timed-results-button" onClick={handlePlayAgainClick}>
               Try Again <FontAwesomeIcon icon={faRotateRight} />
             </button>
+            <Link to="/practice-chords/high-scores" className="timed-results-button">
+              High Scores <FontAwesomeIcon icon={faRankingStar} />
+            </Link>
             <button className="timed-results-button" onClick={handleConfigureClick}>
               Back
             </button>

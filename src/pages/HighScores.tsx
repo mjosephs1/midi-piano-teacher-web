@@ -1,5 +1,4 @@
 import { FC, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { PracticeConfig, TIMED_HISTORY_KEY, TimedHistory, TimedResult } from '../midi/noteUtils';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
 import './HighScores.css';
@@ -57,12 +56,7 @@ export const HighScores: FC = () => {
 
   return (
     <div className="high-scores-page">
-      <div className="high-scores-header">
-        <h2>High Scores</h2>
-        <Link to="/practice-chords/timed" className="high-scores-back">
-          ← Timed Mode
-        </Link>
-      </div>
+      <h2>High Scores</h2>
 
       <PracticeConfiguration
         config={config}

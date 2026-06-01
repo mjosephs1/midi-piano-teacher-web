@@ -7,34 +7,6 @@
   min-height: 100vh;
 }
 
-.high-scores-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-.high-scores-header h2 {
-  margin: 0;
-}
-
-.high-scores-back {
-  text-decoration: none;
-  color: #333;
-  border: 2px solid #333;
-  border-radius: 6px;
-  padding: 8px 12px;
-  background: transparent;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-}
-
-.high-scores-back:hover {
-  background: #333;
-  color: white;
-}
-
 .high-scores-empty {
   color: #666;
   font-size: 1.1rem;

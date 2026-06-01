@@ -311,10 +311,10 @@ The `PracticeMode` component is a practice page where users advance through a qu
 The `TimedMode` component is a timed practice mode that uses a four-stage state machine to control the user flow: CONFIGURE → COUNTDOWN → STARTED → RESULTS. Users configure chord groups, trigger a countdown, play chords for 60 seconds while their score increments, and then view results with options to play again or reconfigure.
 
 **State Machine Stages:**
-- **CONFIGURE**: Initial configuration screen with "Timed Mode" title (with ranking-star icon button to navigate to High Scores), `PracticeConfiguration`, and "Start" button.
+- **CONFIGURE**: Initial configuration screen with "Timed Mode" title, `PracticeConfiguration`, and "Start" button.
 - **COUNTDOWN**: 4-second countdown with fading text ("3", "2", "1", "Begin"). Each step animates with a fade-in/fade-out effect.
 - **STARTED**: Active game session showing HUD (Stop button, Timer, Score) and `ChordQueue`. Timer counts down from 60 seconds. Each matched chord increments score.
-- **RESULTS**: Final score display with options to "Try Again" (returns to COUNTDOWN) or "Back" (returns to CONFIGURE).
+- **RESULTS**: Final score display with options to "Try Again" (returns to COUNTDOWN), "High Scores" (navigates to High Scores page), or "Back" (returns to CONFIGURE).
 
 **Props:**
 - None — TimedMode is self-contained and does not receive props from parent
@@ -349,7 +349,6 @@ The `HighScores` component displays the top 10 Timed Mode results for a selected
 - Top 10 results displayed in a table with rank, score, accuracy, and timestamp
 - Primary sorting by score (descending); ties broken by accuracy (descending)
 - Rank #1 highlighted with gold background
-- Back navigation link to Timed Mode
 - Empty state message when no scores exist for the selected config
 
 **Props:**
