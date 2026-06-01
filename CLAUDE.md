@@ -45,8 +45,8 @@ src/
   │   ├── Home.tsx           # Home page route with piano display
   │   ├── Settings.tsx       # Settings component (keyboard size selector) + KEYBOARD_SIZES/KEYBOARD_OFFSETS exports
   │   ├── Settings.css       # Settings styling
-  │   ├── ChordVisualizer.tsx    # Chord visualizer page with interactive chord button grid
-  │   ├── ChordVisualizer.css    # Styling for the chord visualizer page
+  │   ├── ChordExplorer.tsx      # Chord Explorer page with interactive chord button grid
+  │   ├── ChordExplorer.css      # Styling for the Chord Explorer page
   │   ├── PracticeMode.tsx   # Practice Mode page — displays target chord and advancing queue
   │   ├── PracticeMode.css   # Styling for the Practice Mode page
   │   ├── TimedMode.tsx      # Timed Mode page — state machine: CONFIGURE → COUNTDOWN → STARTED → RESULTS
@@ -205,7 +205,7 @@ The app uses **React Router** for client-side routing. The structure is:
    - The `<Routes>` definition with all application routes
 3. **Routes:**
    - `/` → `<Home>` component
-   - `/chord-visualizer` → `<ChordVisualizer>` component
+   - `/chord-explorer` → `<ChordExplorer>` component
    - `/practice-chords/practice` → `<PracticeMode>` component
    - `/practice-chords/timed` → `<TimedMode>` component
    - `/practice-chords/high-scores` → `<HighScores>` component
@@ -261,8 +261,8 @@ The `Settings` component has no local state. The parent `App.tsx` owns the `numK
 - On every change, the new value is persisted to `localStorage`
 - Both localStorage reads and writes are wrapped in try/catch to handle unavailability (e.g., private browsing)
 
-### ChordVisualizer Component (`ChordVisualizer.tsx`)
-The `ChordVisualizer` component provides an interactive tool for exploring chord fingerings on the piano. It displays a grid of chord buttons that, when clicked, highlight the corresponding notes on a 25-key virtual piano.
+### ChordExplorer Component (`ChordExplorer.tsx`)
+The `ChordExplorer` component provides an interactive tool for exploring chord fingerings on the piano. It displays a grid of chord buttons that, when clicked, highlight the corresponding notes on a 25-key virtual piano.
 
 **Features:**
 - Interactive grid of chord buttons organized by chord type (rows) and root note (columns)
@@ -282,7 +282,7 @@ The component uses `KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]]` (which equals 60, middl
 3. The resulting note set is passed to the `VirtualPiano` component for display
 
 **Route:**
-- `/chord-visualizer` (registered in `App.tsx`)
+- `/chord-explorer` (registered in `App.tsx`)
 
 ### PracticeMode Component (`PracticeMode.tsx`)
 The `PracticeMode` component is a practice page where users advance through a queue of chords by playing them on their MIDI keyboard. It displays a visual piano showing the target chord, a queue of 5 upcoming chords, and controls for selecting which chord groups to include in the practice session.

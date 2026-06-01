@@ -2,9 +2,9 @@ import { useState, FC } from 'react';
 import { VirtualPiano } from '../midi/VirtualPiano';
 import { KEYBOARD_SIZES, KEYBOARD_OFFSETS } from './Settings';
 import { CHORD_PATTERNS, NOTE_NAMES } from '../midi/noteUtils';
-import './ChordVisualizer.css';
+import './ChordExplorer.css';
 
-export const ChordVisualizer: FC = ({}) => {
+export const ChordExplorer: FC = ({}) => {
     const [chordNotes, setChordNotes] = useState<Set<number>>(new Set());
     const [selectedChord, setSelectedChord] = useState<{ rootIndex: number; patternIndex: number } | null>(null);
 
@@ -18,8 +18,8 @@ export const ChordVisualizer: FC = ({}) => {
     };
 
     return (
-      <div className="chord-visualizer-page">
-        <h2>Chord Visualizer</h2>
+      <div className="chord-explorer-page">
+        <h2>Chord Explorer</h2>
         <VirtualPiano
             numKeys={KEYBOARD_SIZES[0]}
             pressedNotes={chordNotes}/>
@@ -43,4 +43,3 @@ export const ChordVisualizer: FC = ({}) => {
       </div>
     );
   };
-  

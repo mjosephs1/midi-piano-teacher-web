@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Settings, KEYBOARD_SIZES } from './pages/Settings';
-import { ChordVisualizer } from './pages/ChordVisualizer';
+import { ChordExplorer } from './pages/ChordExplorer';
 import { PracticeMode } from './pages/PracticeMode';
 import { TimedMode } from './pages/TimedMode';
 import { HighScores } from './pages/HighScores';
@@ -63,7 +63,7 @@ const App: FC = () => {
         <h1>MIDI Piano Teacher</h1>
         <nav className="nav-links">
           <Link to="/">Home</Link>
-          <Link to="/chord-visualizer">Chord Visualizer</Link>
+          <Link to="/chord-explorer">Chord Explorer</Link>
           <div className="nav-dropdown">
             <span className="nav-dropdown-trigger">Practice</span>
             <div className="nav-dropdown-menu">
@@ -96,7 +96,7 @@ const App: FC = () => {
 
       <Routes>
         <Route path="/" element={<Home numKeys={numKeys} />} />
-        <Route path="/chord-visualizer" element={<ChordVisualizer/>} />
+        <Route path="/chord-explorer" element={<ChordExplorer/>} />
 <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
         <Route path="/practice-chords/timed" element={<TimedMode />} />
         <Route path="/practice-chords/high-scores" element={<HighScores />} />
