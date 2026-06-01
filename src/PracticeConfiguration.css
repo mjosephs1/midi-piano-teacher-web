@@ -1,5 +1,6 @@
 .practice-config {
   padding: 16px 0;
+  width: 100%;
 }
 
 .practice-config-label {
@@ -9,41 +10,91 @@
   text-align: left;
 }
 
-.chord-group-buttons {
+.config-top-row {
   display: flex;
-  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  min-width: 0;
+  width: 650px;
+}
+
+.config-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.config-section:last-child {
+  flex: 0 0 auto;
+}
+
+.chord-group-list-container {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+}
+
+.chord-group-list-toolbar {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 12px;
+  display: flex;
   gap: 8px;
 }
 
-.chord-group-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 16px;
+.chord-group-toolbar-btn {
+  font-size: 12px;
+  padding: 4px 10px;
   border: 1px solid #999;
-  background-color: #f5f5f5;
-  border-radius: 6px;
+  background: #f5f5f5;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
-  min-width: 72px;
+  transition: background-color 0.2s;
 }
 
-.chord-group-btn:hover {
+.chord-group-toolbar-btn:hover {
   background-color: #e0e0e0;
 }
 
-.chord-group-btn.selected {
-  background-color: #E04040;
-  border-color: #a20404;
+.chord-group-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+  min-width: 0;
 }
 
-.chord-group-btn.selected .chord-group-name,
-.chord-group-btn.selected .chord-group-shorthand {
-  color: #fff;
+.chord-group-item:nth-child(2n+1) {
+  border-right: none;
 }
 
-.chord-group-btn.only-selected {
+.chord-group-item:last-child {
+  border-bottom: none;
+}
+
+.chord-group-item:hover {
+  background-color: #f9f9f9;
+}
+
+.chord-group-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #E04040;
+}
+
+.chord-group-item input[type="checkbox"]:disabled {
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .chord-group-name {
@@ -54,37 +105,49 @@
 .chord-group-shorthand {
   font-size: 11px;
   color: #666;
-  margin-top: 2px;
+  margin-left: auto;
 }
 
-.chord-group-buttons + .practice-config-label {
+.config-top-row + .practice-config-label {
   margin-top: 24px;
 }
 
-.sharps-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.sharps-btn {
-  padding: 10px 16px;
-  border: 1px solid #999;
-  background-color: #f5f5f5;
+.sharps-list-container {
+  border: 1px solid #ccc;
   border-radius: 6px;
+  display: grid;
+  grid-template-columns: 1fr;
+  position: relative;
+}
+
+.sharps-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
-  font-size: 14px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
 }
 
-.sharps-btn:hover {
-  background-color: #e0e0e0;
+.sharps-item:last-child {
+  border-bottom: none;
 }
 
-.sharps-btn.selected {
-  background-color: #E04040;
-  border-color: #a20404;
-  color: #fff;
+.sharps-item:hover {
+  background-color: #f9f9f9;
+}
+
+.sharps-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #E04040;
+}
+
+.sharps-label {
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .hands-buttons {
