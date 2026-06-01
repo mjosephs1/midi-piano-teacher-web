@@ -65,7 +65,7 @@ const App: FC = () => {
         <nav className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/chord-visualizer">Chord Visualizer</Link>
-          <Link to="/practice-chords">Practice Chords</Link>
+          <Link to="/practice-chords">Practice</Link>
         </nav>
         <div className="settings-wrapper" ref={settingsWrapperRef}>
           <button
