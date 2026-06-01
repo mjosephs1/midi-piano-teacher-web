@@ -1,6 +1,9 @@
 .practice-config {
   padding: 16px 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .practice-config-label {
@@ -10,12 +13,12 @@
   text-align: left;
 }
 
+
 .config-top-row {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
   min-width: 0;
-  width: 650px;
+  width: 100%;
 }
 
 .config-section {
@@ -23,19 +26,22 @@
   min-width: 0;
 }
 
-.config-section:last-child {
+.config-section--sharps {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .chord-group-list-container {
   border: 1px solid #ccc;
   border-radius: 6px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   position: relative;
 }
 
-.chord-group-list-toolbar {
+.chord-group-list-header {
   grid-column: 1 / -1;
   position: sticky;
   top: 0;
@@ -44,7 +50,19 @@
   border-bottom: 1px solid #ddd;
   padding: 8px 12px;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.chord-group-toolbar-buttons {
+  display: flex;
   gap: 8px;
+}
+
+.chord-group-list-header .practice-config-label,
+.sharps-list-header .practice-config-label {
+  margin: 0;
 }
 
 .chord-group-toolbar-btn {
@@ -67,15 +85,11 @@
   gap: 8px;
   padding: 6px 8px;
   cursor: pointer;
-  border-right: 1px solid #eee;
   border-bottom: 1px solid #eee;
   transition: background-color 0.2s;
   min-width: 0;
 }
 
-.chord-group-item:nth-child(2n+1) {
-  border-right: none;
-}
 
 .chord-group-item:last-child {
   border-bottom: none;
@@ -108,16 +122,17 @@
   margin-left: auto;
 }
 
-.config-top-row + .practice-config-label {
-  margin-top: 24px;
-}
-
 .sharps-list-container {
   border: 1px solid #ccc;
   border-radius: 6px;
   display: grid;
   grid-template-columns: 1fr;
   position: relative;
+}
+
+.sharps-list-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
 }
 
 .sharps-item {
@@ -148,6 +163,12 @@
 .sharps-label {
   font-size: 13px;
   font-weight: 500;
+}
+
+.hands-card {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 12px;
 }
 
 .hands-buttons {
