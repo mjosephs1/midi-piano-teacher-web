@@ -58,10 +58,13 @@ export const HighScores: FC = () => {
     <div className="high-scores-page">
       <h2>High Scores</h2>
 
-      <PracticeConfiguration
-        config={config}
-        onPracticeConfigChange={setConfig}
-      />
+      <div className="high-scores-config-card">
+        <h3 className="high-scores-config-card-title">Configuration</h3>
+        <PracticeConfiguration
+          config={config}
+          onPracticeConfigChange={setConfig}
+        />
+      </div>
 
       {topScores.length === 0 ? (
         <div className="high-scores-empty">No scores yet for this configuration.</div>

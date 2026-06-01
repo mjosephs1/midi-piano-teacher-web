@@ -127,16 +127,24 @@ export const TimedMode: FC = () => {
 
   return (
     <div className="timed-mode-page">
+      <h2>Timed Mode</h2>
       {stage === 'CONFIGURE' && (
         <>
-          <h2>Timed Mode</h2>
-          <PracticeConfiguration
-            config={config}
-            onPracticeConfigChange={setConfig}
-          />
-          <button className="timed-play-button" onClick={handleStartClick}>
-            Start <FontAwesomeIcon icon={faPlay} />
-          </button>
+          <div className="timed-config-card">
+            <h3 className="timed-config-card-title">Configuration</h3>
+            <PracticeConfiguration
+              config={config}
+              onPracticeConfigChange={setConfig}
+            />
+          </div>
+          <div className="timed-configure-buttons">
+            <Link to="/practice-chords/high-scores" className="timed-play-button">
+              High Scores <FontAwesomeIcon icon={faRankingStar} />
+            </Link>
+            <button className="timed-play-button" onClick={handleStartClick}>
+              Start <FontAwesomeIcon icon={faPlay} />
+            </button>
+          </div>
         </>
       )}
 

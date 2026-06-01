@@ -17,7 +17,11 @@
   cursor: pointer;
   transition: background-color 0.2s;
   gap: 0.6rem;
-  margin: 0 auto;
+  text-decoration: none;
+}
+
+.timed-configure-buttons .timed-play-button {
+  margin: 0;
 }
 
 .timed-play-button:hover {
@@ -175,4 +179,25 @@
 .timed-results-button:hover {
   background: #333;
   color: white;
+}
+
+.timed-config-card {
+  border-radius: 8px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid #333;
+}
+
+.timed-config-card-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.timed-configure-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
 }

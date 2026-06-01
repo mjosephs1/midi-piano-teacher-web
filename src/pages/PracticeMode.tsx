@@ -74,7 +74,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
           </button>
           {configOpen && (
             <div className="practice-config-panel">
-              <h3 className="practice-config-title">Practice Mode Settings</h3>
+              <h3 className="practice-config-title">Practice Mode Configuration</h3>
               <PracticeConfiguration
                 config={config}
                 onPracticeConfigChange={setConfig}
