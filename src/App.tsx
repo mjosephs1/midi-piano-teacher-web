@@ -5,7 +5,6 @@ import { Routes, Route, Link } from 'react-router-dom';
 import { Home } from './Home';
 import { Settings, KEYBOARD_SIZES } from './Settings';
 import { ChordVisualizer } from './ChordVisualizer';
-import { PracticeChords } from './PracticeChords';
 import { PracticeMode } from './PracticeMode';
 import { TimedMode } from './TimedMode';
 import { HighScores } from './HighScores';
@@ -65,7 +64,14 @@ const App: FC = () => {
         <nav className="nav-links">
           <Link to="/">Home</Link>
           <Link to="/chord-visualizer">Chord Visualizer</Link>
-          <Link to="/practice-chords">Practice</Link>
+          <div className="nav-dropdown">
+            <span className="nav-dropdown-trigger">Practice</span>
+            <div className="nav-dropdown-menu">
+              <Link to="/practice-chords/practice">Practice Mode</Link>
+              <Link to="/practice-chords/timed">Timed Mode</Link>
+              <Link to="/practice-chords/tempo">Tempo Mode</Link>
+            </div>
+          </div>
         </nav>
         <div className="settings-wrapper" ref={settingsWrapperRef}>
           <button
@@ -91,8 +97,7 @@ const App: FC = () => {
       <Routes>
         <Route path="/" element={<Home numKeys={numKeys} />} />
         <Route path="/chord-visualizer" element={<ChordVisualizer/>} />
-        <Route path="/practice-chords" element={<PracticeChords />} />
-        <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
+<Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
         <Route path="/practice-chords/timed" element={<TimedMode />} />
         <Route path="/practice-chords/high-scores" element={<HighScores />} />
       </Routes>

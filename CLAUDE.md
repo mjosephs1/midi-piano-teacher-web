@@ -42,8 +42,6 @@ src/
   ├── Settings.css           # Settings page styling
   ├── ChordVisualizer.tsx    # Chord visualizer page with interactive chord button grid
   ├── ChordVisualizer.css    # Styling for the chord visualizer page
-  ├── PracticeChords.tsx     # Practice Chords hub page with practice mode buttons
-  ├── PracticeChords.css     # Styling for the Practice Chords page
   ├── PracticeMode.tsx       # Practice Mode page — displays target chord and advancing queue
   ├── PracticeMode.css       # Styling for the Practice Mode page
   ├── TimedMode.tsx          # Timed Mode page — initial page with Play and Configure buttons
@@ -205,10 +203,12 @@ The app uses **React Router** for client-side routing. The structure is:
 3. **Routes:**
    - `/` → `<Home>` component
    - `/chord-visualizer` → `<ChordVisualizer>` component
-   - `/practice-chords` → `<PracticeChords>` component (hub page)
    - `/practice-chords/practice` → `<PracticeMode>` component
    - `/practice-chords/timed` → `<TimedMode>` component
    - `/practice-chords/high-scores` → `<HighScores>` component
+   - `/practice-chords/tempo` → future Tempo Mode (not yet implemented; navigates to no-match)
+
+4. **Practice nav dropdown**: The "Practice" nav item is a `<div className="nav-dropdown">` with a `<span>` trigger (no navigation on click) and a pure-CSS hover dropdown menu containing links to the three practice modes. Moving the mouse from the trigger into the menu stays within the `.nav-dropdown` hover zone so the menu remains open.
 
 **Adding a new route:**
 ```tsx
@@ -280,25 +280,6 @@ The component uses `KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]]` (which equals 60, middl
 
 **Route:**
 - `/chord-visualizer` (registered in `App.tsx`)
-
-### PracticeChords Component (`PracticeChords.tsx`)
-The `PracticeChords` component is a hub page that provides navigation to different practice modes. It displays a vertical list of buttons linking to different practice modes.
-
-**Features:**
-- Hub page with three practice mode buttons: Practice, Timed Mode, and Tempo Mode
-- Each button links to a practice mode page (Practice and Timed are implemented; Tempo is a future placeholder)
-- Minimal, self-contained component with no MIDI integration or state management
-
-**State:**
-- None — this is a presentation component with no local state
-
-**Route:**
-- `/practice-chords` (registered in `App.tsx`)
-- Implemented sub-routes:
-  - `/practice-chords/practice` → `<PracticeMode>` (active practice mode)
-  - `/practice-chords/timed` → `<TimedMode>` (timed practice mode)
-- Future sub-routes (placeholder):
-  - `/practice-chords/tempo` — future Tempo Mode
 
 ### PracticeMode Component (`PracticeMode.tsx`)
 The `PracticeMode` component is a practice page where users advance through a queue of chords by playing them on their MIDI keyboard. It displays a visual piano showing the target chord, a queue of 5 upcoming chords, and controls for selecting which chord groups to include in the practice session.
