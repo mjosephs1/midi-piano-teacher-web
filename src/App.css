@@ -5,7 +5,7 @@
 }
 
 .App > :not(.app-header) {
-  padding: 2rem;
+  padding: 2rem clamp(2rem, 8vw, 10rem);
   box-sizing: border-box;
   margin: 0 auto;
   max-width: none;
@@ -17,7 +17,7 @@
   gap: 1.5rem;
   width: 100%;
   background-color: #f5f0e8;
-  padding: 0 2rem;
+  padding: 0 clamp(4rem, 16vw, 20rem);
   box-sizing: border-box;
   position: relative;
 }
@@ -139,7 +139,8 @@
 .settings-panel {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   background: #f5f0e8;
   border: 1px solid #d0c8bc;
   border-top: none;
@@ -202,7 +203,8 @@
   display: none;
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   flex-direction: column;
   background-color: #f5f0e8;
   border: 1px solid #d0c8bc;
