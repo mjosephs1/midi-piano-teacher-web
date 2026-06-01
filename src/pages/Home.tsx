@@ -1,7 +1,7 @@
 import type { FC } from 'react';
-import { useMidi } from './midi/MidiContext';
-import { VirtualPiano } from './midi/VirtualPiano';
-import { noteNumberToName } from './midi/noteUtils';
+import { useMidi } from '../midi/MidiContext';
+import { VirtualPiano } from '../midi/VirtualPiano';
+import { noteNumberToName } from '../midi/noteUtils';
 
 interface HomeProps {
   numKeys: number;

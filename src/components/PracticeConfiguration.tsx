@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { CHORD_PATTERNS, PracticeConfig, SharpsFilter, HandsMode } from './midi/noteUtils';
+import { CHORD_PATTERNS, PracticeConfig, SharpsFilter, HandsMode } from '../midi/noteUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHand } from '@fortawesome/free-solid-svg-icons';
 import './PracticeConfiguration.css';

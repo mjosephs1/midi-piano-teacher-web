@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPlay, faStop, faRotateRight, faRankingStar } from '@fortawesome/free-solid-svg-icons';
-import { PracticeConfig, TimedHistory, TimedResult, TIMED_HISTORY_KEY } from './midi/noteUtils';
-import { PracticeConfiguration } from './PracticeConfiguration';
-import { ChordQueue } from './ChordQueue';
+import { PracticeConfig, TimedHistory, TimedResult, TIMED_HISTORY_KEY } from '../midi/noteUtils';
+import { PracticeConfiguration } from '../components/PracticeConfiguration';
+import { ChordQueue } from '../components/ChordQueue';
 import './TimedMode.css';
 
 library.add(faPlay, faStop, faRotateRight, faRankingStar);

@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useRef } from 'react';
-import { CHORD_PATTERNS, NOTE_NAMES, PracticeConfig } from './midi/noteUtils';
-import { useMidi } from './midi/MidiContext';
+import { CHORD_PATTERNS, NOTE_NAMES, PracticeConfig } from '../midi/noteUtils';
+import { useMidi } from '../midi/MidiContext';
 import './ChordQueue.css';
 
 const MIDI_BASE = 60;

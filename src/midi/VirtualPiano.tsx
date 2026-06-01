@@ -1,4 +1,4 @@
-import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS } from '../Settings';
+import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS } from '../pages/Settings';
 import './VirtualPiano.css';
 
 interface VirtualPianoProps {

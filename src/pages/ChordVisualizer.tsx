@@ -1,7 +1,7 @@
 import { useState, FC } from 'react';
-import { VirtualPiano } from './midi/VirtualPiano';
+import { VirtualPiano } from '../midi/VirtualPiano';
 import { KEYBOARD_SIZES, KEYBOARD_OFFSETS } from './Settings';
-import { CHORD_PATTERNS, NOTE_NAMES } from './midi/noteUtils';
+import { CHORD_PATTERNS, NOTE_NAMES } from '../midi/noteUtils';
 import './ChordVisualizer.css';
 
 export const ChordVisualizer: FC = ({}) => {

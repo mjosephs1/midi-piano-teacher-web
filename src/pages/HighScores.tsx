@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PracticeConfig, TIMED_HISTORY_KEY, TimedHistory, TimedResult } from './midi/noteUtils';
-import { PracticeConfiguration } from './PracticeConfiguration';
+import { PracticeConfig, TIMED_HISTORY_KEY, TimedHistory, TimedResult } from '../midi/noteUtils';
+import { PracticeConfiguration } from '../components/PracticeConfiguration';
 import './HighScores.css';
 
 export const HighScores: FC = () => {

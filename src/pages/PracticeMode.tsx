@@ -2,10 +2,10 @@ import { FC, useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
-import { PracticeConfig } from './midi/noteUtils';
-import { VirtualPiano } from './midi/VirtualPiano';
-import { ChordQueue } from './ChordQueue';
-import { PracticeConfiguration } from './PracticeConfiguration';
+import { PracticeConfig } from '../midi/noteUtils';
+import { VirtualPiano } from '../midi/VirtualPiano';
+import { ChordQueue } from '../components/ChordQueue';
+import { PracticeConfiguration } from '../components/PracticeConfiguration';
 import './PracticeMode.css';
 
 library.add(faGear);

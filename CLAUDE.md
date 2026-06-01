@@ -37,25 +37,27 @@ npm run build
 src/
   ├── App.tsx                # Main router and layout component
   ├── App.css                # App styling
-  ├── Home.tsx               # Home page route with piano display
-  ├── Settings.tsx           # Settings page route
-  ├── Settings.css           # Settings page styling
-  ├── ChordVisualizer.tsx    # Chord visualizer page with interactive chord button grid
-  ├── ChordVisualizer.css    # Styling for the chord visualizer page
-  ├── PracticeMode.tsx       # Practice Mode page — displays target chord and advancing queue
-  ├── PracticeMode.css       # Styling for the Practice Mode page
-  ├── TimedMode.tsx          # Timed Mode page — initial page with Play and Configure buttons
-  ├── TimedMode.css          # Styling for the Timed Mode page
-  ├── ChordQueue.tsx         # Component displaying 5 advancing chord cards
-  ├── ChordQueue.css         # Styling for the chord queue component
-  ├── PracticeConfiguration.tsx  # Controlled component for selecting practice chord groups
-  ├── PracticeConfiguration.css  # Styling for practice configuration component
-  ├── HighScores.tsx         # High Scores page — displays top 10 results for a config
-  ├── HighScores.css         # Styling for the High Scores page
   ├── index.tsx              # React root entry point (wraps app in Router and MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
   ├── reportWebVitals.ts     # Web vitals reporting
+  ├── pages/                 # Route-level page components
+  │   ├── Home.tsx           # Home page route with piano display
+  │   ├── Settings.tsx       # Settings component (keyboard size selector) + KEYBOARD_SIZES/KEYBOARD_OFFSETS exports
+  │   ├── Settings.css       # Settings styling
+  │   ├── ChordVisualizer.tsx    # Chord visualizer page with interactive chord button grid
+  │   ├── ChordVisualizer.css    # Styling for the chord visualizer page
+  │   ├── PracticeMode.tsx   # Practice Mode page — displays target chord and advancing queue
+  │   ├── PracticeMode.css   # Styling for the Practice Mode page
+  │   ├── TimedMode.tsx      # Timed Mode page — state machine: CONFIGURE → COUNTDOWN → STARTED → RESULTS
+  │   ├── TimedMode.css      # Styling for the Timed Mode page
+  │   ├── HighScores.tsx     # High Scores page — displays top 10 results for a config
+  │   └── HighScores.css     # Styling for the High Scores page
+  ├── components/            # Reusable UI components
+  │   ├── ChordQueue.tsx     # Component displaying 5 advancing chord cards
+  │   ├── ChordQueue.css     # Styling for the chord queue component
+  │   ├── PracticeConfiguration.tsx  # Controlled component for selecting practice chord groups
+  │   └── PracticeConfiguration.css  # Styling for practice configuration component
   └── midi/
       ├── MidiContext.tsx    # MidiProvider and useMidi() hook
       ├── VirtualPiano.tsx   # Visual piano component that displays and animates pressed keys

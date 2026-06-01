@@ -2,12 +2,12 @@ import './App.css';
 import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { Home } from './Home';
-import { Settings, KEYBOARD_SIZES } from './Settings';
-import { ChordVisualizer } from './ChordVisualizer';
-import { PracticeMode } from './PracticeMode';
-import { TimedMode } from './TimedMode';
-import { HighScores } from './HighScores';
+import { Home } from './pages/Home';
+import { Settings, KEYBOARD_SIZES } from './pages/Settings';
+import { ChordVisualizer } from './pages/ChordVisualizer';
+import { PracticeMode } from './pages/PracticeMode';
+import { TimedMode } from './pages/TimedMode';
+import { HighScores } from './pages/HighScores';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 
