@@ -4,9 +4,10 @@ import './VirtualPiano.css';
 interface VirtualPianoProps {
   numKeys?: number;
   pressedNotes?: Set<number>;
+  secondaryPressedNotes?: Set<number>;
 }
 
-export function VirtualPiano({ numKeys = 88, pressedNotes = new Set() }: VirtualPianoProps = {}) {
+export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondaryPressedNotes = new Set() }: VirtualPianoProps = {}) {
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
     const offset = KEYBOARD_OFFSETS[numKeys] ?? 21;
     const blackKeyPattern = [true, true, false, true, true, true, false];
@@ -33,7 +34,7 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set() }: Virtual
             const noteNumber = getKeyNumber(i);
           return <rect
             key={`white-${i}`}
-            className={`white-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''}`}
+            className={`white-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''} ${secondaryPressedNotes.has(noteNumber + offset) ? 'secondary' : ''}`}
             x={i * whiteKeyWidth}
             y={0}
             width={whiteKeyWidth}
@@ -46,7 +47,7 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set() }: Virtual
             return blackKeyPattern[i%7] && noteNumber < numKeys ? (
                 <rect
                     key={`black-${i}`}
-                    className={`black-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''}`}
+                    className={`black-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''} ${secondaryPressedNotes.has(noteNumber + offset) ? 'secondary' : ''}`}
                     x={(i * whiteKeyWidth) + (whiteKeyWidth-(blackKeyWidth/2))}
                     y={0}
                     width={blackKeyWidth}

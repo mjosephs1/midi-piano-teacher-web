@@ -30,5 +30,21 @@
 }
   
 .black-key.active {
-    fill: #a20404;
+    fill: #E04040;
+}
+
+.white-key.secondary {
+    fill: #c0c0c0;
+}
+
+.black-key.secondary {
+    fill: #888;
+}
+
+.white-key.active.secondary {
+    fill: #b02828;
+}
+
+.black-key.active.secondary {
+    fill: #b02828;
 }

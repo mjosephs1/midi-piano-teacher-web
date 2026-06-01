@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
 import { PracticeConfig } from '../midi/noteUtils';
+import { useMidi } from '../midi/MidiContext';
 import { VirtualPiano } from '../midi/VirtualPiano';
 import { ChordQueue } from '../components/ChordQueue';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
@@ -29,6 +30,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
     return new PracticeConfig();
   });
 
+  const { pressedNotes } = useMidi();
   const [currentChordNotes, setCurrentChordNotes] = useState<Set<number>>(new Set());
   const [configOpen, setConfigOpen] = useState(false);
   const configWrapperRef = useRef<HTMLDivElement>(null);
@@ -81,7 +83,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
           )}
         </div>
       </div>
-      <VirtualPiano numKeys={numKeys} pressedNotes={currentChordNotes} />
+      <VirtualPiano numKeys={numKeys} pressedNotes={currentChordNotes} secondaryPressedNotes={pressedNotes} />
       <div className="chord-queue-section">
         <div className="chord-queue-label">Play this</div>
         <ChordQueue config={config} onCurrentChordChange={setCurrentChordNotes} />

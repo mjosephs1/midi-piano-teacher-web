@@ -167,7 +167,8 @@ The `VirtualPiano` component renders a visual representation of a piano keyboard
 
 **Props:**
 - `numKeys` (default: `88`) — total number of keys to display on the piano (25, 37, 49, 61, 76, or 88)
-- `pressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers that are currently pressed
+- `pressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers that are currently pressed; these keys render with red fill
+- `secondaryPressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers to highlight with a light gray fill. Used in PracticeMode to show live MIDI input alongside the static target chord. A key in both sets renders as a darker red (`#b02828`) to indicate a correct match.
 
 **MIDI Offset Mapping:**
 The `VirtualPiano` component uses the `KEYBOARD_OFFSETS` map (exported from `src/Settings.tsx`) to correctly align virtual keys with real MIDI note numbers from physical keyboards. Each keyboard size has a starting note, and the offset maps that starting note to the virtual piano's key positions. This ensures that pressing the lowest key on a physical keyboard highlights the leftmost key on the virtual piano.
