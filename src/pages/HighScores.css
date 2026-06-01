@@ -5,6 +5,21 @@
   gap: 20px;
   padding: 20px;
   min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.high-scores-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 32px;
+  width: 100%;
+}
+
+.high-scores-scores-section {
+  flex: 1;
+  min-width: 0;
 }
 
 .high-scores-empty {
@@ -16,7 +31,6 @@
 
 .high-scores-table {
   width: 100%;
-  max-width: 600px;
   border-collapse: collapse;
   margin-top: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -58,7 +72,6 @@
 
 .rank-cell {
   font-weight: 600;
-  color: #4CAF50;
   width: 50px;
 }
 
@@ -80,7 +93,8 @@
 .high-scores-config-card {
   border-radius: 8px;
   padding: 16px;
-  width: 100%;
+  flex: 0 0 auto;
+  width: fit-content;
   box-sizing: border-box;
   border: 2px solid #333;
 }

@@ -360,13 +360,13 @@ The `HighScores` component displays the top 10 Timed Mode results for a selected
 **Derived Data:**
 - `topScores`: computed from `TIMED_HISTORY_KEY` localStorage entry matching `config.toString()`. Sorted by score descending, then accuracy descending. Top 10 entries extracted with rank numbers (1–10).
 - Accuracy calculation (same as TimedMode results): `score + mistakes === 0 ? 100 : Math.round((score / (score + mistakes)) * 100)`
-- Timestamp formatting: `new Date(timestamp).toLocaleString()` for human-readable date/time
+- Timestamp formatting: `new Date(timestamp).toLocaleDateString()` for human-readable date only
 
 **Table Columns:**
-- `#` — rank from 1 to 10
+- `#` — rank from 1 to 10 (black text)
 - `Score` — number of correct chords played
 - `Accuracy` — percentage of attempts that were correct
-- `Date` — ISO 8601 timestamp converted to locale-specific date/time
+- `Date` — ISO 8601 timestamp converted to locale-specific date only
 
 **Route:**
 - `/practice-chords/high-scores` (registered in `App.tsx`)
