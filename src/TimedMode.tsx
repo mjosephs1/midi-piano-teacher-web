@@ -1,13 +1,14 @@
 import { FC, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faPlay, faStop, faRotateRight } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faStop, faRotateRight, faRankingStar } from '@fortawesome/free-solid-svg-icons';
 import { PracticeConfig, TimedHistory, TimedResult, TIMED_HISTORY_KEY } from './midi/noteUtils';
 import { PracticeConfiguration } from './PracticeConfiguration';
 import { ChordQueue } from './ChordQueue';
 import './TimedMode.css';
 
-library.add(faPlay, faStop, faRotateRight);
+library.add(faPlay, faStop, faRotateRight, faRankingStar);
 
 type TimedStage = 'CONFIGURE' | 'COUNTDOWN' | 'STARTED' | 'RESULTS';
 
@@ -128,7 +129,12 @@ export const TimedMode: FC = () => {
     <div className="timed-mode-page">
       {stage === 'CONFIGURE' && (
         <>
-          <h2>Timed Mode</h2>
+          <div className="timed-title-row">
+            <h2>Timed Mode</h2>
+            <Link to="/practice-chords/high-scores" className="timed-icon-btn">
+              <FontAwesomeIcon icon={faRankingStar} />
+            </Link>
+          </div>
           <PracticeConfiguration
             config={config}
             onPracticeConfigChange={setConfig}

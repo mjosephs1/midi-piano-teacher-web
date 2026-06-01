@@ -8,6 +8,7 @@ import { ChordVisualizer } from './ChordVisualizer';
 import { PracticeChords } from './PracticeChords';
 import { PracticeMode } from './PracticeMode';
 import { TimedMode } from './TimedMode';
+import { HighScores } from './HighScores';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 
@@ -93,6 +94,7 @@ const App: FC = () => {
         <Route path="/practice-chords" element={<PracticeChords />} />
         <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
         <Route path="/practice-chords/timed" element={<TimedMode />} />
+        <Route path="/practice-chords/high-scores" element={<HighScores />} />
       </Routes>
     </div>
   );

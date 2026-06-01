@@ -1,0 +1,106 @@
+.high-scores-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.high-scores-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.high-scores-header h2 {
+  margin: 0;
+}
+
+.high-scores-back {
+  text-decoration: none;
+  color: #333;
+  border: 2px solid #333;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.high-scores-back:hover {
+  background: #333;
+  color: white;
+}
+
+.high-scores-empty {
+  color: #666;
+  font-size: 1.1rem;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.high-scores-table {
+  width: 100%;
+  max-width: 600px;
+  border-collapse: collapse;
+  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.high-scores-table thead {
+  background: #f5f5f5;
+}
+
+.high-scores-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #333;
+}
+
+.high-scores-table tbody tr {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.high-scores-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.high-scores-table tbody tr.rank-1 {
+  background-color: #fffacd;
+  font-weight: 600;
+}
+
+.high-scores-table tbody tr.rank-1:hover {
+  background-color: #ffef99;
+}
+
+.high-scores-table td {
+  padding: 12px;
+  text-align: left;
+}
+
+.rank-cell {
+  font-weight: 600;
+  color: #4CAF50;
+  width: 50px;
+}
+
+.score-cell {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.accuracy-cell {
+  text-align: center;
+  width: 100px;
+}
+
+.date-cell {
+  font-size: 0.9rem;
+  color: #666;
+}

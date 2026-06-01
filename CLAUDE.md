@@ -52,6 +52,8 @@ src/
   ├── ChordQueue.css         # Styling for the chord queue component
   ├── PracticeConfiguration.tsx  # Controlled component for selecting practice chord groups
   ├── PracticeConfiguration.css  # Styling for practice configuration component
+  ├── HighScores.tsx         # High Scores page — displays top 10 results for a config
+  ├── HighScores.css         # Styling for the High Scores page
   ├── index.tsx              # React root entry point (wraps app in Router and MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
@@ -202,10 +204,11 @@ The app uses **React Router** for client-side routing. The structure is:
    - The `<Routes>` definition with all application routes
 3. **Routes:**
    - `/` → `<Home>` component
-   - `/settings` → `<Settings>` component
    - `/chord-visualizer` → `<ChordVisualizer>` component
    - `/practice-chords` → `<PracticeChords>` component (hub page)
    - `/practice-chords/practice` → `<PracticeMode>` component
+   - `/practice-chords/timed` → `<TimedMode>` component
+   - `/practice-chords/high-scores` → `<HighScores>` component
 
 **Adding a new route:**
 ```tsx
@@ -322,7 +325,7 @@ The `PracticeMode` component is a practice page where users advance through a qu
 The `TimedMode` component is a timed practice mode that uses a four-stage state machine to control the user flow: CONFIGURE → COUNTDOWN → STARTED → RESULTS. Users configure chord groups, trigger a countdown, play chords for 60 seconds while their score increments, and then view results with options to play again or reconfigure.
 
 **State Machine Stages:**
-- **CONFIGURE**: Initial configuration screen with `PracticeConfiguration` and "Start" button.
+- **CONFIGURE**: Initial configuration screen with "Timed Mode" title (with ranking-star icon button to navigate to High Scores), `PracticeConfiguration`, and "Start" button.
 - **COUNTDOWN**: 4-second countdown with fading text ("3", "2", "1", "Begin"). Each step animates with a fade-in/fade-out effect.
 - **STARTED**: Active game session showing HUD (Stop button, Timer, Score) and `ChordQueue`. Timer counts down from 60 seconds. Each matched chord increments score.
 - **RESULTS**: Final score display with options to "Try Again" (returns to COUNTDOWN) or "Back" (returns to CONFIGURE).
@@ -350,6 +353,38 @@ The `TimedMode` component is a timed practice mode that uses a four-stage state 
 
 **Route:**
 - `/practice-chords/timed` (registered in `App.tsx`)
+
+### HighScores Component (`HighScores.tsx`)
+The `HighScores` component displays the top 10 Timed Mode results for a selected practice configuration. It allows users to view historical performance and filter results by configuration.
+
+**Features:**
+- `PracticeConfiguration` selector at the top to filter scores by config
+- Automatic loading and sorting of results from `TIMED_HISTORY_KEY` localStorage
+- Top 10 results displayed in a table with rank, score, accuracy, and timestamp
+- Primary sorting by score (descending); ties broken by accuracy (descending)
+- Rank #1 highlighted with gold background
+- Back navigation link to Timed Mode
+- Empty state message when no scores exist for the selected config
+
+**Props:**
+- None — HighScores is self-contained and does not receive props from parent
+
+**State:**
+- `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode`. Initialized from global `PracticeConfig.STORAGE_KEY` with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Persisted on change via `useEffect`.
+
+**Derived Data:**
+- `topScores`: computed from `TIMED_HISTORY_KEY` localStorage entry matching `config.toString()`. Sorted by score descending, then accuracy descending. Top 10 entries extracted with rank numbers (1–10).
+- Accuracy calculation (same as TimedMode results): `score + mistakes === 0 ? 100 : Math.round((score / (score + mistakes)) * 100)`
+- Timestamp formatting: `new Date(timestamp).toLocaleString()` for human-readable date/time
+
+**Table Columns:**
+- `#` — rank from 1 to 10
+- `Score` — number of correct chords played
+- `Accuracy` — percentage of attempts that were correct
+- `Date` — ISO 8601 timestamp converted to locale-specific date/time
+
+**Route:**
+- `/practice-chords/high-scores` (registered in `App.tsx`)
 
 ### ChordQueue Component (`ChordQueue.tsx`)
 The `ChordQueue` component displays a horizontal row of 5 chord cards. It maintains a queue of random chords from the selected chord groups and detects when the user plays the target (leftmost) chord, advancing the queue.
