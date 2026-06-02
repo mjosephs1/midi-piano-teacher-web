@@ -52,7 +52,9 @@ src/
   │   ├── TimedMode.tsx      # Timed Mode page — state machine: CONFIGURE → COUNTDOWN → STARTED → RESULTS
   │   ├── TimedMode.css      # Styling for the Timed Mode page
   │   ├── HighScores.tsx     # High Scores page — displays top 10 results for a config
-  │   └── HighScores.css     # Styling for the High Scores page
+  │   ├── HighScores.css     # Styling for the High Scores page
+  │   ├── Progress.tsx       # Progress page — stub, renders "Progress" title only
+  │   └── Progress.css       # Styling for the Progress page
   ├── components/            # Reusable UI components
   │   ├── ChordQueue.tsx     # Component displaying 5 advancing chord cards
   │   ├── ChordQueue.css     # Styling for the chord queue component
@@ -370,6 +372,15 @@ The `HighScores` component displays the top 10 Timed Mode results for a selected
 
 **Route:**
 - `/practice-chords/high-scores` (registered in `App.tsx`)
+
+### Progress Component (`Progress.tsx`)
+The `Progress` component is a stub page for future development. Currently renders only a "Progress" title.
+
+**Props:**
+- None
+
+**Route:**
+- `/practice-chords/progress` (registered in `App.tsx`)
 
 ### ChordQueue Component (`ChordQueue.tsx`)
 The `ChordQueue` component displays a horizontal row of 5 chord cards. It maintains a queue of random chords from the selected chord groups and detects when the user plays the target (leftmost) chord, advancing the queue.

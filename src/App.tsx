@@ -8,6 +8,7 @@ import { ChordExplorer } from './pages/ChordExplorer';
 import { PracticeMode } from './pages/PracticeMode';
 import { TimedMode } from './pages/TimedMode';
 import { HighScores } from './pages/HighScores';
+import { Progress } from './pages/Progress';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { PianoIcon } from './components/PianoIcon';
@@ -99,7 +100,7 @@ const App: FC = () => {
             </button>
             <div className="user-menu-dropdown">
               <Link to="/practice-chords/high-scores">High Scores</Link>
-              <span className="user-menu-item-disabled">Progress</span>
+              <Link to="/practice-chords/progress">Progress</Link>
             </div>
           </div>
         </div>
@@ -111,6 +112,7 @@ const App: FC = () => {
 <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
         <Route path="/practice-chords/timed" element={<TimedMode />} />
         <Route path="/practice-chords/high-scores" element={<HighScores />} />
+        <Route path="/practice-chords/progress" element={<Progress />} />
       </Routes>
     </div>
   );
