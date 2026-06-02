@@ -19,18 +19,13 @@
 .practice-config-button {
   display: flex;
   align-items: center;
-  border: 2px solid #333;
-  border-radius: 6px;
+  border: none;
   background: transparent;
   padding: 0.4rem 0.6rem;
   font-size: 1rem;
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s;
-}
-
-.practice-config-button:hover {
-  background: #f0f0f0;
 }
 
 .practice-config-backdrop {
