@@ -10,6 +10,7 @@ import { TimedMode } from './pages/TimedMode';
 import { HighScores } from './pages/HighScores';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
+import { PianoIcon } from './components/PianoIcon';
 
 /* import all the icons in Free Solid, Free Regular, and Brands styles */
 import { faGear, faCircleUser } from '@fortawesome/free-solid-svg-icons'
@@ -80,7 +81,7 @@ const App: FC = () => {
               onClick={() => setSettingsOpen(prev => !prev)}
               aria-expanded={settingsOpen}
             >
-              <FontAwesomeIcon icon={faGear} />
+              <PianoIcon pianoIconWidth={45} />
             </button>
             {settingsOpen && (
               <div className="settings-panel">
