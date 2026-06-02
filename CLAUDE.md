@@ -53,7 +53,7 @@ src/
   │   ├── TimedMode.css      # Styling for the Timed Mode page
   │   ├── HighScores.tsx     # High Scores page — displays top 10 results for a config
   │   ├── HighScores.css     # Styling for the High Scores page
-  │   ├── Progress.tsx       # Progress page — stub, renders "Progress" title only
+  │   ├── Progress.tsx       # Progress page — line chart of daily average scores, filterable by config
   │   └── Progress.css       # Styling for the Progress page
   ├── components/            # Reusable UI components
   │   ├── ChordQueue.tsx     # Component displaying 5 advancing chord cards
@@ -215,7 +215,7 @@ The app uses **React Router** for client-side routing. The structure is:
 
 4. **Practice nav dropdown**: The "Practice" nav item is a `<div className="nav-dropdown">` with a `<span>` trigger (no navigation on click) and a pure-CSS hover dropdown menu containing links to the three practice modes. Moving the mouse from the trigger into the menu stays within the `.nav-dropdown` hover zone so the menu remains open.
 
-5. **User menu dropdown**: A circle-user icon button (`faCircleUser`) in the top-right header, positioned to the right of the Settings gear button. It uses the same pure-CSS hover pattern as the Practice dropdown. The menu contains "High Scores" (links to `/practice-chords/high-scores`) and "Progress" (disabled stub, styled with dimmed gray color).
+5. **User menu dropdown**: A circle-user icon button (`faCircleUser`) in the top-right header, positioned to the right of the Settings gear button. It uses the same pure-CSS hover pattern as the Practice dropdown. The menu contains "High Scores" (links to `/practice-chords/high-scores`) and "Progress" (links to `/practice-chords/progress`).
 
 **Adding a new route:**
 ```tsx
@@ -374,10 +374,23 @@ The `HighScores` component displays the top 10 Timed Mode results for a selected
 - `/practice-chords/high-scores` (registered in `App.tsx`)
 
 ### Progress Component (`Progress.tsx`)
-The `Progress` component is a stub page for future development. Currently renders only a "Progress" title.
+The `Progress` component displays a line chart of the user's average score over time for a selected practice configuration. Uses Recharts for visualization and mirrors the two-column layout of `HighScores`.
+
+**Features:**
+- `PracticeConfiguration` selector on the left to filter chart data by config
+- Recharts `LineChart` on the right showing daily average scores over time
+- X-axis: one tick per calendar day (formatted with `toLocaleDateString()`)
+- Y-axis: average score for that day (average of all Timed Mode runs on that day)
+- Empty state message when no history exists for the selected config
+- Config persisted to `PracticeConfig.STORAGE_KEY` (shared with PracticeMode and TimedMode)
 
 **Props:**
-- None
+- None — self-contained, reads data from localStorage
+
+**Data derivation:**
+- Reads `TIMED_HISTORY_KEY` from localStorage, looks up `history[config.toString()]`
+- Groups `TimedResult[]` entries by day, computes average score per day
+- Sorts data points by date ascending before rendering
 
 **Route:**
 - `/practice-chords/progress` (registered in `App.tsx`)

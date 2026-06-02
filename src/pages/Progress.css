@@ -1,3 +1,49 @@
 .progress-page {
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.progress-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 32px;
+  width: 100%;
+}
+
+.progress-config-card {
+  border-radius: 8px;
+  padding: 16px;
+  flex: 0 0 auto;
+  width: fit-content;
+  box-sizing: border-box;
+  border: 2px solid #333;
+}
+
+.progress-config-card-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.progress-chart-section {
+  flex: 1;
+  min-width: 0;
+  padding-top: 8px;
+}
+
+.progress-empty {
+  color: #666;
+  font-size: 1.1rem;
+  margin-top: 20px;
+  text-align: center;
 }
