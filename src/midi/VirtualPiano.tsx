@@ -1,3 +1,4 @@
+import { keyboard } from '@testing-library/user-event/dist/keyboard';
 import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS } from '../pages/Settings';
 import './VirtualPiano.css';
 
@@ -15,10 +16,16 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
     // Scalable Interactive Piano
     const scaleFactor = 50;
     const whiteKeyWidth = scaleFactor;
-    const whiteKeyHeight = whiteKeyWidth * 4;
+    const whiteKeyHeight = whiteKeyWidth * 4.5;
     const blackKeyWidth = whiteKeyWidth * 0.6;
     const blackKeyHeight = whiteKeyHeight * 0.6;
-    const svgDimensions = `0 0 ${whiteKeyWidth * numWhiteKeys} ${whiteKeyHeight}`
+
+    const keyboardSideWidth = 50;
+    const keyboardTopWidth = 120;
+    const keyboardWidth = (whiteKeyWidth * numWhiteKeys) + (keyboardSideWidth * 2);
+    const keyboardHeight = whiteKeyHeight + keyboardTopWidth;
+    const keyboardEdgePadding = 4; // prevent lines from being cutoff at the edges
+    const svgDimensions = `0 0 ${keyboardWidth + keyboardEdgePadding} ${keyboardHeight + keyboardEdgePadding}`
 
     const getKeyNumber = (whiteKeyNum: number) => {
         let blackKeyCount = ((Math.floor(whiteKeyNum / 7)) * 5);
@@ -30,13 +37,25 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
 
     return (
       <svg className="virtual-piano" viewBox={svgDimensions} width="1000" height="200">
+        <rect 
+          x={keyboardEdgePadding/2}
+          y={keyboardEdgePadding/2}
+          width={(whiteKeyWidth * numWhiteKeys) + (keyboardSideWidth * 2)}
+          height={whiteKeyHeight + keyboardTopWidth}
+          fill="white"
+          stroke="black"
+          strokeWidth={5}
+          rx={25}
+          ry={25}
+        />
+        
         {Array.from({ length: numWhiteKeys }).map((_, i) => {
             const noteNumber = getKeyNumber(i);
           return <rect
             key={`white-${i}`}
             className={`white-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''} ${secondaryPressedNotes.has(noteNumber + offset) ? 'secondary' : ''}`}
-            x={i * whiteKeyWidth}
-            y={0}
+            x={(i * whiteKeyWidth) + keyboardSideWidth + (keyboardEdgePadding/2)}
+            y={keyboardTopWidth-15}
             width={whiteKeyWidth}
             height={whiteKeyHeight}
           />
@@ -48,8 +67,8 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
                 <rect
                     key={`black-${i}`}
                     className={`black-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''} ${secondaryPressedNotes.has(noteNumber + offset) ? 'secondary' : ''}`}
-                    x={(i * whiteKeyWidth) + (whiteKeyWidth-(blackKeyWidth/2))}
-                    y={0}
+                    x={(i * whiteKeyWidth) + (whiteKeyWidth-(blackKeyWidth/2)) + keyboardSideWidth + (keyboardEdgePadding/2)}
+                    y={keyboardTopWidth-15}
                     width={blackKeyWidth}
                     height={blackKeyHeight}
                 />
