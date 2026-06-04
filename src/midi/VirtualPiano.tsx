@@ -1,4 +1,3 @@
-import { keyboard } from '@testing-library/user-event/dist/keyboard';
 import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS } from '../pages/Settings';
 import './VirtualPiano.css';
 
@@ -74,6 +73,19 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
                 />
             ) : null
         })}
+
+        {/* Uncomment to visually see the MIDI note numbers on the virtual keyboard */}
+        {/* {Array.from({ length: numWhiteKeys }).map((_, i) => {
+          const noteNumber = getKeyNumber(i);
+          const noteLabel = noteNumber + offset;
+
+          return <text 
+          x={(i * whiteKeyWidth) + keyboardSideWidth + (keyboardEdgePadding/2)}
+          y={keyboardTopWidth+150}
+          fill="black"
+          >{noteLabel}</text>
+        })} */}
+
       </svg>
     );
   }
