@@ -1,53 +1,43 @@
 import { FC, useState, useEffect, useRef } from 'react';
-import { CHORD_PATTERNS, NOTE_NAMES, PracticeConfig } from '../midi/noteUtils';
+import { CHORD_PATTERNS, NOTE_NAMES, PracticeConfig, Chord } from '../midi/noteUtils';
 import { useMidi } from '../midi/MidiContext';
 import './ChordQueue.css';
 
-const MIDI_BASE = 60;
-
 interface ChordQueueItem {
   id: number;
-  rootIndex: number;
-  patternName: string;
+  chord: Chord;
 }
 
 interface ChordQueueProps {
   config: PracticeConfig;
-  onCurrentChordChange: (notes: Set<number>) => void;
+  onCurrentChordChange: (chord: Chord) => void;
   onChordMatched?: () => void;
   onChordMistake?: () => void;
 }
 
 let itemIdCounter = 0;
 
-function getAvailableRootIndices(sharpsFilter: string): number[] {
-  const SHARP_INDICES = [1, 3, 6, 8, 10]; // C#, D#, F#, G#, A#
-  const ALL_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+function getAvailableRootNotes(sharpsFilter: string): string[] {
+  const SHARP_NOTES = ['C#', 'D#', 'F#', 'G#', 'A#'];
 
   if (sharpsFilter === 'no-sharps') {
-    return ALL_INDICES.filter(i => !SHARP_INDICES.includes(i));
+    return NOTE_NAMES.filter(n => !SHARP_NOTES.includes(n));
   } else if (sharpsFilter === 'sharps-only') {
-    return SHARP_INDICES;
+    return SHARP_NOTES;
   }
-  return ALL_INDICES;
+  return [...NOTE_NAMES];
 }
 
-function generateChordItem(selectedGroups: Set<string>, sharpsFilter: string, exclude?: string): ChordQueueItem {
+function generateChordItem(selectedGroups: Set<string>, sharpsFilter: string, exclude?: Chord): ChordQueueItem {
   const allowed = CHORD_PATTERNS.filter(p => selectedGroups.has(p.name));
-  const availableRoots = getAvailableRootIndices(sharpsFilter);
+  const availableRoots = getAvailableRootNotes(sharpsFilter);
   let item: ChordQueueItem;
   do {
     const pattern = allowed[Math.floor(Math.random() * allowed.length)];
-    const rootIndex = availableRoots[Math.floor(Math.random() * availableRoots.length)];
-    item = { id: itemIdCounter++, rootIndex, patternName: pattern.name };
-  } while (exclude !== undefined && `${NOTE_NAMES[item.rootIndex]} ${item.patternName}` === exclude);
+    const rootNote = availableRoots[Math.floor(Math.random() * availableRoots.length)];
+    item = { id: itemIdCounter++, chord: new Chord(rootNote, pattern.name) };
+  } while (exclude !== undefined && item.chord.equals(exclude));
   return item;
-}
-
-function computeChordNotes(item: ChordQueueItem): Set<number> {
-  const pattern = CHORD_PATTERNS.find(p => p.name === item.patternName);
-  if (!pattern) return new Set();
-  return new Set(pattern.intervals.map(i => MIDI_BASE + item.rootIndex + i));
 }
 
 export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, onChordMatched, onChordMistake }) => {
@@ -62,10 +52,10 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
   const [fadingOutCard, setFadingOutCard] = useState<ChordQueueItem | null>(null);
   const isTransitioningRef = useRef(false);
   const nextChordPressedRef = useRef(false);
-  const lastMatchedChordRef = useRef<string | null>(null);
+  const lastMatchedChordRef = useRef<Chord | null>(null);
   const fadingOutCardRef = useRef<ChordQueueItem | null>(null);
 
-  const { pressedChords, pressedNotes } = useMidi();
+  const { pressedChord, pressedNotes } = useMidi();
 
   // Regenerate queue when config changes
   useEffect(() => {
@@ -74,31 +64,27 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
 
   // Notify parent when current chord changes
   useEffect(() => {
-    const currentChordNotes = computeChordNotes(queue[0]);
-    onCurrentChordChange(currentChordNotes);
+    onCurrentChordChange(queue[0].chord);
   }, [queue, onCurrentChordChange]);
 
   // Detect chord match and trigger flash
   useEffect(() => {
-    if (!pressedChords && handsMode !== 'both') return;
+    if (!pressedChord && handsMode !== 'both') return;
     if (handsMode === 'both' && pressedNotes.size === 0) return;
 
-    const target = `${NOTE_NAMES[queue[0].rootIndex]} ${queue[0].patternName}`;
+    const targetChord = queue[0].chord;
     if (isTransitioningRef.current) return;
 
     let isMatch = false;
     if (handsMode === 'both') {
-      // For both hands mode: only check for mistakes if 6+ notes are pressed
       if (pressedNotes.size < 6) return;
-      // Check that each pitch class appears at least twice
-      const targetNotes = computeChordNotes(queue[0]);
+      const targetNotes = targetChord.getNoteIndices();
       const targetPCs = new Set(Array.from(targetNotes).map(n => n % 12));
       isMatch = [...targetPCs].every(pc =>
         Array.from(pressedNotes).filter(n => n % 12 === pc).length >= 2
       );
     } else {
-      // For left/right modes: use chord name matching
-      isMatch = pressedChords === target;
+      isMatch = pressedChord?.equals(targetChord) ?? false;
     }
 
     if (!isMatch) {
@@ -107,53 +93,45 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
     }
 
     isTransitioningRef.current = true;
-    lastMatchedChordRef.current = target;
+    lastMatchedChordRef.current = targetChord;
     nextChordPressedRef.current = false;
     fadingOutCardRef.current = queue[0];
     onChordMatched?.();
     setIsFlashing(true);
     setIsAdvancing(true);
-  }, [pressedChords, pressedNotes, handsMode, queue]);
+  }, [pressedChord, pressedNotes, handsMode, queue]);
 
   // Detect if a new chord is pressed while transitioning
   useEffect(() => {
-    if (!isTransitioningRef.current || !pressedChords) return;
+    if (!isTransitioningRef.current || !pressedChord) return;
 
-    const target = `${NOTE_NAMES[queue[0].rootIndex]} ${queue[0].patternName}`;
-    // Only set flag if this is a different chord from the one that triggered the transition
-    if (pressedChords === target && pressedChords !== lastMatchedChordRef.current) {
+    const targetChord = queue[0].chord;
+    if (pressedChord.equals(targetChord) && !lastMatchedChordRef.current?.equals(pressedChord)) {
       nextChordPressedRef.current = true;
     }
-  }, [pressedChords, queue]);
+  }, [pressedChord, queue]);
 
   // Handle queue advance and animation timing
   useEffect(() => {
     if (!isAdvancing) return;
 
-    // Use the captured fading-out card from the detection effect
     setFadingOutCard(fadingOutCardRef.current);
 
-    // Advance the queue immediately so the next target is correct
-    setQueue(prev => {
-      const rightmostChordName = `${NOTE_NAMES[prev[4].rootIndex]} ${prev[4].patternName}`;
-      return [
-        ...prev.slice(1),
-        generateChordItem(selectedGroups, sharpsFilter, rightmostChordName),
-      ];
-    });
+    setQueue(prev => [
+      ...prev.slice(1),
+      generateChordItem(selectedGroups, sharpsFilter, prev[4].chord),
+    ]);
 
     const animationTimeout = setTimeout(() => {
       setFadingOutCard(null);
       setIsFlashing(false);
       setIsAdvancing(false);
 
-      // Check if the user pressed the next chord at any point during the animation
       if (nextChordPressedRef.current) {
         nextChordPressedRef.current = false;
         setIsFlashing(true);
         setIsAdvancing(true);
       } else {
-        // Normal completion: clear transition state
         isTransitioningRef.current = false;
       }
     }, 200);
@@ -166,7 +144,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
       {fadingOutCard && (
         <div key={fadingOutCard.id} className="chord-card chord-card-fading">
           <span className="chord-card-label">
-            {NOTE_NAMES[fadingOutCard.rootIndex]}{CHORD_PATTERNS.find(p => p.name === fadingOutCard.patternName)?.shorthand ?? ''}
+            {fadingOutCard.chord.rootNote}{fadingOutCard.chord.shorthand()}
           </span>
         </div>
       )}
@@ -182,7 +160,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
               style={{ opacity }}
             >
               <span className="chord-card-label">
-                {NOTE_NAMES[item.rootIndex]}{CHORD_PATTERNS.find(p => p.name === item.patternName)?.shorthand ?? ''}
+                {item.chord.rootNote}{item.chord.shorthand()}
               </span>
             </div>
           );

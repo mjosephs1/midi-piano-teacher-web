@@ -106,11 +106,11 @@ The MIDI detection system uses React Context to share MIDI state across the enti
 
 2. **`useMidi()` hook** — any component can call this to get:
    ```tsx
-   const { pressedNotes, status, pressedChords } = useMidi();
+   const { pressedNotes, status, pressedChord } = useMidi();
    ```
    - `pressedNotes`: `Set<number>` of MIDI note numbers currently pressed
    - `status`: One of `'listening' | 'denied' | 'unavailable'`
-   - `pressedChords`: `string | null` — the name of the detected chord (e.g., `"C Major"`), or `null` if no valid chord is pressed
+   - `pressedChord`: `Chord | null` — the detected chord (a `Chord` instance), or `null` if no valid chord is pressed. Use `pressedChord?.name()` to get the display string (e.g., `"C Major"`).
 
 3. **`noteNumberToName()`** (in `src/midi/noteUtils.ts`) converts MIDI note numbers to names:
    - `noteNumberToName(60)` → `"C"`
@@ -131,15 +131,19 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `TIMED_HISTORY_KEY` constant: `'midiPianoTimedHistory'` — used by TimedMode to store result history in localStorage
    - `TimedResult` type: Object with `score: number`, `mistakes: number`, and `timestamp: string` (ISO 8601 format)
    - `TimedHistory` type: Object with config string keys mapping to arrays of `TimedResult` entries
+   - `Chord` class — represents a chord with `rootNote: string` and `patternName: string`. Constructed as `new Chord('C', 'Major')`. Methods:
+     - `name()`: returns the chord name string, e.g. `"C Major"`
+     - `shorthand()`: returns the pattern shorthand, e.g. `"maj"`, `"m7"`
+     - `getNoteIndices(baseNote?: number)`: returns `Set<number>` of MIDI note numbers (default baseNote 60). This is the canonical way to convert a chord to playable notes.
    - All exported from `src/midi/noteUtils.ts`. Used by `PracticeConfiguration`, `ChordQueue`, and both practice mode components to pass configuration consistently.
 
 5. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
-   - Takes a `Set<number>` of MIDI note numbers and returns a chord name string or `null`
+   - Takes a `Set<number>` of MIDI note numbers and returns a `Chord | null`
    - Returns `null` if fewer than 3 unique pitch classes are pressed
    - Normalizes notes to pitch classes (modulo 12) and tries each as a potential root
    - Matches intervals against known chord patterns: Major, Minor, Diminished, Augmented, Sus2, Sus4, and 7th variants (Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7)
-   - Returns chord name with root (e.g., `"C Major"`, `"D Minor 7"`)
-   - Handles inversions correctly (e.g., first-inversion C Major [E, G, C] returns `"C Major"`)
+   - Returns a `Chord` instance (call `.name()` for display string, e.g., `"C Major"`)
+   - Handles inversions correctly (e.g., first-inversion C Major [E, G, C] returns `Chord { rootNote: 'C', patternName: 'Major' }`)
 
 ### Adding MIDI to a new component
 ```tsx
@@ -303,7 +307,7 @@ The `PracticeMode` component is a practice page where users advance through a qu
 
 **State:**
 - `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode` in a single object. Initialized from global `PracticeConfig.STORAGE_KEY` with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Serialized and persisted on every change.
-- `currentChordNotes: Set<number>` — MIDI note numbers for the current target chord, set by the `ChordQueue` component and passed to `VirtualPiano`
+- `currentChordNotes: Set<number>` — MIDI note numbers for the current target chord, derived from the `Chord` via `chord.getNoteIndices()` and passed to `VirtualPiano`
 - `configOpen: boolean` — controls visibility of the `PracticeConfiguration` modal
 
 **Route:**
@@ -401,14 +405,14 @@ The `ChordQueue` component displays a horizontal row of 5 chord cards. It mainta
 **Features:**
 - Displays 5 chord cards in a horizontal flex row
 - The leftmost card (current target) is highlighted in red and scaled up
-- Listens to `pressedChords` from `useMidi()` hook to detect when user plays the target chord
+- Listens to `pressedChord` from `useMidi()` hook to detect when user plays the target chord
 - On match, advances the queue: removes the leftmost card and appends a new random card on the right
 - Regenerates all 5 cards when `config.selectedGroups` or `config.sharpsFilter` changes
 - Prevents immediate re-triggering by excluding the just-matched chord from the new random generation
 
 **Props:**
 - `config: PracticeConfig` — encapsulates practice settings: `selectedGroups` (set of chord group names to sample from), `sharpsFilter` (controls available root notes: `'no-sharps'` excludes C#, D#, F#, G#, A# (indices 1, 3, 6, 8, 10); `'sharps-only'` keeps only those; `'with-sharps'` allows all 12), and `handsMode` (controls chord matching: `'left'` or `'right'` matches by chord name; `'both'` requires each pitch class appear at least twice in different octaves)
-- `onCurrentChordChange: (notes: Set<number>) => void` — callback fired when the target chord changes (on mount, after advance, or when config changes). Receives the MIDI note set for the target chord.
+- `onCurrentChordChange: (chord: Chord) => void` — callback fired when the target chord changes (on mount, after advance, or when config changes). Receives a `Chord` instance. Consumers are responsible for interpreting it (e.g., call `chord.getNoteIndices()` to get MIDI notes for `VirtualPiano`).
 - `onChordMatched?: () => void` — optional callback fired when the user successfully plays the target chord. Fired just before the queue advances.
 - `onChordMistake?: () => void` — optional callback fired when the user plays a chord that doesn't match the target.
 
@@ -417,12 +421,12 @@ The `ChordQueue` component displays a horizontal row of 5 chord cards. It mainta
 - Helper function `getAvailableRootIndices(sharpsFilter)` returns the set of available root indices (0–11) based on the filter.
 - Computes MIDI note numbers using base note 60 (C4) and pattern intervals: `new Set(pattern.intervals.map(i => 60 + rootIndex + i))`. This range (60–82) is visible on all keyboard sizes.
 - **Chord matching logic** varies by `handsMode`:
-  - For `'left'` and `'right'`: compares `pressedChords` string (e.g., `"G Minor"`) with target name `NOTE_NAMES[rootIndex] + " " + patternName`
+  - For `'left'` and `'right'`: compares `pressedChord?.name()` with `queue[0].chord.name()`
   - For `'both'`: extracts pitch classes from the target chord, then checks that every pitch class is present at least twice (in different octaves) among `pressedNotes`. Formula: `[...targetPCs].every(pc => Array.from(pressedNotes).filter(n => n % 12 === pc).length >= 2)`
 - Four `useEffect` hooks:
   1. Regenerate all 5 items when `selectedGroups` or `sharpsFilter` changes
   2. Compute and notify parent of current chord notes when queue changes
-  3. Detect chord match and advance queue when `pressedChords`, `pressedNotes`, `handsMode`, or queue changes
+  3. Detect chord match and advance queue when `pressedChord`, `pressedNotes`, `handsMode`, or queue changes
   4. Detect if a new chord is pressed during a transition (for chaining matches)
 
 ### PracticeConfiguration Component (`PracticeConfiguration.tsx`)

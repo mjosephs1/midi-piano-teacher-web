@@ -85,7 +85,30 @@ export const CHORD_PATTERNS: ChordPattern[] = [
   { name: 'Half-dim 7', shorthand: 'ø7', intervals: [0, 3, 6, 10] },
 ];
 
-export const detectChord = (pressedNotes: Set<number>): string | null => {
+export class Chord {
+  constructor(readonly rootNote: string, readonly patternName: string) {}
+
+  name(): string {
+    return `${this.rootNote} ${this.patternName}`;
+  }
+
+  equals(other: Chord): boolean {
+    return this.name() === other.name();
+  }
+
+  shorthand(): string {
+    return CHORD_PATTERNS.find(p => p.name === this.patternName)?.shorthand ?? '';
+  }
+
+  getNoteIndices(baseNote = 60): Set<number> {
+    const rootIndex = NOTE_NAMES.indexOf(this.rootNote);
+    const pattern = CHORD_PATTERNS.find(p => p.name === this.patternName);
+    if (rootIndex === -1 || !pattern) return new Set();
+    return new Set(pattern.intervals.map(i => baseNote + rootIndex + i));
+  }
+}
+
+export const detectChord = (pressedNotes: Set<number>): Chord | null => {
   if (pressedNotes.size < 3) {
     return null;
   }
@@ -109,7 +132,7 @@ export const detectChord = (pressedNotes: Set<number>): string | null => {
     for (const pattern of CHORD_PATTERNS) {
       if (intervals.length === pattern.intervals.length &&
           intervals.every((interval, index) => interval === pattern.intervals[index])) {
-        return `${NOTE_NAMES[root]} ${pattern.name}`;
+        return new Chord(NOTE_NAMES[root], pattern.name);
       }
     }
   }

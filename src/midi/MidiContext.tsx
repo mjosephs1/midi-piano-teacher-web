@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, FC, useMemo } from 'react';
-import { detectChord } from './noteUtils';
+import { detectChord, Chord } from './noteUtils';
 
 // Web MIDI API types (not included in standard TypeScript DOM lib)
 interface MIDIMessageEvent extends Event {
@@ -24,7 +24,7 @@ type MidiStatus = 'unavailable' | 'denied' | 'listening';
 interface MidiContextValue {
   pressedNotes: Set<number>;
   status: MidiStatus;
-  pressedChords: string | null;
+  pressedChord: Chord | null;
 }
 
 const MidiContext = createContext<MidiContextValue | undefined>(undefined);
@@ -36,7 +36,7 @@ interface MidiProviderProps {
 export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
   const [pressedNotes, setPressedNotes] = useState<Set<number>>(new Set());
   const [status, setStatus] = useState<MidiStatus>('unavailable');
-  const pressedChords = useMemo(() => detectChord(pressedNotes), [pressedNotes]);
+  const pressedChord = useMemo(() => detectChord(pressedNotes), [pressedNotes]);
 
   useEffect(() => {
     const setupMidi = async () => {
@@ -88,7 +88,7 @@ export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
   }, []);
 
   return (
-    <MidiContext.Provider value={{ pressedNotes, status, pressedChords }}>
+    <MidiContext.Provider value={{ pressedNotes, status, pressedChord }}>
       {children}
     </MidiContext.Provider>
   );

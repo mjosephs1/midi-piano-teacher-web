@@ -8,7 +8,7 @@ interface HomeProps {
 }
 
 export const Home: FC<HomeProps> = ({ numKeys }) => {
-  const { pressedNotes, status, pressedChords } = useMidi();
+  const { pressedNotes, status, pressedChord } = useMidi();
 
   const statusMessage = {
     unavailable: 'Web MIDI API not available in your browser',
@@ -33,7 +33,7 @@ export const Home: FC<HomeProps> = ({ numKeys }) => {
             {noteNames ? <p>{noteNames}</p> : <p className="empty">Play Something!</p>}
           </div>
           <div className="chord-section">
-            <p>{pressedChords || ' '}</p>
+            <p>{pressedChord?.name() || ' '}</p>
           </div>
         </div>
       )}
