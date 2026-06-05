@@ -58,6 +58,7 @@ src/
   ├── components/            # Reusable UI components
   │   ├── ChordQueue.tsx     # Component displaying 5 advancing chord cards
   │   ├── ChordQueue.css     # Styling for the chord queue component
+  │   ├── PianoIcon.tsx      # Piano SVG icon component (interactive hover effect)
   │   ├── PracticeConfiguration.tsx  # Controlled component for selecting practice chord groups
   │   └── PracticeConfiguration.css  # Styling for practice configuration component
   └── midi/
