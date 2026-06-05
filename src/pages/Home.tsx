@@ -5,9 +5,10 @@ import { noteNumberToName } from '../midi/noteUtils';
 
 interface HomeProps {
   numKeys: number;
+  onNumKeysChange: (numKeys: number) => void;
 }
 
-export const Home: FC<HomeProps> = ({ numKeys }) => {
+export const Home: FC<HomeProps> = ({ numKeys, onNumKeysChange }) => {
   const { pressedNotes, status, pressedChord } = useMidi();
 
   const statusMessage = {
@@ -25,7 +26,7 @@ export const Home: FC<HomeProps> = ({ numKeys }) => {
         <p className="status">{statusMessage}</p>
       )}
       <div>
-        <VirtualPiano numKeys={numKeys} pressedNotes={pressedNotes} header="MIDI Piano Teacher" />
+        <VirtualPiano numKeys={numKeys} pressedNotes={pressedNotes} header="MIDI Piano Teacher" showSettings={true} onNumKeysChange={onNumKeysChange} />
       </div>
       {status === 'listening' && (
         <div className="notes-display">

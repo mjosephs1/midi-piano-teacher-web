@@ -106,7 +106,7 @@ const App: FC = () => {
       </header>
 
       <Routes>
-        <Route path="/" element={<Home numKeys={numKeys} />} />
+        <Route path="/" element={<Home numKeys={numKeys} onNumKeysChange={setNumKeys} />} />
         <Route path="/chord-explorer" element={<ChordExplorer/>} />
 <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
         <Route path="/practice-chords/timed" element={<TimedMode />} />

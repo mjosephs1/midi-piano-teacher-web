@@ -166,7 +166,7 @@ The `VirtualPiano` component renders a visual representation of a piano keyboard
 **Features:**
 - Renders a scalable piano keyboard with white and black keys
 - Highlights pressed keys based on the `pressedNotes` prop (decoupled from MIDI input)
-- **Scalable**: The `scaleFactor` variable (currently `50`) controls the keyboard size; adjust to resize all keyboard dimensions proportionally
+- **Scalable**: The `scaleFactor` variable (currently `30`) controls the keyboard size; adjust to resize all keyboard dimensions proportionally
 - **Configurable**: The `numKeys` prop (default: 88) controls the total number of keys to display
 - **Automatic mapping**: Internally maps total keys to white keys (e.g., 88 keys → 52 white keys)
 - **Visual feedback**: Active keys change color when pressed:
@@ -177,6 +177,8 @@ The `VirtualPiano` component renders a visual representation of a piano keyboard
 - `numKeys` (default: `88`) — total number of keys to display on the piano (25, 37, 49, 61, 76, or 88)
 - `pressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers that are currently pressed; these keys render with red fill
 - `secondaryPressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers to highlight with a light gray fill. Used in PracticeMode to show live MIDI input alongside the static target chord. A key in both sets renders as a darker red (`#b02828`) to indicate a correct match.
+- `showSettings` (default: `false`) — when `true`, renders a keyboard-size dropdown inside the piano's header area (top band above the keys), positioned on the right side. Uses SVG `<foreignObject>` to embed HTML within the SVG coordinate space so it scales correctly with the piano. No `xmlns` attribute needed on the inner div — React handles the namespace correctly.
+- `onNumKeysChange` — callback `(numKeys: number) => void` invoked when the user selects a different keyboard size from the settings dropdown. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value (e.g., via `App.tsx`'s localStorage `useEffect`).
 
 **MIDI Offset Mapping:**
 The `VirtualPiano` component uses the `KEYBOARD_OFFSETS` map (exported from `src/Settings.tsx`) to correctly align virtual keys with real MIDI note numbers from physical keyboards. Each keyboard size has a starting note, and the offset maps that starting note to the virtual piano's key positions. This ensures that pressing the lowest key on a physical keyboard highlights the leftmost key on the virtual piano.

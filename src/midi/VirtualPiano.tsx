@@ -1,4 +1,4 @@
-import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS } from '../pages/Settings';
+import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS, KEYBOARD_SIZES } from '../pages/Settings';
 import './VirtualPiano.css';
 
 interface VirtualPianoProps {
@@ -8,6 +8,8 @@ interface VirtualPianoProps {
   maxWidth?: number;
   maxHeight?: number;
   header?: string;
+  showSettings?: boolean;
+  onNumKeysChange?: (numKeys: number) => void;
 }
 
 export function VirtualPiano({
@@ -16,7 +18,9 @@ export function VirtualPiano({
   secondaryPressedNotes = new Set(),
   maxWidth = 1200,
   maxHeight = 200,
-  header = ""
+  header = "",
+  showSettings = false,
+  onNumKeysChange,
 }: VirtualPianoProps = {}) {
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
     const offset = KEYBOARD_OFFSETS[numKeys] ?? 21;
@@ -53,7 +57,9 @@ export function VirtualPiano({
     const headerWidth = headerFontSize * header.length/2;
     const headerXPosition = (keyboardWidth/2) - (headerWidth/2); // centered
     const headerYPosition = scaleFactor * 1.4;
-    
+
+    const keySelectorFontSize = scaleFactor * 0.55;
+    const keySelectorWidth = keySelectorFontSize * 8;
 
     const getKeyNumber = (whiteKeyNum: number) => {
         const adjustedWhiteKeyNum = whiteKeyNum + startWhiteKeyIndex;
@@ -84,8 +90,8 @@ export function VirtualPiano({
             x={headerXPosition}
             y={headerYPosition}
             fill="black"
-            font-size={headerFontSize}
-            font-weight="bold"
+            fontSize={headerFontSize}
+            fontWeight="bold"
           >
             {header}
           </text>
@@ -122,12 +128,33 @@ export function VirtualPiano({
           const noteNumber = getKeyNumber(i);
           const noteLabel = noteNumber + offset;
 
-          return <text 
+          return <text
           x={(i * whiteKeyWidth) + keyboardSideWidth + (keyboardEdgePadding/2)}
           y={keyboardTopWidth + whiteKeyHeight - (keyboardHeight*0.05)}
           fill="black"
           >{noteLabel}</text>
         })} */}
+
+        {showSettings && (
+          <foreignObject
+            x={keyboardWidth - keyboardSideWidth - 100}
+            y={(keyboardTopWidth - scaleFactor * 1.7) / 2}
+            width={keySelectorWidth}
+            height={scaleFactor * 1.4}
+          >
+            <div style={{display: 'flex', alignItems: 'center', gap: '4px', height: '100%'}}>
+              <select
+                value={numKeys}
+                onChange={e => onNumKeysChange?.(parseInt(e.target.value, 10))}
+                style={{fontSize: `${keySelectorFontSize}px`}}
+              >
+                {KEYBOARD_SIZES.map(size => (
+                  <option key={size} value={size}>{`${size} Keys`}</option>
+                ))}
+              </select>
+            </div>
+          </foreignObject>
+        )}
 
       </svg>
     );
