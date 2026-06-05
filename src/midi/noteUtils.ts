@@ -4,6 +4,7 @@ export type SharpsFilter = 'no-sharps' | 'with-sharps' | 'sharps-only';
 export type HandsMode = 'left' | 'both' | 'right';
 
 export const TIMED_HISTORY_KEY = 'midiPianoTimedHistory';
+export const OCTAVE_OFFSET_STORAGE_KEY = 'midiPianoOctaveOffset';
 
 export type TimedResult = {
   score: number;

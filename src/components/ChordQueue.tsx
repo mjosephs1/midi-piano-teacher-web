@@ -84,6 +84,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
         Array.from(pressedNotes).filter(n => n % 12 === pc).length >= 2
       );
     } else {
+      console.log(`Pressed Chord = ${pressedChord?.name()}`)
       isMatch = pressedChord?.equals(targetChord) ?? false;
     }
 

@@ -2,7 +2,7 @@ import { FC, useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faGear, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { PracticeConfig, Chord } from '../midi/noteUtils';
+import { PracticeConfig, Chord, OCTAVE_OFFSET_STORAGE_KEY } from '../midi/noteUtils';
 import { KEYBOARD_OFFSETS } from './Settings';
 import { useMidi } from '../midi/MidiContext';
 import { VirtualPiano } from '../midi/VirtualPiano';
@@ -43,9 +43,26 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
 
   const { pressedNotes } = useMidi();
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
-  const [octaveOffset, setOctaveOffset] = useState(0);
+  const [octaveOffset, setOctaveOffset] = useState(() => {
+    try {
+      const configStored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
+      let handsMode = 'right';
+      if (configStored) {
+        const parsed = PracticeConfig.fromJson(JSON.parse(configStored));
+        if (parsed) handsMode = parsed.handsMode;
+      }
+      const octaveStored = localStorage.getItem(OCTAVE_OFFSET_STORAGE_KEY);
+      if (octaveStored) {
+        const parsed = JSON.parse(octaveStored);
+        const hand = handsMode === 'left' ? 'left' : 'right';
+        if (typeof parsed[hand] === 'number') return parsed[hand];
+      }
+    } catch {}
+    return 0;
+  });
   const [configOpen, setConfigOpen] = useState(false);
   const configWrapperRef = useRef<HTMLDivElement>(null);
+  const prevNumKeysRef = useRef(numKeys);
 
   // calculate where to place the notes for the current chord so that it fits within the bounds of the virtual piano
   const leftDefault = Math.max(36, KEYBOARD_OFFSETS[numKeys] ?? 21);
@@ -57,8 +74,29 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
   const currentChordNotes = currentChord ? currentChord.getNoteIndices(effectiveBase) : new Set<number>();
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem(OCTAVE_OFFSET_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const hand = config.handsMode === 'left' ? 'left' : 'right';
+        setOctaveOffset(typeof parsed[hand] === 'number' ? parsed[hand] : 0);
+        return;
+      }
+    } catch {}
     setOctaveOffset(0);
-  }, [config.handsMode, numKeys]);
+  }, [config.handsMode]);
+
+  useEffect(() => {
+    if (prevNumKeysRef.current === numKeys) return;
+    prevNumKeysRef.current = numKeys;
+    setOctaveOffset(0);
+    try {
+      const stored = localStorage.getItem(OCTAVE_OFFSET_STORAGE_KEY);
+      const existing = stored ? JSON.parse(stored) : {};
+      const hand = config.handsMode === 'left' ? 'left' : 'right';
+      localStorage.setItem(OCTAVE_OFFSET_STORAGE_KEY, JSON.stringify({ ...existing, [hand]: 0 }));
+    } catch {}
+  }, [numKeys, config.handsMode]);
 
   useEffect(() => {
     try {
@@ -81,6 +119,19 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [configOpen]);
+
+  const handleOctaveChange = useCallback((delta: number) => {
+    setOctaveOffset(prev => {
+      const next = prev + delta;
+      try {
+        const stored = localStorage.getItem(OCTAVE_OFFSET_STORAGE_KEY);
+        const existing = stored ? JSON.parse(stored) : {};
+        const hand = config.handsMode === 'left' ? 'left' : 'right';
+        localStorage.setItem(OCTAVE_OFFSET_STORAGE_KEY, JSON.stringify({ ...existing, [hand]: next }));
+      } catch {}
+      return next;
+    });
+  }, [config.handsMode]);
 
   const handleCurrentChordChange = useCallback((chord: Chord) => {
     setCurrentChord(chord);
@@ -118,14 +169,14 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
           <span className="octave-label">Octave {Math.floor(baseNote / 12) - 1}</span>
           <button
             className="octave-button"
-            onClick={() => setOctaveOffset(o => o + 1)}
+            onClick={() => handleOctaveChange(1)}
             disabled={baseNote + 12 > 108}
           >
             <FontAwesomeIcon icon={faChevronUp} />
           </button>
           <button
             className="octave-button"
-            onClick={() => setOctaveOffset(o => o - 1)}
+            onClick={() => handleOctaveChange(-1)}
             disabled={baseNote - 12 < 12}
           >
             <FontAwesomeIcon icon={faChevronDown} />

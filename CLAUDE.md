@@ -129,6 +129,7 @@ The MIDI detection system uses React Context to share MIDI state across the enti
      - `toString()`: Returns a deterministic string key (e.g., `"Major,Minor|with-sharps|right"`) for use as a history key in localStorage. Sorts `selectedGroups` to ensure consistent keys regardless of selection order.
      - `fromJson(data)`: Static method that validates and deserializes from a plain object; returns `PracticeConfig | null`
    - `TIMED_HISTORY_KEY` constant: `'midiPianoTimedHistory'` — used by TimedMode to store result history in localStorage
+   - `OCTAVE_OFFSET_STORAGE_KEY` constant: `'midiPianoOctaveOffset'` — used by PracticeMode to persist the per-hand octave offset. Stored as `{ left: number, right: number }`. "Both" mode shares the `'right'` slot.
    - `TimedResult` type: Object with `score: number`, `mistakes: number`, and `timestamp: string` (ISO 8601 format)
    - `TimedHistory` type: Object with config string keys mapping to arrays of `TimedResult` entries
    - `Chord` class — represents a chord with `rootNote: string` and `patternName: string`. Constructed as `new Chord('C', 'Major')`. Methods:
@@ -307,7 +308,7 @@ The `PracticeMode` component is a practice page where users advance through a qu
 **State:**
 - `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode` in a single object. Initialized from global `PracticeConfig.STORAGE_KEY` with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Serialized and persisted on every change.
 - `currentChord: Chord | null` — the current target chord object (not notes). Notes are derived via `currentChord.getNoteIndices(baseNote)` where `baseNote` is computed from `handsMode` and `octaveOffset`.
-- `octaveOffset: number` — number of octaves shifted from the default (0 = default). Default is 0 (reset when `handsMode` or `numKeys` changes). Resets to 0 when `handsMode` or `numKeys` changes.
+- `octaveOffset: number` — number of octaves shifted from the default. Initialized from `OCTAVE_OFFSET_STORAGE_KEY` localStorage for the active hand on mount. When `handsMode` changes, loads the saved offset for the new hand (or defaults to 0). When `numKeys` changes, always resets to 0 (this reset is not saved). Only saved to localStorage when the user explicitly clicks the octave up/down buttons (not on programmatic resets).
 - `configOpen: boolean` — controls visibility of the `PracticeConfiguration` modal
 
 **Derived values (not state):**
