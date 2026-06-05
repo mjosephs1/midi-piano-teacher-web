@@ -8,20 +8,19 @@
 .timed-play-button {
   display: flex;
   align-items: center;
+  justify-content: center;
   border: 2px solid #333;
   border-radius: 6px;
   background: transparent;
-  padding: 0.8rem 1.2rem;
-  font-size: 1.2rem;
+  padding: 1rem 1.8rem;
+  font-size: 1.3rem;
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s;
   gap: 0.6rem;
   text-decoration: none;
-}
-
-.timed-configure-buttons .timed-play-button {
-  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .timed-play-button:hover {
@@ -181,10 +180,17 @@
   color: white;
 }
 
+.timed-configure-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .timed-config-card {
+  flex: 1;
   border-radius: 8px;
   padding: 16px;
-  width: 100%;
   box-sizing: border-box;
   border: 2px solid #333;
 }
@@ -198,6 +204,6 @@
 
 .timed-configure-buttons {
   display: flex;
-  gap: 0.5rem;
-  justify-content: center;
+  flex-direction: column;
+  gap: 0.75rem;
 }

@@ -2,13 +2,13 @@ import { FC, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faPlay, faStop, faRotateRight, faRankingStar } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faStop, faRotateRight, faRankingStar, faChartLine } from '@fortawesome/free-solid-svg-icons';
 import { PracticeConfig, TimedHistory, TimedResult, TIMED_HISTORY_KEY } from '../midi/noteUtils';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
 import { ChordQueue } from '../components/ChordQueue';
 import './TimedMode.css';
 
-library.add(faPlay, faStop, faRotateRight, faRankingStar);
+library.add(faPlay, faStop, faRotateRight, faRankingStar, faChartLine);
 
 type TimedStage = 'CONFIGURE' | 'COUNTDOWN' | 'STARTED' | 'RESULTS';
 
@@ -129,7 +129,7 @@ export const TimedMode: FC = () => {
     <div className="timed-mode-page">
       <h2>Timed Mode</h2>
       {stage === 'CONFIGURE' && (
-        <>
+        <div className="timed-configure-layout">
           <div className="timed-config-card">
             <h3 className="timed-config-card-title">Configuration</h3>
             <PracticeConfiguration
@@ -138,14 +138,17 @@ export const TimedMode: FC = () => {
             />
           </div>
           <div className="timed-configure-buttons">
-            <Link to="/practice-chords/high-scores" className="timed-play-button">
-              High Scores <FontAwesomeIcon icon={faRankingStar} />
-            </Link>
             <button className="timed-play-button" onClick={handleStartClick}>
               Start <FontAwesomeIcon icon={faPlay} />
             </button>
+            <Link to="/practice-chords/high-scores" className="timed-play-button">
+              High Scores <FontAwesomeIcon icon={faRankingStar} />
+            </Link>
+            <Link to="/practice-chords/progress" className="timed-play-button">
+              Progress <FontAwesomeIcon icon={faChartLine} />
+            </Link>
           </div>
-        </>
+        </div>
       )}
 
       {stage === 'COUNTDOWN' && (
