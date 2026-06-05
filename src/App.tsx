@@ -71,7 +71,6 @@ const App: FC = () => {
             <div className="nav-dropdown-menu">
               <Link to="/practice-chords/practice">Practice Mode</Link>
               <Link to="/practice-chords/timed">Timed Mode</Link>
-              <Link to="/practice-chords/tempo">Tempo Mode</Link>
             </div>
           </div>
         </nav>

@@ -215,9 +215,7 @@ The app uses **React Router** for client-side routing. The structure is:
    - `/practice-chords/practice` → `<PracticeMode>` component
    - `/practice-chords/timed` → `<TimedMode>` component
    - `/practice-chords/high-scores` → `<HighScores>` component
-   - `/practice-chords/tempo` → future Tempo Mode (not yet implemented; navigates to no-match)
-
-4. **Practice nav dropdown**: The "Practice" nav item is a `<div className="nav-dropdown">` with a `<span>` trigger (no navigation on click) and a pure-CSS hover dropdown menu containing links to the three practice modes. Moving the mouse from the trigger into the menu stays within the `.nav-dropdown` hover zone so the menu remains open.
+4. **Practice nav dropdown**: The "Practice" nav item is a `<div className="nav-dropdown">` with a `<span>` trigger (no navigation on click) and a pure-CSS hover dropdown menu containing links to the two practice modes (Practice Mode and Timed Mode). Moving the mouse from the trigger into the menu stays within the `.nav-dropdown` hover zone so the menu remains open.
 
 5. **User menu dropdown**: A circle-user icon button (`faCircleUser`) in the top-right header, positioned to the right of the Settings gear button. It uses the same pure-CSS hover pattern as the Practice dropdown. The menu contains "High Scores" (links to `/practice-chords/high-scores`) and "Progress" (links to `/practice-chords/progress`).
 
