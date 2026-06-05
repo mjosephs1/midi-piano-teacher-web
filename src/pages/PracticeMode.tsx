@@ -24,9 +24,10 @@ function clampToKeyboard(chord: Chord, baseNote: number, pianoLow: number, piano
 
 interface PracticeModeProps {
   numKeys: number;
+  onNumKeysChange: (numKeys: number) => void;
 }
 
-export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
+export const PracticeMode: FC<PracticeModeProps> = ({ numKeys, onNumKeysChange }) => {
   const [config, setConfig] = useState<PracticeConfig>(() => {
     try {
       const stored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
@@ -164,7 +165,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys }) => {
         </div>
       </div>
       <div className="piano-with-octave">
-        <VirtualPiano numKeys={numKeys} pressedNotes={currentChordNotes} secondaryPressedNotes={pressedNotes} />
+        <VirtualPiano numKeys={numKeys} pressedNotes={currentChordNotes} secondaryPressedNotes={pressedNotes} showSettings={true} onNumKeysChange={onNumKeysChange} />
         <div className="octave-section">
           <span className="octave-label">Octave {Math.floor(baseNote / 12) - 1}</span>
           <button

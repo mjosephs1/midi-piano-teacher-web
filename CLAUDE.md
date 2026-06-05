@@ -43,7 +43,7 @@ src/
   ├── reportWebVitals.ts     # Web vitals reporting
   ├── pages/                 # Route-level page components
   │   ├── Home.tsx           # Home page route with piano display
-  │   ├── Settings.tsx       # Settings component (keyboard size selector) + KEYBOARD_SIZES/KEYBOARD_OFFSETS exports
+  │   ├── Settings.tsx       # KEYBOARD_SIZES/KEYBOARD_OFFSETS exports (component no longer rendered in header)
   │   ├── Settings.css       # Settings styling
   │   ├── ChordExplorer.tsx      # Chord Explorer page with interactive chord button grid
   │   ├── ChordExplorer.css      # Styling for the Chord Explorer page
@@ -177,7 +177,7 @@ The `VirtualPiano` component renders a visual representation of a piano keyboard
 - `numKeys` (default: `88`) — total number of keys to display on the piano (25, 37, 49, 61, 76, or 88)
 - `pressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers that are currently pressed; these keys render with red fill
 - `secondaryPressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers to highlight with a light gray fill. Used in PracticeMode to show live MIDI input alongside the static target chord. A key in both sets renders as a darker red (`#b02828`) to indicate a correct match.
-- `showSettings` (default: `false`) — when `true`, renders a keyboard-size dropdown inside the piano's header area (top band above the keys), positioned on the right side. Uses SVG `<foreignObject>` to embed HTML within the SVG coordinate space so it scales correctly with the piano. No `xmlns` attribute needed on the inner div — React handles the namespace correctly.
+- `showSettings` (default: `false`) — when `true`, renders a keyboard-size dropdown inside the piano's header area (top band above the keys), positioned on the right side. Currently `true` in `PracticeMode`. Uses SVG `<foreignObject>` to embed HTML within the SVG coordinate space so it scales correctly with the piano. No `xmlns` attribute needed on the inner div — React handles the namespace correctly.
 - `onNumKeysChange` — callback `(numKeys: number) => void` invoked when the user selects a different keyboard size from the settings dropdown. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value (e.g., via `App.tsx`'s localStorage `useEffect`).
 
 **MIDI Offset Mapping:**
@@ -221,7 +221,7 @@ The app uses **React Router** for client-side routing. The structure is:
    - `/practice-chords/high-scores` → `<HighScores>` component
 4. **Practice nav dropdown**: The "Practice" nav item is a `<div className="nav-dropdown">` with a `<span>` trigger (no navigation on click) and a pure-CSS hover dropdown menu containing links to the two practice modes (Practice Mode and Timed Mode). Moving the mouse from the trigger into the menu stays within the `.nav-dropdown` hover zone so the menu remains open.
 
-5. **User menu dropdown**: A circle-user icon button (`faCircleUser`) in the top-right header, positioned to the right of the Settings gear button. It uses the same pure-CSS hover pattern as the Practice dropdown. The menu contains "High Scores" (links to `/practice-chords/high-scores`) and "Progress" (links to `/practice-chords/progress`).
+5. **User menu dropdown**: A circle-user icon button (`faCircleUser`) inside `nav-links`, positioned immediately to the right of the Practice dropdown. It uses the same pure-CSS hover pattern as the Practice dropdown. The menu contains "High Scores" (links to `/practice-chords/high-scores`) and "Progress" (links to `/practice-chords/progress`).
 
 **Adding a new route:**
 ```tsx
@@ -307,6 +307,7 @@ The `PracticeMode` component is a practice page where users advance through a qu
 
 **Props:**
 - `numKeys: number` — the selected keyboard size from parent `App.tsx`
+- `onNumKeysChange: (numKeys: number) => void` — passed through to VirtualPiano's in-piano settings dropdown
 
 **State:**
 - `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode` in a single object. Initialized from global `PracticeConfig.STORAGE_KEY` with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Serialized and persisted on every change.

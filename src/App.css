@@ -102,21 +102,6 @@
   align-self: auto;
 }
 
-.header-buttons {
-  display: flex;
-  gap: 0;
-  align-items: stretch;
-  align-self: stretch;
-  margin-left: auto;
-}
-
-.settings-wrapper {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  align-self: stretch;
-}
-
 .settings-button {
   display: flex;
   align-items: center;
@@ -134,20 +119,6 @@
 
 .settings-button:hover {
   color: #b02828;
-}
-
-.settings-panel {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #f5f0e8;
-  border: 1px solid #d0c8bc;
-  border-top: none;
-  border-radius: 0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-  z-index: 100;
-  min-width: 240px;
 }
 
 .App .status {

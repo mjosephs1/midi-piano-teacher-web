@@ -1,9 +1,8 @@
 import './App.css';
 import type { FC } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Home } from './pages/Home';
-import { Settings, KEYBOARD_SIZES } from './pages/Settings';
 import { ChordExplorer } from './pages/ChordExplorer';
 import { PracticeMode } from './pages/PracticeMode';
 import { TimedMode } from './pages/TimedMode';
@@ -11,7 +10,6 @@ import { HighScores } from './pages/HighScores';
 import { Progress } from './pages/Progress';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { PianoIcon } from './components/PianoIcon';
 
 /* import all the icons in Free Solid, Free Regular, and Brands styles */
 import { faGear, faCircleUser, faRankingStar, faChartLine } from '@fortawesome/free-solid-svg-icons'
@@ -34,9 +32,6 @@ const App: FC = () => {
     }
     return 88;
   });
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const settingsWrapperRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     document.title = 'MIDI Piano Teacher';
   }, []);
@@ -48,16 +43,6 @@ const App: FC = () => {
       // localStorage unavailable, skip persistence
     }
   }, [numKeys]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (settingsWrapperRef.current && !settingsWrapperRef.current.contains(e.target as Node)) {
-        setSettingsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   return (
     <div className="App">
@@ -73,26 +58,6 @@ const App: FC = () => {
               <Link to="/practice-chords/timed">Timed Mode</Link>
             </div>
           </div>
-        </nav>
-        <div className="header-buttons">
-          <div className="settings-wrapper" ref={settingsWrapperRef}>
-            <button
-              className="settings-button"
-              onClick={() => setSettingsOpen(prev => !prev)}
-              aria-expanded={settingsOpen}
-            >
-              <PianoIcon pianoIconWidth={45} />
-            </button>
-            {settingsOpen && (
-              <div className="settings-panel">
-                <Settings
-                  numKeys={numKeys}
-                  onNumKeysChange={setNumKeys}
-                  keyboardSizes={KEYBOARD_SIZES}
-                />
-              </div>
-            )}
-          </div>
           <div className="user-menu">
             <button className="settings-button">
               <FontAwesomeIcon icon={faCircleUser} />
@@ -102,13 +67,13 @@ const App: FC = () => {
               <Link to="/practice-chords/progress"><FontAwesomeIcon icon={faChartLine} /> Progress</Link>
             </div>
           </div>
-        </div>
+        </nav>
       </header>
 
       <Routes>
         <Route path="/" element={<Home numKeys={numKeys} onNumKeysChange={setNumKeys} />} />
         <Route path="/chord-explorer" element={<ChordExplorer/>} />
-<Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} />} />
+<Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} onNumKeysChange={setNumKeys} />} />
         <Route path="/practice-chords/timed" element={<TimedMode />} />
         <Route path="/practice-chords/high-scores" element={<HighScores />} />
         <Route path="/practice-chords/progress" element={<Progress />} />
