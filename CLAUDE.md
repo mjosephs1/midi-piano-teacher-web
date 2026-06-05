@@ -301,14 +301,21 @@ The `PracticeMode` component is a practice page where users advance through a qu
 - When the user plays the target chord on their MIDI keyboard, the queue advances (target disappears, new chord added on the right)
 - Includes a `PracticeConfiguration` panel toggled by a gear icon button for selecting chord groups, sharps filter, and hands mode
 - Settings persist globally via `localStorage` (shared across PracticeMode and TimedMode) as a serialized `PracticeConfig` object
+- **Octave selector**: Up/down arrow buttons to the right of the VirtualPiano shift the displayed octave by ±12 semitones. Buttons disable at MIDI bounds (0 and 108).
 
 **Props:**
 - `numKeys: number` — the selected keyboard size from parent `App.tsx`
 
 **State:**
 - `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode` in a single object. Initialized from global `PracticeConfig.STORAGE_KEY` with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Serialized and persisted on every change.
-- `currentChordNotes: Set<number>` — MIDI note numbers for the current target chord, derived from the `Chord` via `chord.getNoteIndices()` and passed to `VirtualPiano`
+- `currentChord: Chord | null` — the current target chord object (not notes). Notes are derived via `currentChord.getNoteIndices(baseNote)` where `baseNote` is computed from `handsMode` and `octaveOffset`.
+- `octaveOffset: number` — number of octaves shifted from the default (0 = default). Default is 0 (reset when `handsMode` or `numKeys` changes). Resets to 0 when `handsMode` or `numKeys` changes.
 - `configOpen: boolean` — controls visibility of the `PracticeConfiguration` modal
+
+**Derived values (not state):**
+- `defaultBase`: for right-hand mode = 72; for left-hand mode = `Math.max(36, KEYBOARD_OFFSETS[numKeys] ?? 21)` — ensures the default is always within the visible keyboard range (25/37-key keyboards start at 48, so left-hand default is clamped to 48; 49+ key keyboards use 36)
+- `baseNote`: `defaultBase + octaveOffset * 12`
+- `currentChordNotes`: `currentChord.getNoteIndices(baseNote)` — passed to `VirtualPiano` as `pressedNotes`
 
 **Route:**
 - `/practice-chords/practice` (registered in `App.tsx`)
