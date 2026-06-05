@@ -28,6 +28,11 @@
   font-size: 2.5rem;
 }
 
+.title-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .nav-links {
   display: flex;
   gap: 0;

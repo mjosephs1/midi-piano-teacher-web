@@ -47,9 +47,8 @@ const App: FC = () => {
   return (
     <div className="App">
       <header className="app-header">
-        <h1>MIDI Piano Teacher</h1>
+        <Link to="/" className="title-link"><h1>MIDI Piano Teacher</h1></Link>
         <nav className="nav-links">
-          <Link to="/">Home</Link>
           <Link to="/chord-explorer">Chord Explorer</Link>
           <div className="nav-dropdown">
             <span className="nav-dropdown-trigger">Practice</span>

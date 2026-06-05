@@ -210,7 +210,7 @@ The app uses **React Router** for client-side routing. The structure is:
 
 1. **`index.tsx`** wraps the app in `<BrowserRouter>` to enable routing
 2. **`App.tsx`** contains:
-   - The header with navigation links (`<Link>` components)
+   - The header with navigation links (`<Link>` components). The `<h1>MIDI Piano Teacher</h1>` title is wrapped in a `<Link to="/" className="title-link">` so clicking the title navigates home. There is no separate "Home" nav link.
    - State management for `numKeys` (keyboard size preference)
    - The `<Routes>` definition with all application routes
 3. **Routes:**
