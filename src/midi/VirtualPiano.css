@@ -6,7 +6,7 @@
 .white-key {
     fill: white;
     stroke: #333;
-    stroke-width: 2;
+    stroke-width: 1;
     cursor: pointer;
 }
   
@@ -21,7 +21,7 @@
 .black-key {
     fill: black;
     stroke: #333;
-    stroke-width: 2;
+    stroke-width: 1;
     cursor: pointer;
 }
   

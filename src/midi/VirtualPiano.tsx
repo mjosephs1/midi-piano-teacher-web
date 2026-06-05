@@ -5,26 +5,37 @@ interface VirtualPianoProps {
   numKeys?: number;
   pressedNotes?: Set<number>;
   secondaryPressedNotes?: Set<number>;
+  maxWidth?: number;
+  maxHeight?: number;
 }
 
-export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondaryPressedNotes = new Set() }: VirtualPianoProps = {}) {
+export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondaryPressedNotes = new Set(), maxWidth = 1200, maxHeight = 200 }: VirtualPianoProps = {}) {
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
     const offset = KEYBOARD_OFFSETS[numKeys] ?? 21;
     const blackKeyPattern = [true, true, false, true, true, true, false];
 
     // Scalable Interactive Piano
-    const scaleFactor = 50;
+    const scaleFactor = 30;
     const whiteKeyWidth = scaleFactor;
     const whiteKeyHeight = whiteKeyWidth * 4.5;
     const blackKeyWidth = whiteKeyWidth * 0.6;
     const blackKeyHeight = whiteKeyHeight * 0.6;
 
-    const keyboardSideWidth = 50;
-    const keyboardTopWidth = 120;
-    const keyboardWidth = (whiteKeyWidth * numWhiteKeys) + (keyboardSideWidth * 2);
-    const keyboardHeight = whiteKeyHeight + keyboardTopWidth;
-    const keyboardEdgePadding = 4; // prevent lines from being cutoff at the edges
-    const svgDimensions = `0 0 ${keyboardWidth + keyboardEdgePadding} ${keyboardHeight + keyboardEdgePadding}`
+    const keyboardSideWidth = whiteKeyWidth;
+    const keyboardTopWidth = whiteKeyHeight * 0.6;
+    const keyboardEdgePadding = scaleFactor/10; // prevent lines from being cutoff at the edges
+    const keyboardWidth = (whiteKeyWidth * numWhiteKeys) + (keyboardSideWidth * 2) + keyboardEdgePadding;
+    const keyboardHeight = whiteKeyHeight + keyboardTopWidth + keyboardEdgePadding;
+    const svgDimensions = `0 0 ${keyboardWidth} ${keyboardHeight}`
+
+    // Cap the width/height to prevent it from rendering too large
+    const widthToHeighRatio = keyboardWidth/keyboardHeight;
+    const heightConstrainedHeight = Math.min(keyboardHeight, maxHeight); // The Virtual Piano height can not exceed 200px
+    const heightConstrainedWidth = heightConstrainedHeight * widthToHeighRatio;
+    const widthConstratinedWidth = Math.min(keyboardWidth, maxWidth); // The Virtual Piano width can not exceed 1000px
+    const widthConstratinedHeight = widthConstratinedWidth * (1/widthToHeighRatio);
+    
+    // widthToHeighRatio * actualHeight;
 
     const getKeyNumber = (whiteKeyNum: number) => {
         let blackKeyCount = ((Math.floor(whiteKeyNum / 7)) * 5);
@@ -35,7 +46,7 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
     }
 
     return (
-      <svg className="virtual-piano" viewBox={svgDimensions} width="1000" height="200">
+      <svg className="virtual-piano" viewBox={svgDimensions} width={Math.min(heightConstrainedWidth, widthConstratinedWidth)} height={Math.min(heightConstrainedHeight, widthConstratinedHeight)}>
         <rect 
           x={keyboardEdgePadding/2}
           y={keyboardEdgePadding/2}
@@ -43,9 +54,9 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
           height={whiteKeyHeight + keyboardTopWidth}
           fill="white"
           stroke="black"
-          strokeWidth={5}
-          rx={25}
-          ry={25}
+          strokeWidth={keyboardEdgePadding}
+          rx={scaleFactor/2}
+          ry={scaleFactor/2}
         />
         
         {Array.from({ length: numWhiteKeys }).map((_, i) => {
@@ -54,7 +65,7 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
             key={`white-${i}`}
             className={`white-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''} ${secondaryPressedNotes.has(noteNumber + offset) ? 'secondary' : ''}`}
             x={(i * whiteKeyWidth) + keyboardSideWidth + (keyboardEdgePadding/2)}
-            y={keyboardTopWidth-15}
+            y={keyboardTopWidth - (keyboardHeight*0.05)}
             width={whiteKeyWidth}
             height={whiteKeyHeight}
           />
@@ -67,7 +78,7 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
                     key={`black-${i}`}
                     className={`black-key ${pressedNotes.has(noteNumber + offset) ? 'active' : ''} ${secondaryPressedNotes.has(noteNumber + offset) ? 'secondary' : ''}`}
                     x={(i * whiteKeyWidth) + (whiteKeyWidth-(blackKeyWidth/2)) + keyboardSideWidth + (keyboardEdgePadding/2)}
-                    y={keyboardTopWidth-15}
+                    y={keyboardTopWidth - (keyboardHeight*0.05)}
                     width={blackKeyWidth}
                     height={blackKeyHeight}
                 />
