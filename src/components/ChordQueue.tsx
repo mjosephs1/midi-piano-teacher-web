@@ -43,11 +43,15 @@ function generateChordItem(selectedGroups: Set<string>, sharpsFilter: string, ex
 export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, onChordMatched, onChordMistake }) => {
   const { selectedGroups, sharpsFilter, handsMode } = config;
 
+  const onChordMatchedRef = useRef(onChordMatched);
+  const onChordMistakeRef = useRef(onChordMistake);
+  onChordMatchedRef.current = onChordMatched;
+  onChordMistakeRef.current = onChordMistake;
+
   const [queue, setQueue] = useState<ChordQueueItem[]>(() =>
     Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter))
   );
 
-  const [isFlashing, setIsFlashing] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [fadingOutCard, setFadingOutCard] = useState<ChordQueueItem | null>(null);
   const isTransitioningRef = useRef(false);
@@ -89,7 +93,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
     }
 
     if (!isMatch) {
-      onChordMistake?.();
+      onChordMistakeRef.current?.();
       return;
     }
 
@@ -97,8 +101,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
     lastMatchedChordRef.current = targetChord;
     nextChordPressedRef.current = false;
     fadingOutCardRef.current = queue[0];
-    onChordMatched?.();
-    setIsFlashing(true);
+    onChordMatchedRef.current?.();
     setIsAdvancing(true);
   }, [pressedChord, pressedNotes, handsMode, queue]);
 
@@ -125,12 +128,10 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
 
     const animationTimeout = setTimeout(() => {
       setFadingOutCard(null);
-      setIsFlashing(false);
       setIsAdvancing(false);
 
       if (nextChordPressedRef.current) {
         nextChordPressedRef.current = false;
-        setIsFlashing(true);
         setIsAdvancing(true);
       } else {
         isTransitioningRef.current = false;
