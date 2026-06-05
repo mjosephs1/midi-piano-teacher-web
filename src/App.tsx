@@ -14,9 +14,9 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { PianoIcon } from './components/PianoIcon';
 
 /* import all the icons in Free Solid, Free Regular, and Brands styles */
-import { faGear, faCircleUser } from '@fortawesome/free-solid-svg-icons'
+import { faGear, faCircleUser, faRankingStar, faChartLine } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faGear, faCircleUser)
+library.add(faGear, faCircleUser, faRankingStar, faChartLine)
 
 
 const STORAGE_KEY = 'midiPianoNumKeys';
@@ -98,8 +98,8 @@ const App: FC = () => {
               <FontAwesomeIcon icon={faCircleUser} />
             </button>
             <div className="user-menu-dropdown">
-              <Link to="/practice-chords/high-scores">High Scores</Link>
-              <Link to="/practice-chords/progress">Progress</Link>
+              <Link to="/practice-chords/high-scores"><FontAwesomeIcon icon={faRankingStar} /> High Scores</Link>
+              <Link to="/practice-chords/progress"><FontAwesomeIcon icon={faChartLine} /> Progress</Link>
             </div>
           </div>
         </div>

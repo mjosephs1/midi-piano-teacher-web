@@ -219,9 +219,11 @@
 }
 
 .user-menu-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.6rem 1rem;
   white-space: nowrap;
-  align-self: auto;
   text-decoration: none;
   color: #000;
   transition: background-color 0.2s;
