@@ -4,7 +4,7 @@ import { KEYBOARD_SIZES, KEYBOARD_OFFSETS } from './Settings';
 import { CHORD_PATTERNS, NOTE_NAMES } from '../midi/noteUtils';
 import './ChordExplorer.css';
 
-export const ChordExplorer: FC = ({}) => {
+export const ChordExplorer: FC = () => {
     const [chordNotes, setChordNotes] = useState<Set<number>>(new Set());
     const [selectedChord, setSelectedChord] = useState<{ rootIndex: number; patternIndex: number } | null>(null);
 

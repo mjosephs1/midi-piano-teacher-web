@@ -30,7 +30,7 @@ export function PianoIcon({ pianoIconWidth }: Props) {
             })}
             {
             Array.from({ length: numWhiteKeys-1 }).map((_, i) => {
-                return i != 2 ? (
+                return i !== 2 ? (
                     <rect
                         key={`black-${i}`}
                         stroke="black"
