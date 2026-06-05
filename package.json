@@ -1,6 +1,7 @@
 {
   "name": "midi-piano-teacher-web",
   "version": "0.1.0",
+  "homepage": "https://mjosephs1.github.io/midi-piano-teacher-web",
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
@@ -19,6 +20,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "BROWSER=none react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -45,6 +48,7 @@
   "devDependencies": {
     "@types/node": "^25.8.0",
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "gh-pages": "^6.3.0"
   }
 }
