@@ -19,7 +19,7 @@ export function PianoIcon({ pianoIconWidth }: Props) {
                 key={`white-${i}`}
                 stroke="black"           // border color
                 strokeWidth={5}
-                fill={hovered && (i == 1 || i == 5) ? "#E04040" : "white"} 
+                fill={hovered && [1,3,5].includes(i) ? "#E04040" : "white"} 
                 x={i * whiteKeyWidth}
                 y={0}
                 width={whiteKeyWidth}
@@ -35,7 +35,7 @@ export function PianoIcon({ pianoIconWidth }: Props) {
                         key={`black-${i}`}
                         stroke="black"
                         strokeWidth={5}
-                        fill={hovered && i == 3 ? "#E04040" : "black"} 
+                        fill={"black"} 
                         x={(i * whiteKeyWidth) + (whiteKeyWidth-(blackKeyWidth/2))}
                         y={0}
                         width={blackKeyWidth}

@@ -19,10 +19,11 @@ export const ChordExplorer: FC = ({}) => {
 
     return (
       <div className="chord-explorer-page">
-        <h2>Chord Explorer</h2>
         <VirtualPiano
             numKeys={KEYBOARD_SIZES[0]}
-            pressedNotes={chordNotes}/>
+            pressedNotes={chordNotes}
+            header="Chord Explorer"
+            />
 
         <div className="chord-grid">
           {CHORD_PATTERNS.map((pattern, pi) => (

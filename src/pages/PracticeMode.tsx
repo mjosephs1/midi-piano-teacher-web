@@ -9,6 +9,7 @@ import { VirtualPiano } from '../midi/VirtualPiano';
 import { ChordQueue } from '../components/ChordQueue';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
 import './PracticeMode.css';
+import { PianoIcon } from '../components/PianoIcon';
 
 library.add(faGear, faChevronUp, faChevronDown);
 
@@ -144,15 +145,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys, onNumKeysChange }
         <div className="practice-config-backdrop" onClick={() => setConfigOpen(false)} />
       )}
       <div className="practice-mode-title-row">
-        <h2>Practice Mode</h2>
         <div className="practice-config-wrapper" ref={configWrapperRef}>
-          <button
-            className="practice-config-button"
-            onClick={() => setConfigOpen(prev => !prev)}
-            aria-expanded={configOpen}
-          >
-            <FontAwesomeIcon icon={faGear} />
-          </button>
           {configOpen && (
             <div className="practice-config-panel">
               <h3 className="practice-config-title">Practice Mode Configuration</h3>
@@ -165,8 +158,22 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys, onNumKeysChange }
         </div>
       </div>
       <div className="piano-with-octave">
-        <VirtualPiano numKeys={numKeys} pressedNotes={currentChordNotes} secondaryPressedNotes={pressedNotes} showSettings={true} onNumKeysChange={onNumKeysChange} />
-        <div className="octave-section">
+        <VirtualPiano 
+          numKeys={numKeys}
+          pressedNotes={currentChordNotes}
+          secondaryPressedNotes={pressedNotes}
+          header="Practice Mode"
+          showSettings={true}
+          onNumKeysChange={onNumKeysChange} />
+        <div className="practice-mode-settings-section">
+          <span className="octave-label">Settings</span>
+          <button
+              className="practice-config-button"
+              onClick={() => setConfigOpen(prev => !prev)}
+              aria-expanded={configOpen}
+            >
+              <PianoIcon pianoIconWidth={40}/>
+          </button>
           <span className="octave-label">Octave {Math.floor(baseNote / 12) - 1}</span>
           <button
             className="octave-button"
