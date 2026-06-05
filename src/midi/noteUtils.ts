@@ -97,6 +97,12 @@ export class Chord {
     return this.name() === other.name();
   }
 
+  matches(pressedNotes: Set<number>): boolean {
+    const chordPCs = new Set(Array.from(this.getNoteIndices()).map(n => n % 12));
+    const pressedPCs = new Set(Array.from(pressedNotes).map(n => n % 12));
+    return chordPCs.size === pressedPCs.size && [...chordPCs].every(pc => pressedPCs.has(pc));
+  }
+
   shorthand(): string {
     return CHORD_PATTERNS.find(p => p.name === this.patternName)?.shorthand ?? '';
   }

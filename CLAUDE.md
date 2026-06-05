@@ -136,6 +136,7 @@ The MIDI detection system uses React Context to share MIDI state across the enti
      - `name()`: returns the chord name string, e.g. `"C Major"`
      - `shorthand()`: returns the pattern shorthand, e.g. `"maj"`, `"m7"`
      - `getNoteIndices(baseNote?: number)`: returns `Set<number>` of MIDI note numbers (default baseNote 60). This is the canonical way to convert a chord to playable notes.
+     - `matches(pressedNotes: Set<number>)`: returns `true` if the pitch classes of `pressedNotes` exactly equal this chord's pitch classes. Used for chord matching in ChordQueue — avoids name-comparison bugs where enharmonically equivalent chords (e.g. Asus2 and Esus4 share the same 3 pitch classes) would fail a name match.
    - All exported from `src/midi/noteUtils.ts`. Used by `PracticeConfiguration`, `ChordQueue`, and both practice mode components to pass configuration consistently.
 
 5. **`detectChord()`** (in `src/midi/noteUtils.ts`) detects chord names from pressed MIDI notes:
