@@ -7,9 +7,17 @@ interface VirtualPianoProps {
   secondaryPressedNotes?: Set<number>;
   maxWidth?: number;
   maxHeight?: number;
+  header?: string;
 }
 
-export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondaryPressedNotes = new Set(), maxWidth = 1200, maxHeight = 200 }: VirtualPianoProps = {}) {
+export function VirtualPiano({
+  numKeys = 88,
+  pressedNotes = new Set(),
+  secondaryPressedNotes = new Set(),
+  maxWidth = 1200,
+  maxHeight = 200,
+  header = ""
+}: VirtualPianoProps = {}) {
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
     const offset = KEYBOARD_OFFSETS[numKeys] ?? 21;
     const blackKeyPattern = [true, true, false, true, true, true, false];
@@ -40,8 +48,12 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
     const heightConstrainedWidth = heightConstrainedHeight * widthToHeighRatio;
     const widthConstratinedWidth = Math.min(keyboardWidth, maxWidth); // The Virtual Piano width can not exceed 1000px
     const widthConstratinedHeight = widthConstratinedWidth * (1/widthToHeighRatio);
+
+    const headerFontSize = scaleFactor*0.8;
+    const headerWidth = headerFontSize * header.length/2;
+    const headerXPosition = (keyboardWidth/2) - (headerWidth/2); // centered
+    const headerYPosition = scaleFactor * 1.4;
     
-    // widthToHeighRatio * actualHeight;
 
     const getKeyNumber = (whiteKeyNum: number) => {
         const adjustedWhiteKeyNum = whiteKeyNum + startWhiteKeyIndex;
@@ -65,7 +77,20 @@ export function VirtualPiano({ numKeys = 88, pressedNotes = new Set(), secondary
           rx={scaleFactor/2}
           ry={scaleFactor/2}
         />
-        
+
+        {
+        header !== "" && 
+          <text
+            x={headerXPosition}
+            y={headerYPosition}
+            fill="black"
+            font-size={headerFontSize}
+            font-weight="bold"
+          >
+            {header}
+          </text>
+        }
+
         {Array.from({ length: numWhiteKeys }).map((_, i) => {
             const noteNumber = getKeyNumber(i);
           return <rect
