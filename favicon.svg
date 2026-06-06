@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 450">
+  <!-- White keys -->
+  <rect stroke="black" stroke-width="5" fill="white" x="0" y="125" width="350" height="200" rx="10" ry="10"/>
+  <rect stroke="black" stroke-width="5" fill="white" x="5"   y="140" width="50" height="175"/>
+  <rect stroke="black" stroke-width="5" fill="white" x="50"  y="140" width="50" height="175"/>
+  <rect stroke="black" stroke-width="5" fill="white" x="100" y="140" width="50" height="175"/>
+  <rect stroke="black" stroke-width="5" fill="white" x="150" y="140" width="50" height="175"/>
+  <rect stroke="black" stroke-width="5" fill="white" x="200" y="140" width="50" height="175"/>
+  <rect stroke="black" stroke-width="5" fill="white" x="250" y="140" width="50" height="175"/>
+  <rect stroke="black" stroke-width="5" fill="white" x="300" y="140" width="45" height="175"/>
+  <!-- Black keys -->
+  <rect stroke="black" stroke-width="5" fill="black" x="35"  y="140" width="30" height="105"/>
+  <rect stroke="black" stroke-width="5" fill="black" x="85"  y="140" width="30" height="105"/>
+  <rect stroke="black" stroke-width="5" fill="black" x="185" y="140" width="30" height="105"/>
+
+  <rect stroke="black" stroke-width="5" fill="black" x="235" y="140" width="30" height="105"/>
+  <rect stroke="black" stroke-width="5" fill="black" x="285" y="140" width="30" height="105"/>
+</svg>
