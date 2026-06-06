@@ -74,11 +74,13 @@ export const Progress: FC = () => {
           {chartData.length === 0 ? (
             <div className="progress-empty">No scores yet for this configuration.</div>
           ) : (
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+            <>
+              <h3 className="progress-chart-title">Average Score Over Time</h3>
+              <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
-                <YAxis allowDecimals={false} />
+                <YAxis allowDecimals={false} label={{ value: 'Score', angle: -90, position: 'insideLeft' }} />
                 <Tooltip />
                 <Line
                   type="monotone"
@@ -89,7 +91,8 @@ export const Progress: FC = () => {
                   strokeWidth={2}
                 />
               </LineChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            </>
           )}
         </div>
       </div>

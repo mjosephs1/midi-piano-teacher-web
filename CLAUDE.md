@@ -396,9 +396,10 @@ The `Progress` component displays a line chart of the user's average score over 
 
 **Features:**
 - `PracticeConfiguration` selector on the left to filter chart data by config
-- Recharts `LineChart` on the right showing daily average scores over time
+- Recharts `LineChart` on the right showing daily average scores over time, with title "Average Score Over Time"
 - X-axis: one tick per calendar day (formatted with `toLocaleDateString()`)
-- Y-axis: average score for that day (average of all Timed Mode runs on that day)
+- Y-axis: average score for that day (average of all Timed Mode runs on that day), labeled "Score"
+- Chart section is vertically centered relative to the Configuration panel (`align-items: center` on the flex layout)
 - Empty state message when no history exists for the selected config
 - Config persisted to `PracticeConfig.STORAGE_KEY` (shared with PracticeMode and TimedMode)
 
