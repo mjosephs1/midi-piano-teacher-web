@@ -40,6 +40,14 @@ function generateChordItem(selectedGroups: Set<string>, sharpsFilter: string, ex
   return item;
 }
 
+function generateInitialQueue(selectedGroups: Set<string>, sharpsFilter: string): ChordQueueItem[] {
+  const items: ChordQueueItem[] = [];
+  for (let i = 0; i < 5; i++) {
+    items.push(generateChordItem(selectedGroups, sharpsFilter, items[i - 1]?.chord));
+  }
+  return items;
+}
+
 export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, onChordMatched, onChordMistake }) => {
   const { selectedGroups, sharpsFilter, handsMode } = config;
 
@@ -49,7 +57,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
   onChordMistakeRef.current = onChordMistake;
 
   const [queue, setQueue] = useState<ChordQueueItem[]>(() =>
-    Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter))
+    generateInitialQueue(selectedGroups, sharpsFilter)
   );
 
   const [isAdvancing, setIsAdvancing] = useState(false);
@@ -63,7 +71,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
 
   // Regenerate queue when config changes
   useEffect(() => {
-    setQueue(Array.from({ length: 5 }, () => generateChordItem(selectedGroups, sharpsFilter)));
+    setQueue(generateInitialQueue(selectedGroups, sharpsFilter));
   }, [selectedGroups, sharpsFilter]);
 
   // Notify parent when current chord changes
