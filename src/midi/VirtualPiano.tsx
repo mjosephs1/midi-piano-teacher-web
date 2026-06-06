@@ -1,4 +1,7 @@
-import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS, KEYBOARD_SIZES } from '../pages/Settings';
+import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGear } from '@fortawesome/free-solid-svg-icons';
+import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS, KEYBOARD_SIZES, Settings } from '../pages/Settings';
 import { noteNumberToName } from './noteUtils';
 import './VirtualPiano.css';
 
@@ -12,6 +15,7 @@ interface VirtualPianoProps {
   showSettings?: boolean;
   showNotes?: boolean;
   onNumKeysChange?: (numKeys: number) => void;
+  onShowNotesChange?: (showNotes: boolean) => void;
 }
 
 export function VirtualPiano({
@@ -24,7 +28,10 @@ export function VirtualPiano({
   showSettings = false,
   showNotes = false,
   onNumKeysChange,
+  onShowNotesChange,
 }: VirtualPianoProps = {}) {
+    const [settingsOpen, setSettingsOpen] = useState(false);
+
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
     const offset = KEYBOARD_OFFSETS[numKeys] ?? 21;
     const blackKeyPattern = [true, true, false, true, true, true, false];
@@ -61,8 +68,7 @@ export function VirtualPiano({
     const headerXPosition = (keyboardWidth/2) - (headerWidth/2); // centered
     const headerYPosition = scaleFactor * 1.4;
 
-    const keySelectorFontSize = scaleFactor * 0.55;
-    const keySelectorWidth = keySelectorFontSize * 8;
+    const gearIconSize = scaleFactor * 1.4;
 
     const getKeyNumber = (whiteKeyNum: number) => {
         const adjustedWhiteKeyNum = whiteKeyNum + startWhiteKeyIndex;
@@ -74,8 +80,9 @@ export function VirtualPiano({
     }
 
     return (
+      <>
       <svg className="virtual-piano" viewBox={svgDimensions} width={Math.min(heightConstrainedWidth, widthConstratinedWidth)} height={Math.min(heightConstrainedHeight, widthConstratinedHeight)}>
-        <rect 
+        <rect
           x={keyboardEdgePadding/2}
           y={keyboardEdgePadding/2}
           width={(whiteKeyWidth * numWhiteKeys) + (keyboardSideWidth * 2)}
@@ -88,7 +95,7 @@ export function VirtualPiano({
         />
 
         {
-        header !== "" && 
+        header !== "" &&
           <text
             x={headerXPosition}
             y={headerYPosition}
@@ -126,7 +133,7 @@ export function VirtualPiano({
             ) : null
         })}
 
-        {/* Display Notes on keybaord */}
+        {/* Display Notes on keyboard */}
         {Array.from({ length: numWhiteKeys }).map((_, i) => {
             const noteNumber = getKeyNumber(i) + offset;
           return showNotes ? (<text
@@ -166,25 +173,51 @@ export function VirtualPiano({
 
         {showSettings && (
           <foreignObject
-            x={keyboardWidth - keyboardSideWidth - 100}
-            y={(keyboardTopWidth - scaleFactor * 1.7) / 2}
-            width={keySelectorWidth}
-            height={scaleFactor * 1.4}
+            x={keyboardWidth - keyboardSideWidth - gearIconSize - scaleFactor * 0.3}
+            y={(keyboardTopWidth - gearIconSize) / 2}
+            width={gearIconSize}
+            height={gearIconSize}
           >
-            <div style={{display: 'flex', alignItems: 'center', gap: '4px', height: '100%'}}>
-              <select
-                value={numKeys}
-                onChange={e => onNumKeysChange?.(parseInt(e.target.value, 10))}
-                style={{fontSize: `${keySelectorFontSize}px`}}
-              >
-                {KEYBOARD_SIZES.map(size => (
-                  <option key={size} value={size}>{`${size} Keys`}</option>
-                ))}
-              </select>
-            </div>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              style={{
+                width: '100%',
+                height: '100%',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: `${scaleFactor * 0.8}px`,
+                color: '#555',
+              }}
+            >
+              <FontAwesomeIcon icon={faGear} />
+            </button>
           </foreignObject>
         )}
 
       </svg>
+
+      {settingsOpen && (
+        <>
+          <div className="piano-settings-backdrop" onClick={() => setSettingsOpen(false)} />
+          <div className="piano-settings-panel">
+            <div className="piano-settings-panel-header">
+              <h3>Piano Settings</h3>
+              <button className="piano-settings-close" onClick={() => setSettingsOpen(false)}>✕</button>
+            </div>
+            <Settings
+              numKeys={numKeys}
+              onNumKeysChange={onNumKeysChange ?? (() => {})}
+              keyboardSizes={KEYBOARD_SIZES}
+              showNotes={showNotes}
+              onShowNotesChange={onShowNotesChange ?? (() => {})}
+            />
+          </div>
+        </>
+      )}
+      </>
     );
   }

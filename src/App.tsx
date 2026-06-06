@@ -19,30 +19,43 @@ library.add(faGear, faCircleUser, faRankingStar, faChartLine)
 
 const STORAGE_KEY = 'midiPianoNumKeys';
 
-const App: FC = () => {
-  const [numKeys, setNumKeys] = useState<number>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored !== null) {
-        const parsed = parseInt(stored, 10);
-        if (!isNaN(parsed)) return parsed;
+interface PianoSettings {
+  numKeys: number;
+  showNotes: boolean;
+}
+
+function loadPianoSettings(): PianoSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored !== null) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === 'object') {
+        const numKeys = typeof parsed.numKeys === 'number' ? parsed.numKeys : 88;
+        const showNotes = typeof parsed.showNotes === 'boolean' ? parsed.showNotes : false;
+        return { numKeys, showNotes };
       }
-    } catch {
-      // localStorage unavailable
     }
-    return 88;
-  });
+  } catch {
+    // localStorage unavailable or invalid JSON
+  }
+  return { numKeys: 88, showNotes: false };
+}
+
+const App: FC = () => {
+  const [numKeys, setNumKeys] = useState<number>(() => loadPianoSettings().numKeys);
+  const [showNotes, setShowNotes] = useState<boolean>(() => loadPianoSettings().showNotes);
+
   useEffect(() => {
     document.title = 'MIDI Piano Teacher';
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, String(numKeys));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ numKeys, showNotes }));
     } catch {
       // localStorage unavailable, skip persistence
     }
-  }, [numKeys]);
+  }, [numKeys, showNotes]);
 
   return (
     <div className="App">
@@ -70,9 +83,9 @@ const App: FC = () => {
       </header>
 
       <Routes>
-        <Route path="/" element={<Home numKeys={numKeys} onNumKeysChange={setNumKeys} />} />
+        <Route path="/" element={<Home numKeys={numKeys} onNumKeysChange={setNumKeys} showNotes={showNotes} onShowNotesChange={setShowNotes} />} />
         <Route path="/chord-explorer" element={<ChordExplorer/>} />
-<Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} onNumKeysChange={setNumKeys} />} />
+        <Route path="/practice-chords/practice" element={<PracticeMode numKeys={numKeys} onNumKeysChange={setNumKeys} showNotes={showNotes} onShowNotesChange={setShowNotes} />} />
         <Route path="/practice-chords/timed" element={<TimedMode />} />
         <Route path="/practice-chords/high-scores" element={<HighScores />} />
         <Route path="/practice-chords/progress" element={<Progress />} />

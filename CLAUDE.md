@@ -43,7 +43,7 @@ src/
   ├── reportWebVitals.ts     # Web vitals reporting
   ├── pages/                 # Route-level page components
   │   ├── Home.tsx           # Home page route with piano display
-  │   ├── Settings.tsx       # KEYBOARD_SIZES/KEYBOARD_OFFSETS exports (component no longer rendered in header)
+  │   ├── Settings.tsx       # KEYBOARD_SIZES/KEYBOARD_OFFSETS exports + Settings component rendered inside VirtualPiano's gear-icon modal
   │   ├── Settings.css       # Settings styling
   │   ├── ChordExplorer.tsx      # Chord Explorer page with interactive chord button grid
   │   ├── ChordExplorer.css      # Styling for the Chord Explorer page
@@ -178,8 +178,9 @@ The `VirtualPiano` component renders a visual representation of a piano keyboard
 - `numKeys` (default: `88`) — total number of keys to display on the piano (25, 37, 49, 61, 76, or 88)
 - `pressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers that are currently pressed; these keys render with red fill
 - `secondaryPressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers to highlight with a light gray fill. Used in PracticeMode to show live MIDI input alongside the static target chord. A key in both sets renders as a darker red (`#b02828`) to indicate a correct match.
-- `showSettings` (default: `false`) — when `true`, renders a keyboard-size dropdown inside the piano's header area (top band above the keys), positioned on the right side. Currently `true` in `PracticeMode`. Uses SVG `<foreignObject>` to embed HTML within the SVG coordinate space so it scales correctly with the piano. No `xmlns` attribute needed on the inner div — React handles the namespace correctly.
-- `onNumKeysChange` — callback `(numKeys: number) => void` invoked when the user selects a different keyboard size from the settings dropdown. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value (e.g., via `App.tsx`'s localStorage `useEffect`).
+- `showSettings` (default: `false`) — when `true`, renders a gear icon button (⚙) in the piano's header area (top band above the keys), right-aligned. Clicking the gear opens a centered modal containing the `Settings` component (keyboard-size dropdown + Show Notes checkbox). Currently `true` in `PracticeMode` and `Home`. Uses SVG `<foreignObject>` for the gear button; the modal is rendered as a sibling outside the SVG in a React fragment.
+- `onNumKeysChange` — callback `(numKeys: number) => void` invoked when the user selects a different keyboard size from the settings modal. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value (e.g., via `App.tsx`'s localStorage `useEffect`).
+- `onShowNotesChange` — callback `(showNotes: boolean) => void` invoked when the user toggles the "Show Notes" checkbox in the settings modal. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value.
 
 **MIDI Offset Mapping:**
 The `VirtualPiano` component uses the `KEYBOARD_OFFSETS` map (exported from `src/Settings.tsx`) to correctly align virtual keys with real MIDI note numbers from physical keyboards. Each keyboard size has a starting note, and the offset maps that starting note to the virtual piano's key positions. This ensures that pressing the lowest key on a physical keyboard highlights the leftmost key on the virtual piano.
@@ -250,26 +251,28 @@ The component displays two sections when MIDI is active:
 - **Chord section**: The detected chord name if 3+ unique pitch classes form a recognized chord pattern (e.g., `"C Major"`); otherwise blank
 
 ### Settings Component (`Settings.tsx`)
-The `Settings` component provides a user interface for selecting keyboard size. It is a controlled component that receives the current setting and a change callback as props.
+The `Settings` component provides a user interface for selecting keyboard size and toggling note labels. It is a controlled component rendered inside VirtualPiano's settings modal (opened via the gear icon).
 
 **Features:**
 - Dropdown with 6 preset keyboard sizes: 25, 37, 49, 61, 76, 88 keys
 - Shows user-friendly labels ("25 keys", "88 keys", etc.)
-- Current selection is always displayed in the dropdown
+- Checkbox to toggle "Show Notes" (renders note names on piano keys)
 
 **Props:**
 - `numKeys: number` — the currently selected total key count
 - `onNumKeysChange: (numKeys: number) => void` — callback when user selects a different size
 - `keyboardSizes: readonly number[]` — array of available total key counts
+- `showNotes: boolean` — whether note labels are currently shown on piano keys
+- `onShowNotesChange: (showNotes: boolean) => void` — callback when user toggles the Show Notes checkbox
 
 **Helper function:**
 - `getWhiteKeysFromTotalKeys(numKeys: number): number` — converts total keys to white keys for internal use in `Piano`
 
 **State Management:**
-The `Settings` component has no local state. The parent `App.tsx` owns the `numKeys` state:
-- Initial value is read from `localStorage` (key: `midiPianoNumKeys`) on component mount
-- Default value is 88 keys
-- On every change, the new value is persisted to `localStorage`
+The `Settings` component has no local state. The parent `App.tsx` owns both `numKeys` and `showNotes` state:
+- Both values are stored together as a JSON object under localStorage key `midiPianoNumKeys`: `{ numKeys: number, showNotes: boolean }`
+- Defaults: `numKeys = 88`, `showNotes = false`
+- On every change to either value, the full object is persisted to `localStorage`
 - Both localStorage reads and writes are wrapped in try/catch to handle unavailability (e.g., private browsing)
 
 ### ChordExplorer Component (`ChordExplorer.tsx`)

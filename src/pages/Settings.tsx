@@ -28,12 +28,16 @@ interface SettingsProps {
   numKeys: number;
   onNumKeysChange: (numKeys: number) => void;
   keyboardSizes: readonly number[];
+  showNotes: boolean;
+  onShowNotesChange: (showNotes: boolean) => void;
 }
 
 export const Settings: FC<SettingsProps> = ({
   numKeys,
   onNumKeysChange,
   keyboardSizes,
+  showNotes,
+  onShowNotesChange,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onNumKeysChange(parseInt(e.target.value, 10));
@@ -41,7 +45,6 @@ export const Settings: FC<SettingsProps> = ({
 
   return (
     <div className="settings-page">
-      {/* <h2>Settings</h2> */}
       <div className="settings-row">
         <label htmlFor="keyboard-size">Keyboard Size</label>
         <select
@@ -56,6 +59,15 @@ export const Settings: FC<SettingsProps> = ({
           ))}
         </select>
       </div>
+      <label className="settings-checkbox-row" htmlFor="show-notes">
+        <input
+          id="show-notes"
+          type="checkbox"
+          checked={showNotes}
+          onChange={e => onShowNotesChange(e.target.checked)}
+        />
+        Show Notes
+      </label>
     </div>
   );
 };
