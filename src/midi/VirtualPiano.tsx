@@ -1,4 +1,5 @@
 import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS, KEYBOARD_SIZES } from '../pages/Settings';
+import { noteNumberToName } from './noteUtils';
 import './VirtualPiano.css';
 
 interface VirtualPianoProps {
@@ -9,6 +10,7 @@ interface VirtualPianoProps {
   maxHeight?: number;
   header?: string;
   showSettings?: boolean;
+  showNotes?: boolean;
   onNumKeysChange?: (numKeys: number) => void;
 }
 
@@ -20,6 +22,7 @@ export function VirtualPiano({
   maxHeight = 200,
   header = "",
   showSettings = false,
+  showNotes = false,
   onNumKeysChange,
 }: VirtualPianoProps = {}) {
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
@@ -120,6 +123,32 @@ export function VirtualPiano({
                     width={blackKeyWidth}
                     height={blackKeyHeight}
                 />
+            ) : null
+        })}
+
+        {/* Display Notes on keybaord */}
+        {Array.from({ length: numWhiteKeys }).map((_, i) => {
+            const noteNumber = getKeyNumber(i) + offset;
+          return showNotes ? (<text
+            key={`white-note-${i}`}
+            x={(i * whiteKeyWidth) + keyboardSideWidth + (keyboardEdgePadding/2) + whiteKeyWidth/3}
+            y={keyboardTopWidth - (keyboardHeight*0.05) + whiteKeyHeight*0.95}
+            height={whiteKeyHeight}
+            fill="black"
+          >{noteNumberToName(noteNumber)}</text>) : null
+        })}
+        {Array.from({ length: numWhiteKeys }).map((_, i) => {
+            const noteNumber = getKeyNumber(i) + 1;
+            return showNotes && blackKeyPattern[(startWhiteKeyIndex + i) % 7] && noteNumber < numKeys ? (
+                <text
+                    key={`black-note-${i}`}
+                    x={(i * whiteKeyWidth) + (whiteKeyWidth-(blackKeyWidth/2)) + keyboardSideWidth + (keyboardEdgePadding/2)}
+                    y={keyboardTopWidth - (keyboardHeight*0.05) + blackKeyHeight*0.95}
+                    width={blackKeyWidth}
+                    height={blackKeyHeight}
+                    fill="white"
+                    fontSize={scaleFactor*0.4}
+                >{noteNumberToName(noteNumber + offset)}</text>
             ) : null
         })}
 
