@@ -28,6 +28,16 @@
   font-size: 2.5rem;
 }
 
+@media (max-width: 600px) {
+  .app-header {
+    padding: 0 0.5rem;
+  }
+
+  .app-header h1 {
+    font-size: 1.3rem;
+  }
+}
+
 .title-link {
   text-decoration: none;
   color: inherit;
