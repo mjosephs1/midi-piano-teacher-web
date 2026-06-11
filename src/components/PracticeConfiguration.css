@@ -211,3 +211,15 @@
   gap: 4px;
   align-items: center;
 }
+
+@media (max-width: 600px) {
+  .config-top-row {
+    flex-direction: column;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .config-top-row {
+    flex-direction: column;
+  }
+}
