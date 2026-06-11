@@ -42,6 +42,12 @@
   }
 }
 
+@media (orientation: landscape) and (max-height: 500px) {
+  .App > :not(.app-header) {
+    padding: 1rem 0.5rem;
+  }
+}
+
 .title-link {
   text-decoration: none;
   color: inherit;
