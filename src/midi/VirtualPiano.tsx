@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
 import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS, KEYBOARD_SIZES, Settings } from '../pages/Settings';
@@ -31,6 +31,13 @@ export function VirtualPiano({
   onShowNotesChange,
 }: VirtualPianoProps = {}) {
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+      const handleResize = () => setScreenWidth(window.innerWidth);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const numWhiteKeys = getWhiteKeysFromTotalKeys(numKeys);
     const offset = KEYBOARD_OFFSETS[numKeys] ?? 21;
@@ -43,7 +50,7 @@ export function VirtualPiano({
     const startWhiteKeyIndex = semitoneToWhiteKeyIndex[startPitchClass] ?? 0;
 
     // Scalable Interactive Piano
-    const scaleFactor = 30;
+    const scaleFactor = 50;
     const whiteKeyWidth = scaleFactor;
     const whiteKeyHeight = whiteKeyWidth * 4.5;
     const blackKeyWidth = whiteKeyWidth * 0.6;
@@ -60,7 +67,8 @@ export function VirtualPiano({
     const widthToHeighRatio = keyboardWidth/keyboardHeight;
     const heightConstrainedHeight = Math.min(keyboardHeight, maxHeight); // The Virtual Piano height can not exceed 200px
     const heightConstrainedWidth = heightConstrainedHeight * widthToHeighRatio;
-    const widthConstratinedWidth = Math.min(keyboardWidth, maxWidth); // The Virtual Piano width can not exceed 1000px
+    const effectiveMaxWidth = Math.min(maxWidth, screenWidth*0.9);
+    const widthConstratinedWidth = Math.min(keyboardWidth, effectiveMaxWidth); // The Virtual Piano width can not exceed 1000px
     const widthConstratinedHeight = widthConstratinedWidth * (1/widthToHeighRatio);
 
     const headerFontSize = scaleFactor*0.8;
