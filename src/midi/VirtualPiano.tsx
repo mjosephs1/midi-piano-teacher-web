@@ -182,7 +182,7 @@ export function VirtualPiano({
         {showSettings && (
           <foreignObject
             x={keyboardWidth - keyboardSideWidth - gearIconSize - scaleFactor * 0.3}
-            y={(keyboardTopWidth - gearIconSize) / 2}
+            y={scaleFactor * 0.3}
             width={gearIconSize}
             height={gearIconSize}
           >
@@ -198,7 +198,7 @@ export function VirtualPiano({
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: `${scaleFactor * 0.8}px`,
-                color: '#555',
+                color: 'black',
               }}
             >
               <FontAwesomeIcon icon={faGear} />
