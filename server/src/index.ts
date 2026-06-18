@@ -1,10 +1,17 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import path from 'path';
 import { db } from './db';
 import { userSettings } from './schema';
+import settingsRoutes from './routes/settings';
+import timedResultsRoutes from './routes/timedResults';
 
 const server = Fastify({ logger: true });
+
+server.register(cors, { origin: 'http://localhost:3000' });
+server.register(settingsRoutes, { prefix: '/api/settings' });
+server.register(timedResultsRoutes, { prefix: '/api/timed-results' });
 
 server.get('/health', async () => {
   return { status: 'ok' };
