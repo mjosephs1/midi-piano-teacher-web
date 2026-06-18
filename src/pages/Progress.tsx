@@ -1,62 +1,59 @@
-import { FC, useState, useEffect, useRef } from 'react';
+import { FC, useState, useEffect, useCallback } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { PracticeConfig } from '../midi/noteUtils';
+import { PracticeConfig, TimedResult } from '../midi/noteUtils';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
 import { useStorage } from '../context/StorageContext';
 import './Progress.css';
 
 type ChartDataPoint = { date: string; avgScore: number };
 
+function buildChartData(results: TimedResult[]): ChartDataPoint[] {
+  const byDay: Record<string, number[]> = {};
+  for (const entry of results) {
+    const day = new Date(entry.timestamp).toLocaleDateString();
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(entry.score);
+  }
+  return Object.entries(byDay)
+    .map(([date, scores]) => ({
+      date,
+      avgScore: Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10,
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
 export const Progress: FC = () => {
   const { loadSettings, saveSettings, loadTimedResults } = useStorage();
   const [config, setConfig] = useState<PracticeConfig>(new PracticeConfig());
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const settingsLoadedRef = useRef(false);
 
-  // Load config on mount
+  // Load settings then results in sequence — avoids a redundant results fetch with the default config
   useEffect(() => {
-    loadSettings().then(settings => {
-      setConfig(new PracticeConfig(
-        new Set(settings.selectedGroups),
-        settings.sharpsFilter,
-        settings.handsMode,
-      ));
-      settingsLoadedRef.current = true;
-    }).catch(() => {
-      settingsLoadedRef.current = true;
-    });
-  }, [loadSettings]);
+    loadSettings()
+      .then(settings => {
+        const loadedConfig = new PracticeConfig(
+          new Set(settings.selectedGroups),
+          settings.sharpsFilter,
+          settings.handsMode,
+        );
+        setConfig(loadedConfig);
+        return loadTimedResults(loadedConfig);
+      })
+      .then(results => setChartData(buildChartData(results)))
+      .catch(() => {});
+  }, [loadSettings, loadTimedResults]);
 
-  // Save config when it changes
-  useEffect(() => {
-    if (!settingsLoadedRef.current) return;
+  const handleConfigChange = useCallback((newConfig: PracticeConfig) => {
+    setConfig(newConfig);
     saveSettings({
-      selectedGroups: [...config.selectedGroups],
-      sharpsFilter: config.sharpsFilter,
-      handsMode: config.handsMode,
+      selectedGroups: [...newConfig.selectedGroups],
+      sharpsFilter: newConfig.sharpsFilter,
+      handsMode: newConfig.handsMode,
     });
-  }, [config, saveSettings]);
-
-  // Load chart data whenever config changes
-  useEffect(() => {
-    loadTimedResults(config).then(results => {
-      const byDay: Record<string, number[]> = {};
-      for (const entry of results) {
-        const day = new Date(entry.timestamp).toLocaleDateString();
-        if (!byDay[day]) byDay[day] = [];
-        byDay[day].push(entry.score);
-      }
-      const data = Object.entries(byDay)
-        .map(([date, scores]) => ({
-          date,
-          avgScore: Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10,
-        }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      setChartData(data);
-    });
-  }, [config, loadTimedResults]);
+    loadTimedResults(newConfig).then(results => setChartData(buildChartData(results)));
+  }, [loadTimedResults, saveSettings]);
 
   return (
     <div className="progress-page">
@@ -67,7 +64,7 @@ export const Progress: FC = () => {
           <h3 className="progress-config-card-title">Configuration</h3>
           <PracticeConfiguration
             config={config}
-            onPracticeConfigChange={setConfig}
+            onPracticeConfigChange={handleConfigChange}
           />
         </div>
 

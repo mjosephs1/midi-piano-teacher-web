@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useRef } from 'react';
+import { FC, useState, useEffect, useCallback } from 'react';
 import { PracticeConfig, TimedResult } from '../midi/noteUtils';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
 import { useStorage } from '../context/StorageContext';
@@ -6,51 +6,49 @@ import './HighScores.css';
 
 type RankedResult = TimedResult & { rank: number; accuracy: number };
 
+function processResults(results: TimedResult[]): RankedResult[] {
+  const withAccuracy = results.map(entry => ({
+    ...entry,
+    accuracy: entry.score + entry.mistakes === 0
+      ? 100
+      : Math.round((entry.score / (entry.score + entry.mistakes)) * 100),
+  }));
+  return withAccuracy
+    .sort((a, b) => b.score !== a.score ? b.score - a.score : b.accuracy - a.accuracy)
+    .slice(0, 10)
+    .map((entry, i) => ({ ...entry, rank: i + 1 }));
+}
+
 export const HighScores: FC = () => {
   const { loadSettings, saveSettings, loadTimedResults } = useStorage();
   const [config, setConfig] = useState<PracticeConfig>(new PracticeConfig());
   const [topScores, setTopScores] = useState<RankedResult[]>([]);
-  const settingsLoadedRef = useRef(false);
 
-  // Load config on mount
+  // Load settings then results in sequence — avoids a redundant results fetch with the default config
   useEffect(() => {
-    loadSettings().then(settings => {
-      setConfig(new PracticeConfig(
-        new Set(settings.selectedGroups),
-        settings.sharpsFilter,
-        settings.handsMode,
-      ));
-      settingsLoadedRef.current = true;
-    }).catch(() => {
-      settingsLoadedRef.current = true;
-    });
-  }, [loadSettings]);
+    loadSettings()
+      .then(settings => {
+        const loadedConfig = new PracticeConfig(
+          new Set(settings.selectedGroups),
+          settings.sharpsFilter,
+          settings.handsMode,
+        );
+        setConfig(loadedConfig);
+        return loadTimedResults(loadedConfig);
+      })
+      .then(results => setTopScores(processResults(results)))
+      .catch(() => {});
+  }, [loadSettings, loadTimedResults]);
 
-  // Save config when it changes
-  useEffect(() => {
-    if (!settingsLoadedRef.current) return;
+  const handleConfigChange = useCallback((newConfig: PracticeConfig) => {
+    setConfig(newConfig);
     saveSettings({
-      selectedGroups: [...config.selectedGroups],
-      sharpsFilter: config.sharpsFilter,
-      handsMode: config.handsMode,
+      selectedGroups: [...newConfig.selectedGroups],
+      sharpsFilter: newConfig.sharpsFilter,
+      handsMode: newConfig.handsMode,
     });
-  }, [config, saveSettings]);
-
-  // Load scores whenever config changes
-  useEffect(() => {
-    loadTimedResults(config).then(results => {
-      const withAccuracy = results.map(entry => ({
-        ...entry,
-        accuracy: entry.score + entry.mistakes === 0
-          ? 100
-          : Math.round((entry.score / (entry.score + entry.mistakes)) * 100),
-      }));
-      const sorted = withAccuracy.sort((a, b) =>
-        b.score !== a.score ? b.score - a.score : b.accuracy - a.accuracy
-      );
-      setTopScores(sorted.slice(0, 10).map((entry, i) => ({ ...entry, rank: i + 1 })));
-    });
-  }, [config, loadTimedResults]);
+    loadTimedResults(newConfig).then(results => setTopScores(processResults(results)));
+  }, [loadTimedResults, saveSettings]);
 
   return (
     <div className="high-scores-page">
@@ -61,7 +59,7 @@ export const HighScores: FC = () => {
           <h3 className="high-scores-config-card-title">Configuration</h3>
           <PracticeConfiguration
             config={config}
-            onPracticeConfigChange={setConfig}
+            onPracticeConfigChange={handleConfigChange}
           />
         </div>
 
