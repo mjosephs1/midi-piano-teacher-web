@@ -6,41 +6,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a MIDI Piano Teacher web application built with React 19, TypeScript, and Create React App. The project aims to provide interactive piano instruction using MIDI input.
 
+The app is hosted on GitHub Pages (frontend only). An optional local API server backed by PostgreSQL provides persistent storage. When the API server is not reachable, the app falls back to localStorage automatically.
+
 ## Development Commands
 
-### Running the development server
+### Frontend (repo root)
 ```bash
-npm start
+npm install   # install dependencies
+npm start     # dev server at http://localhost:3000
+npm test      # test runner in interactive watch mode
+npm run build # production build in build/
 ```
-- Starts the dev server at http://localhost:3000 (browser opens manually)
-- Changes to source files will automatically reload the page
-- The browser does not open automatically; navigate to http://localhost:3000 manually
 
-### Running tests
+### API Server (`server/` directory)
 ```bash
-npm test
+npm install      # install dependencies
+npm run dev      # start dev server at http://localhost:3001 (tsx watch, hot reload)
+npm run build    # compile TypeScript to dist/
+npm run start    # run compiled server
+npm run db:generate  # generate a new Drizzle migration after editing schema.ts
 ```
-- Launches the test runner in interactive watch mode
-- Run specific test files by pressing `p` to filter, then enter the filename
-- Press `a` to run all tests
 
-### Building for production
+### Database (Docker)
 ```bash
-npm run build
+docker compose up -d    # start Postgres in background
+docker compose down     # stop Postgres (data persists in Docker volume)
+docker compose down -v  # stop Postgres and wipe all data (triggers fresh migration on next server start)
+docker compose ps       # check container status
 ```
-- Creates an optimized production build in the `build/` folder
-- Output is minified with hashed filenames
 
 ## Project Structure
 
 ```
 src/
-  ├── App.tsx                # Main router and layout component
+  ├── App.tsx                # Main router, layout, numKeys/showNotes state, error banner
   ├── App.css                # App styling
-  ├── index.tsx              # React root entry point (wraps app in Router and MidiProvider)
+  ├── index.tsx              # React root entry point (wraps app in StorageProvider, BrowserRouter, MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
   ├── reportWebVitals.ts     # Web vitals reporting
+  ├── context/
+  │   └── StorageContext.tsx # StorageProvider and useStorage() hook — health check + all storage operations
   ├── pages/                 # Route-level page components
   │   ├── Home.tsx           # Home page route with piano display
   │   ├── Settings.tsx       # KEYBOARD_SIZES/KEYBOARD_OFFSETS exports + Settings component rendered inside VirtualPiano's gear-icon modal
@@ -66,10 +72,23 @@ src/
       ├── VirtualPiano.tsx   # Visual piano component that displays and animates pressed keys
       ├── VirtualPiano.css   # Styling for the piano component
       └── noteUtils.ts       # Utilities: note number to name conversion and chord detection
+server/
+  ├── src/
+  │   ├── index.ts           # Fastify server entry point — runs migrations, seeds user 0, registers routes
+  │   ├── db.ts              # pg Pool + Drizzle instance
+  │   ├── schema.ts          # Drizzle table definitions (single source of truth for DB schema)
+  │   └── routes/
+  │       ├── settings.ts    # GET/PATCH /api/settings
+  │       └── timedResults.ts # GET/POST /api/timed-results
+  ├── drizzle/               # Auto-generated SQL migration files (committed to git)
+  ├── drizzle.config.ts      # Drizzle Kit config (points at schema.ts and drizzle/ folder)
+  ├── package.json
+  └── tsconfig.json
 public/
   ├── index.html             # HTML entry point (served by dev server)
   └── [other static assets]
-package.json                 # Dependencies and scripts
+docker-compose.yml           # Postgres 17 service (port 5432, named volume for data)
+package.json                 # Frontend dependencies and scripts
 tsconfig.json               # TypeScript configuration
 ```
 
@@ -93,6 +112,117 @@ tsconfig.json               # TypeScript configuration
 - Type definitions installed: `@types/react`, `@types/react-dom`, `@types/node`
 - `tsconfig.json` configured with strict mode and React 19 JSX support
 - All source files use `.tsx` (for components) or `.ts` (for utilities) extensions
+
+## Persistence Architecture
+
+### Overview
+
+Storage is abstracted behind `StorageContext` (`src/context/StorageContext.tsx`). On app load it performs a health check against `http://localhost:3001/health`. If successful, it uses the API server + PostgreSQL for all reads and writes. If the check fails (or times out after 3 seconds), it falls back to localStorage. Components never call localStorage directly — they always use `useStorage()`.
+
+The app renders nothing while the health check is in flight (`StorageProvider` returns `null` during `'checking'` state). In practice this is ~50ms for localhost; up to 3 seconds if the server is unavailable.
+
+### `useStorage()` hook
+
+```tsx
+const { mode, error, loadSettings, saveSettings, loadTimedResults, saveTimedResult } = useStorage();
+```
+
+- `mode: 'checking' | 'api' | 'local'` — current storage backend (never `'checking'` by the time components render)
+- `error: string | null` — set if an API call fails mid-session; displayed as a red banner in `App.tsx`
+- `loadSettings(): Promise<AllSettings>` — loads all persisted settings for user 0
+- `saveSettings(patch: Partial<AllSettings>): Promise<void>` — updates a subset of settings
+- `loadTimedResults(config: PracticeConfig): Promise<TimedResult[]>` — fetches all results matching the given config
+- `saveTimedResult(score, mistakes, config): Promise<void>` — persists one timed result
+
+### `AllSettings` shape
+
+```ts
+interface AllSettings {
+  numKeys: number;           // keyboard size (25/37/49/61/76/88)
+  showNotes: boolean;        // whether to show note labels on piano keys
+  selectedGroups: string[];  // chord groups selected for practice
+  sharpsFilter: SharpsFilter;
+  handsMode: HandsMode;
+  octaveOffsetRight: number;
+  octaveOffsetLeft: number;
+}
+```
+
+### Component loading pattern
+
+All components that need persisted state follow the same pattern:
+
+```tsx
+const { loadSettings, saveSettings } = useStorage();
+const [config, setConfig] = useState<PracticeConfig>(new PracticeConfig()); // default while loading
+const settingsLoadedRef = useRef(false); // guards against saving before load completes
+
+useEffect(() => {
+  loadSettings().then(settings => {
+    setConfig(new PracticeConfig(...));
+    settingsLoadedRef.current = true;
+  });
+}, [loadSettings]);
+
+useEffect(() => {
+  if (!settingsLoadedRef.current) return; // skip save on initial default state
+  saveSettings({ selectedGroups: [...config.selectedGroups], ... });
+}, [config, saveSettings]);
+```
+
+The `settingsLoadedRef` guard prevents overwriting stored data with defaults on the initial render before the async load completes.
+
+### API Server
+
+Built with **Fastify** + **Drizzle ORM** + **pg** (PostgreSQL). Runs on port 3001.
+
+**Endpoints:**
+- `GET /health` — connectivity check; also exercises the DB connection
+- `GET /api/settings` — returns the `user_settings` row for `user_id = 0`
+- `PATCH /api/settings` — partial update of any settings fields
+- `GET /api/timed-results?selected_groups=Major&sharps_filter=with-sharps&hands_mode=right` — returns matching results
+- `POST /api/timed-results` — inserts a new result row
+
+**On startup**, the server runs `migrate()` (applies any pending Drizzle migrations) then seeds `user_id = 0` into `user_settings` if not present.
+
+### Database Schema
+
+Two tables, both with a `user_id INTEGER DEFAULT 0` column. Currently only user 0 is used. When a real auth system is added, set `user_id` to the authenticated user's ID and add a `FOREIGN KEY` constraint pointing to a `users` table.
+
+```sql
+CREATE TABLE user_settings (
+  user_id             INTEGER  PRIMARY KEY DEFAULT 0,
+  num_keys            INTEGER  NOT NULL DEFAULT 88,
+  show_notes          BOOLEAN  NOT NULL DEFAULT false,
+  selected_groups     TEXT[]   NOT NULL DEFAULT '{Major}',
+  sharps_filter       TEXT     NOT NULL DEFAULT 'with-sharps',
+  hands_mode          TEXT     NOT NULL DEFAULT 'right',
+  octave_offset_right INTEGER  NOT NULL DEFAULT 0,
+  octave_offset_left  INTEGER  NOT NULL DEFAULT 0
+);
+
+CREATE TABLE timed_results (
+  id              SERIAL      PRIMARY KEY,
+  user_id         INTEGER     NOT NULL DEFAULT 0,
+  score           INTEGER     NOT NULL,
+  mistakes        INTEGER     NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  selected_groups TEXT[]      NOT NULL,
+  sharps_filter   TEXT        NOT NULL,
+  hands_mode      TEXT        NOT NULL
+);
+```
+
+### Schema migrations
+
+`server/src/schema.ts` is the single source of truth. To make a schema change:
+
+1. Edit `server/src/schema.ts`
+2. Run `cd server && npm run db:generate` — Drizzle diffs the schema and writes a new `.sql` file to `server/drizzle/`
+3. Commit both files
+4. Restart the server — `migrate()` picks up and applies the new migration automatically
+
+Migration history is tracked in a `__drizzle_migrations` table so migrations are never applied twice.
 
 ## MIDI Architecture
 
@@ -125,14 +255,14 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `SharpsFilter` type — union type `'no-sharps' | 'with-sharps' | 'sharps-only'` used to control which root notes are available for chord generation in practice mode
    - `HandsMode` type — union type `'left' | 'both' | 'right'` used to control how many octaves of each note must be pressed simultaneously during chord matching
    - `PracticeConfig` class — encapsulates practice session settings (`selectedGroups: Set<string>`, `sharpsFilter: SharpsFilter`, `handsMode: HandsMode`) in a single object for cleaner prop passing. Constructor accepts optional parameters with sensible defaults: `new PracticeConfig(new Set(['Major']), 'with-sharps', 'right')`. Provides:
-     - Static constant `STORAGE_KEY = 'midiPianoPracticeConfig'` — used by both PracticeMode and TimedMode for globally-shared settings persistence
-     - `toJson()`: Returns a plain object with serializable fields for localStorage storage
-     - `toString()`: Returns a deterministic string key (e.g., `"Major,Minor|with-sharps|right"`) for use as a history key in localStorage. Sorts `selectedGroups` to ensure consistent keys regardless of selection order.
+     - Static constant `STORAGE_KEY = 'midiPianoPracticeConfig'` — localStorage key used by the StorageContext local fallback
+     - `toJson()`: Returns a plain object with serializable fields
+     - `toString()`: Returns a deterministic string key (e.g., `"Major,Minor|with-sharps|right"`) used as a localStorage history key in the local fallback. Sorts `selectedGroups` to ensure consistent keys regardless of selection order.
      - `fromJson(data)`: Static method that validates and deserializes from a plain object; returns `PracticeConfig | null`
-   - `TIMED_HISTORY_KEY` constant: `'midiPianoTimedHistory'` — used by TimedMode to store result history in localStorage
-   - `OCTAVE_OFFSET_STORAGE_KEY` constant: `'midiPianoOctaveOffset'` — used by PracticeMode to persist the per-hand octave offset. Stored as `{ left: number, right: number }`. "Both" mode shares the `'right'` slot.
+   - `TIMED_HISTORY_KEY` constant: `'midiPianoTimedHistory'` — localStorage key used by the StorageContext local fallback for timed results
+   - `OCTAVE_OFFSET_STORAGE_KEY` constant: `'midiPianoOctaveOffset'` — localStorage key used by the StorageContext local fallback for octave offsets. Stored as `{ left: number, right: number }`. "Both" mode shares the `'right'` slot.
    - `TimedResult` type: Object with `score: number`, `mistakes: number`, and `timestamp: string` (ISO 8601 format)
-   - `TimedHistory` type: Object with config string keys mapping to arrays of `TimedResult` entries
+   - `TimedHistory` type: Object with config string keys mapping to arrays of `TimedResult` entries (used only in the localStorage fallback path of StorageContext)
    - `Chord` class — represents a chord with `rootNote: string` and `patternName: string`. Constructed as `new Chord('C', 'Major')`. Methods:
      - `name()`: returns the chord name string, e.g. `"C Major"`
      - `shorthand()`: returns the pattern shorthand, e.g. `"maj"`, `"m7"`
@@ -179,8 +309,8 @@ The `VirtualPiano` component renders a visual representation of a piano keyboard
 - `pressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers that are currently pressed; these keys render with red fill
 - `secondaryPressedNotes` (default: `new Set()`) — a `Set<number>` of MIDI note numbers to highlight with a light gray fill. Used in PracticeMode to show live MIDI input alongside the static target chord. A key in both sets renders as a darker red (`#b02828`) to indicate a correct match.
 - `showSettings` (default: `false`) — when `true`, renders a gear icon button (⚙) in the piano's header area (top band above the keys), right-aligned. Clicking the gear opens a centered modal containing the `Settings` component (keyboard-size dropdown + Show Notes checkbox). Currently `true` in `PracticeMode` and `Home`. Uses SVG `<foreignObject>` for the gear button; the modal is rendered as a sibling outside the SVG in a React fragment.
-- `onNumKeysChange` — callback `(numKeys: number) => void` invoked when the user selects a different keyboard size from the settings modal. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value (e.g., via `App.tsx`'s localStorage `useEffect`).
-- `onShowNotesChange` — callback `(showNotes: boolean) => void` invoked when the user toggles the "Show Notes" checkbox in the settings modal. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value.
+- `onNumKeysChange` — callback `(numKeys: number) => void` invoked when the user selects a different keyboard size from the settings modal. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value via `saveSettings()`.
+- `onShowNotesChange` — callback `(showNotes: boolean) => void` invoked when the user toggles the "Show Notes" checkbox in the settings modal. Only relevant when `showSettings` is `true`. Callers are responsible for persisting the value via `saveSettings()`.
 
 **MIDI Offset Mapping:**
 The `VirtualPiano` component uses the `KEYBOARD_OFFSETS` map (exported from `src/Settings.tsx`) to correctly align virtual keys with real MIDI note numbers from physical keyboards. Each keyboard size has a starting note, and the offset maps that starting note to the virtual piano's key positions. This ensures that pressing the lowest key on a physical keyboard highlights the leftmost key on the virtual piano.
@@ -196,24 +326,15 @@ export const App: FC = () => {
 };
 ```
 
-Alternatively, to use the piano without MIDI input (e.g., for demos or programmatic control):
-```tsx
-import { VirtualPiano } from './midi/VirtualPiano';
-
-export const Demo: FC = () => {
-  const highlightedNotes = new Set([60, 64, 67]); // C major chord
-  return <VirtualPiano numKeys={88} pressedNotes={highlightedNotes} />;
-};
-```
-
 ### Routing Architecture
 
 The app uses **React Router** for client-side routing. The structure is:
 
-1. **`index.tsx`** wraps the app in `<BrowserRouter>` to enable routing
+1. **`index.tsx`** wraps the app in `<StorageProvider>`, `<BrowserRouter>`, and `<MidiProvider>` (in that order)
 2. **`App.tsx`** contains:
    - The header with navigation links (`<Link>` components). The `<h1>MIDI Piano Teacher</h1>` title is wrapped in a `<Link to="/" className="title-link">` so clicking the title navigates home. There is no separate "Home" nav link.
-   - State management for `numKeys` (keyboard size preference)
+   - State management for `numKeys` and `showNotes` (loaded async via `useStorage()` on mount)
+   - An error banner (`<div className="storage-error-banner">`) shown when `useStorage().error` is non-null
    - The `<Routes>` definition with all application routes
 3. **Routes:**
    - `/` → `<Home>` component
@@ -221,6 +342,7 @@ The app uses **React Router** for client-side routing. The structure is:
    - `/practice-chords/practice` → `<PracticeMode>` component
    - `/practice-chords/timed` → `<TimedMode>` component
    - `/practice-chords/high-scores` → `<HighScores>` component
+   - `/practice-chords/progress` → `<Progress>` component
 4. **Practice nav dropdown**: The "Practice" nav item is a `<div className="nav-dropdown">` with a `<span>` trigger (no navigation on click) and a pure-CSS hover dropdown menu containing links to the two practice modes (Practice Mode and Timed Mode). Moving the mouse from the trigger into the menu stays within the `.nav-dropdown` hover zone so the menu remains open.
 
 5. **User menu dropdown**: A circle-user icon button (`faCircleUser`) inside `nav-links`, positioned immediately to the right of the Practice dropdown. It uses the same pure-CSS hover pattern as the Practice dropdown. The menu contains "High Scores" (links to `/practice-chords/high-scores`) and "Progress" (links to `/practice-chords/progress`).
@@ -269,11 +391,7 @@ The `Settings` component provides a user interface for selecting keyboard size a
 - `getWhiteKeysFromTotalKeys(numKeys: number): number` — converts total keys to white keys for internal use in `Piano`
 
 **State Management:**
-The `Settings` component has no local state. The parent `App.tsx` owns both `numKeys` and `showNotes` state:
-- Both values are stored together as a JSON object under localStorage key `midiPianoNumKeys`: `{ numKeys: number, showNotes: boolean }`
-- Defaults: `numKeys = 88`, `showNotes = false`
-- On every change to either value, the full object is persisted to `localStorage`
-- Both localStorage reads and writes are wrapped in try/catch to handle unavailability (e.g., private browsing)
+`Settings` has no local state. `App.tsx` owns `numKeys` and `showNotes`, loading them async via `useStorage().loadSettings()` on mount and persisting changes via `useStorage().saveSettings({ numKeys, showNotes })`.
 
 ### ChordExplorer Component (`ChordExplorer.tsx`)
 The `ChordExplorer` component provides an interactive tool for exploring chord fingerings on the piano. It displays a grid of chord buttons that, when clicked, highlight the corresponding notes on a 25-key virtual piano.
@@ -306,7 +424,7 @@ The `PracticeMode` component is a practice page where users advance through a qu
 - Shows a horizontal queue of 5 chord cards; the leftmost card is the target to play
 - When the user plays the target chord on their MIDI keyboard, the queue advances (target disappears, new chord added on the right)
 - Includes a `PracticeConfiguration` panel toggled by a gear icon button for selecting chord groups, sharps filter, and hands mode
-- Settings persist globally via `localStorage` (shared across PracticeMode and TimedMode) as a serialized `PracticeConfig` object
+- Settings persist via `useStorage()` (API or localStorage depending on mode)
 - **Octave selector**: Up/down arrow buttons to the right of the VirtualPiano shift the displayed octave by ±12 semitones. Buttons disable at MIDI bounds (0 and 108).
 
 **Props:**
@@ -314,10 +432,11 @@ The `PracticeMode` component is a practice page where users advance through a qu
 - `onNumKeysChange: (numKeys: number) => void` — passed through to VirtualPiano's in-piano settings dropdown
 
 **State:**
-- `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode` in a single object. Initialized from global `PracticeConfig.STORAGE_KEY` with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Serialized and persisted on every change.
+- `config: PracticeConfig` — loaded async on mount via `loadSettings()`. Saved on change via `saveSettings({ selectedGroups, sharpsFilter, handsMode })`.
 - `currentChord: Chord | null` — the current target chord object (not notes). Notes are derived via `currentChord.getNoteIndices(baseNote)` where `baseNote` is computed from `handsMode` and `octaveOffset`.
-- `octaveOffset: number` — number of octaves shifted from the default. Initialized from `OCTAVE_OFFSET_STORAGE_KEY` localStorage for the active hand on mount. When `handsMode` changes, loads the saved offset for the new hand (or defaults to 0). When `numKeys` changes, always resets to 0 (this reset is not saved). Only saved to localStorage when the user explicitly clicks the octave up/down buttons (not on programmatic resets).
+- `octaveOffset: number` — loaded async on mount from `loadSettings()` for the active hand. When `handsMode` changes, re-loads settings to get the correct offset for the new hand. When `numKeys` changes, resets to 0 and saves via `saveSettings()`.
 - `configOpen: boolean` — controls visibility of the `PracticeConfiguration` modal
+- `settingsLoadedRef: MutableRefObject<boolean>` — guards against saving settings before the initial load completes
 
 **Derived values (not state):**
 - `defaultBase`: for right-hand mode = 72; for left-hand mode = `Math.max(36, KEYBOARD_OFFSETS[numKeys] ?? 21)` — ensures the default is always within the visible keyboard range (25/37-key keyboards start at 48, so left-hand default is clamped to 48; 49+ key keyboards use 36)
@@ -340,7 +459,7 @@ The `TimedMode` component is a timed practice mode that uses a four-stage state 
 - None — TimedMode is self-contained and does not receive props from parent
 
 **State:**
-- `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode` in a single object. Initialized from global `PracticeConfig.STORAGE_KEY` (shared with PracticeMode) with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Serialized and persisted on every change.
+- `config: PracticeConfig` — loaded async on mount via `loadSettings()`. Saved on change via `saveSettings()`.
 - `stage: TimedStage` — one of `'CONFIGURE' | 'COUNTDOWN' | 'STARTED' | 'RESULTS'`. Controls which UI is rendered.
 - `countdownStep: number` — 0–3, indexes into `['3', '2', '1', 'Begin']`. Incremented every second during COUNTDOWN.
 - `timeLeft: number` — starts at 60, decrements every second during STARTED. When it reaches 0, transitions to RESULTS.
@@ -351,11 +470,8 @@ The `TimedMode` component is a timed practice mode that uses a four-stage state 
 - **Countdown timer**: `setInterval` fires every 1 second, increments `countdownStep`. When `countdownStep` reaches 3 ("Begin"), the next second triggers transition to STARTED.
 - **Game timer**: `setInterval` fires every 1 second, decrements `timeLeft`. When `timeLeft` reaches 0, transitions to RESULTS.
 
-**Result History:**
-- When entering RESULTS stage, each run's `score`, `mistakes`, and timestamp are automatically saved to localStorage under `TIMED_HISTORY_KEY` (`'midiPianoTimedHistory'`)
-- History is keyed by `config.toString()` (e.g., `"Major|with-sharps|right"`) so that results are grouped by configuration
-- Multiple runs with the same config append new entries to the same array; different configs create separate entries
-- History persists across sessions and can be viewed in browser DevTools (Application → Local Storage → `midiPianoTimedHistory`)
+**Result persistence:**
+When entering RESULTS stage, calls `saveTimedResult(score, mistakes, config)` via `useStorage()`. The API stores results as rows in `timed_results`; the localStorage fallback appends to a keyed history object under `TIMED_HISTORY_KEY`.
 
 **Route:**
 - `/practice-chords/timed` (registered in `App.tsx`)
@@ -365,7 +481,7 @@ The `HighScores` component displays the top 10 Timed Mode results for a selected
 
 **Features:**
 - `PracticeConfiguration` selector at the top to filter scores by config
-- Automatic loading and sorting of results from `TIMED_HISTORY_KEY` localStorage
+- Loads results async via `loadTimedResults(config)` whenever config changes
 - Top 10 results displayed in a table with rank, score, accuracy, and timestamp
 - Primary sorting by score (descending); ties broken by accuracy (descending)
 - Rank #1 highlighted with gold background
@@ -375,18 +491,8 @@ The `HighScores` component displays the top 10 Timed Mode results for a selected
 - None — HighScores is self-contained and does not receive props from parent
 
 **State:**
-- `config: PracticeConfig` — encapsulates `selectedGroups`, `sharpsFilter`, and `handsMode`. Initialized from global `PracticeConfig.STORAGE_KEY` with defaults `new Set(['Major'])`, `'with-sharps'`, and `'right'` respectively. Persisted on change via `useEffect`.
-
-**Derived Data:**
-- `topScores`: computed from `TIMED_HISTORY_KEY` localStorage entry matching `config.toString()`. Sorted by score descending, then accuracy descending. Top 10 entries extracted with rank numbers (1–10).
-- Accuracy calculation (same as TimedMode results): `score + mistakes === 0 ? 100 : Math.round((score / (score + mistakes)) * 100)`
-- Timestamp formatting: `new Date(timestamp).toLocaleDateString()` for human-readable date only
-
-**Table Columns:**
-- `#` — rank from 1 to 10 (black text)
-- `Score` — number of correct chords played
-- `Accuracy` — percentage of attempts that were correct
-- `Date` — ISO 8601 timestamp converted to locale-specific date only
+- `config: PracticeConfig` — loaded async on mount. Saved on change.
+- `topScores: RankedResult[]` — loaded and re-computed in a `useEffect` whenever `config` changes
 
 **Route:**
 - `/practice-chords/high-scores` (registered in `App.tsx`)
@@ -399,17 +505,15 @@ The `Progress` component displays a line chart of the user's average score over 
 - Recharts `LineChart` on the right showing daily average scores over time, with title "Average Score Over Time"
 - X-axis: one tick per calendar day (formatted with `toLocaleDateString()`)
 - Y-axis: average score for that day (average of all Timed Mode runs on that day), labeled "Score"
-- Chart section is vertically centered relative to the Configuration panel (`align-items: center` on the flex layout)
 - Empty state message when no history exists for the selected config
-- Config persisted to `PracticeConfig.STORAGE_KEY` (shared with PracticeMode and TimedMode)
+- Config persisted via `useStorage()`
 
 **Props:**
-- None — self-contained, reads data from localStorage
+- None — self-contained
 
-**Data derivation:**
-- Reads `TIMED_HISTORY_KEY` from localStorage, looks up `history[config.toString()]`
-- Groups `TimedResult[]` entries by day, computes average score per day
-- Sorts data points by date ascending before rendering
+**State:**
+- `config: PracticeConfig` — loaded async on mount. Saved on change.
+- `chartData: ChartDataPoint[]` — loaded and re-computed in a `useEffect` whenever `config` changes via `loadTimedResults(config)`
 
 **Route:**
 - `/practice-chords/progress` (registered in `App.tsx`)
@@ -456,22 +560,23 @@ The `PracticeConfiguration` component is a controlled component for selecting wh
 - `config: PracticeConfig` — the current practice configuration object encapsulating `selectedGroups`, `sharpsFilter`, and `handsMode`
 - `onPracticeConfigChange: (config: PracticeConfig) => void` — callback fired when the user makes any configuration change (toggles a chord group, selects a sharps filter option, or selects a hands mode). Receives the updated `PracticeConfig` object.
 
-**Usage in PracticeMode and TimedMode:**
-The `PracticeConfiguration` is placed inside a collapsible panel (toggled by a gear icon button) in `PracticeMode`, and on the main CONFIGURE screen in `TimedMode`. When the user changes selections, the callback updates parent state with a new `PracticeConfig` object, which triggers `ChordQueue` to regenerate its 5 items and adjust matching behavior based on the new settings.
-
 ---
 
 ## Notes for Development
 
-- React Strict Mode is enabled in index.tsx to help catch potential bugs
+- React Strict Mode is enabled in index.tsx — in development, effects run twice (mount → unmount → remount). The health check in `StorageProvider` handles this correctly with an `AbortController` and a `cancelled` flag so only the second run sets the mode.
 - Always add type annotations to component props and function parameters
 - Web MIDI API types are declared inline in `MidiContext.tsx` (not from a package) for simplicity
+- All components that load persisted state use a `settingsLoadedRef` (a `useRef<boolean>`) to prevent saving default values before the async load completes. See "Component loading pattern" in Persistence Architecture above.
+- The `useStorage()` context functions are wrapped in `useCallback` with `[mode]` as the dependency. Since `mode` never changes after the initial health check, these functions are effectively stable for the lifetime of the app and safe to include in `useEffect` dependency arrays.
+- The frontend TypeScript version (4.9.5, bundled with CRA) does not support `"moduleResolution": "bundler"` in tsconfig.json. Running `tsc --noEmit` will fail with a config error — this is pre-existing and does not affect the build (CRA uses its own pipeline). The server has its own `tsconfig.json` with correct settings for its TS version.
 
 ## Maintaining CLAUDE.md
 
 After every code change, update CLAUDE.md if the change warrants it. Specifically:
 - **Update Project Structure** if you add, delete, or move files or directories
 - **Update Architecture Notes** if you add a new architectural pattern, change a core pattern, or modify how components communicate
+- **Update Persistence Architecture** if you modify the storage layer, add API endpoints, or change the schema
 - **Update MIDI Architecture** if you modify the MIDI system or add new MIDI features
 - **Update Development Commands** if you modify scripts in package.json or change how to run the project
 - **Add to Notes for Development** if you establish a new convention, pattern, or constraint that future Claude sessions should know about

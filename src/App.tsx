@@ -1,6 +1,6 @@
 import './App.css';
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { ChordExplorer } from './pages/ChordExplorer';
@@ -10,55 +10,39 @@ import { HighScores } from './pages/HighScores';
 import { Progress } from './pages/Progress';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-
-/* import all the icons in Free Solid, Free Regular, and Brands styles */
 import { faGear, faCircleUser, faRankingStar, faChartLine } from '@fortawesome/free-solid-svg-icons'
+import { useStorage } from './context/StorageContext';
 
 library.add(faGear, faCircleUser, faRankingStar, faChartLine)
 
-
-const STORAGE_KEY = 'midiPianoNumKeys';
-
-interface PianoSettings {
-  numKeys: number;
-  showNotes: boolean;
-}
-
-function loadPianoSettings(): PianoSettings {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored !== null) {
-      const parsed = JSON.parse(stored);
-      if (parsed && typeof parsed === 'object') {
-        const numKeys = typeof parsed.numKeys === 'number' ? parsed.numKeys : 88;
-        const showNotes = typeof parsed.showNotes === 'boolean' ? parsed.showNotes : false;
-        return { numKeys, showNotes };
-      }
-    }
-  } catch {
-    // localStorage unavailable or invalid JSON
-  }
-  return { numKeys: 88, showNotes: false };
-}
-
 const App: FC = () => {
-  const [numKeys, setNumKeys] = useState<number>(() => loadPianoSettings().numKeys);
-  const [showNotes, setShowNotes] = useState<boolean>(() => loadPianoSettings().showNotes);
+  const { loadSettings, saveSettings, error } = useStorage();
+  const [numKeys, setNumKeys] = useState<number>(88);
+  const [showNotes, setShowNotes] = useState<boolean>(false);
+  const settingsLoadedRef = useRef(false);
 
   useEffect(() => {
     document.title = 'MIDI Piano Teacher';
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ numKeys, showNotes }));
-    } catch {
-      // localStorage unavailable, skip persistence
-    }
-  }, [numKeys, showNotes]);
+    loadSettings().then(settings => {
+      setNumKeys(settings.numKeys);
+      setShowNotes(settings.showNotes);
+      settingsLoadedRef.current = true;
+    }).catch(() => {
+      settingsLoadedRef.current = true;
+    });
+  }, [loadSettings]);
+
+  useEffect(() => {
+    if (!settingsLoadedRef.current) return;
+    saveSettings({ numKeys, showNotes });
+  }, [numKeys, showNotes, saveSettings]);
 
   return (
     <div className="App">
+      {error && <div className="storage-error-banner">{error}</div>}
       <header className="app-header">
         <Link to="/" className="title-link"><h1>MIDI Piano Teacher</h1></Link>
         <nav className="nav-links">

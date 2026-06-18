@@ -1,58 +1,56 @@
-import { FC, useState, useEffect } from 'react';
-import { PracticeConfig, TIMED_HISTORY_KEY, TimedHistory, TimedResult } from '../midi/noteUtils';
+import { FC, useState, useEffect, useRef } from 'react';
+import { PracticeConfig, TimedResult } from '../midi/noteUtils';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
+import { useStorage } from '../context/StorageContext';
 import './HighScores.css';
 
+type RankedResult = TimedResult & { rank: number; accuracy: number };
+
 export const HighScores: FC = () => {
-  const [config, setConfig] = useState<PracticeConfig>(() => {
-    try {
-      const stored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
-      if (stored !== null) {
-        const parsed = JSON.parse(stored);
-        const loaded = PracticeConfig.fromJson(parsed);
-        if (loaded) return loaded;
-      }
-    } catch {
-      // localStorage unavailable or invalid JSON
-    }
-    return new PracticeConfig();
-  });
+  const { loadSettings, saveSettings, loadTimedResults } = useStorage();
+  const [config, setConfig] = useState<PracticeConfig>(new PracticeConfig());
+  const [topScores, setTopScores] = useState<RankedResult[]>([]);
+  const settingsLoadedRef = useRef(false);
 
+  // Load config on mount
   useEffect(() => {
-    try {
-      localStorage.setItem(PracticeConfig.STORAGE_KEY, JSON.stringify(config.toJson()));
-    } catch {
-      // localStorage unavailable
-    }
-  }, [config]);
+    loadSettings().then(settings => {
+      setConfig(new PracticeConfig(
+        new Set(settings.selectedGroups),
+        settings.sharpsFilter,
+        settings.handsMode,
+      ));
+      settingsLoadedRef.current = true;
+    }).catch(() => {
+      settingsLoadedRef.current = true;
+    });
+  }, [loadSettings]);
 
-  const getTopScores = (): (TimedResult & { rank: number })[] => {
-    try {
-      const raw = localStorage.getItem(TIMED_HISTORY_KEY);
-      const history: TimedHistory = raw ? JSON.parse(raw) : {};
-      const key = config.toString();
-      const entries = history[key] ?? [];
+  // Save config when it changes
+  useEffect(() => {
+    if (!settingsLoadedRef.current) return;
+    saveSettings({
+      selectedGroups: [...config.selectedGroups],
+      sharpsFilter: config.sharpsFilter,
+      handsMode: config.handsMode,
+    });
+  }, [config, saveSettings]);
 
-      const withAccuracy = entries.map(entry => ({
+  // Load scores whenever config changes
+  useEffect(() => {
+    loadTimedResults(config).then(results => {
+      const withAccuracy = results.map(entry => ({
         ...entry,
-        accuracy: entry.score + entry.mistakes === 0 ? 100 : Math.round((entry.score / (entry.score + entry.mistakes)) * 100),
+        accuracy: entry.score + entry.mistakes === 0
+          ? 100
+          : Math.round((entry.score / (entry.score + entry.mistakes)) * 100),
       }));
-
-      const sorted = withAccuracy.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return b.accuracy - a.accuracy;
-      });
-
-      return sorted.slice(0, 10).map((entry, i) => ({
-        ...entry,
-        rank: i + 1,
-      }));
-    } catch {
-      return [];
-    }
-  };
-
-  const topScores = getTopScores();
+      const sorted = withAccuracy.sort((a, b) =>
+        b.score !== a.score ? b.score - a.score : b.accuracy - a.accuracy
+      );
+      setTopScores(sorted.slice(0, 10).map((entry, i) => ({ ...entry, rank: i + 1 })));
+    });
+  }, [config, loadTimedResults]);
 
   return (
     <div className="high-scores-page">

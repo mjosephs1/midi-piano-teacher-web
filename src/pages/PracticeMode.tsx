@@ -2,12 +2,13 @@ import { FC, useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faGear, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { PracticeConfig, Chord, OCTAVE_OFFSET_STORAGE_KEY } from '../midi/noteUtils';
+import { PracticeConfig, Chord } from '../midi/noteUtils';
 import { KEYBOARD_OFFSETS } from './Settings';
 import { useMidi } from '../midi/MidiContext';
 import { VirtualPiano } from '../midi/VirtualPiano';
 import { ChordQueue } from '../components/ChordQueue';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
+import { useStorage } from '../context/StorageContext';
 import './PracticeMode.css';
 import { PianoIcon } from '../components/PianoIcon';
 
@@ -31,44 +32,16 @@ interface PracticeModeProps {
 }
 
 export const PracticeMode: FC<PracticeModeProps> = ({ numKeys, onNumKeysChange, showNotes, onShowNotesChange }) => {
-  const [config, setConfig] = useState<PracticeConfig>(() => {
-    try {
-      const stored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
-      if (stored !== null) {
-        const parsed = JSON.parse(stored);
-        const loaded = PracticeConfig.fromJson(parsed);
-        if (loaded) return loaded;
-      }
-    } catch {
-      // localStorage unavailable or invalid JSON
-    }
-    return new PracticeConfig();
-  });
-
+  const { loadSettings, saveSettings } = useStorage();
+  const [config, setConfig] = useState<PracticeConfig>(new PracticeConfig());
   const { pressedNotes } = useMidi();
   const [currentChord, setCurrentChord] = useState<Chord | null>(null);
-  const [octaveOffset, setOctaveOffset] = useState(() => {
-    try {
-      const configStored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
-      let handsMode = 'right';
-      if (configStored) {
-        const parsed = PracticeConfig.fromJson(JSON.parse(configStored));
-        if (parsed) handsMode = parsed.handsMode;
-      }
-      const octaveStored = localStorage.getItem(OCTAVE_OFFSET_STORAGE_KEY);
-      if (octaveStored) {
-        const parsed = JSON.parse(octaveStored);
-        const hand = handsMode === 'left' ? 'left' : 'right';
-        if (typeof parsed[hand] === 'number') return parsed[hand];
-      }
-    } catch {}
-    return 0;
-  });
+  const [octaveOffset, setOctaveOffset] = useState(0);
   const [configOpen, setConfigOpen] = useState(false);
   const configWrapperRef = useRef<HTMLDivElement>(null);
   const prevNumKeysRef = useRef(numKeys);
+  const settingsLoadedRef = useRef(false);
 
-  // calculate where to place the notes for the current chord so that it fits within the bounds of the virtual piano
   const leftDefault = Math.max(36, KEYBOARD_OFFSETS[numKeys] ?? 21);
   const defaultBase = config.handsMode === 'left' ? leftDefault : 72;
   const baseNote = defaultBase + octaveOffset * 12;
@@ -77,38 +50,50 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys, onNumKeysChange, 
   const effectiveBase = currentChord ? clampToKeyboard(currentChord, baseNote, pianoLow, pianoHigh) : baseNote;
   const currentChordNotes = currentChord ? currentChord.getNoteIndices(effectiveBase) : new Set<number>();
 
+  // Load all settings on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(OCTAVE_OFFSET_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const hand = config.handsMode === 'left' ? 'left' : 'right';
-        setOctaveOffset(typeof parsed[hand] === 'number' ? parsed[hand] : 0);
-        return;
-      }
-    } catch {}
-    setOctaveOffset(0);
+    loadSettings().then(settings => {
+      setConfig(new PracticeConfig(
+        new Set(settings.selectedGroups),
+        settings.sharpsFilter,
+        settings.handsMode,
+      ));
+      const hand = settings.handsMode === 'left' ? 'left' : 'right';
+      setOctaveOffset(hand === 'left' ? settings.octaveOffsetLeft : settings.octaveOffsetRight);
+      settingsLoadedRef.current = true;
+    }).catch(() => {
+      settingsLoadedRef.current = true;
+    });
+  }, [loadSettings]);
+
+  // When handsMode changes, load the saved offset for the new hand
+  useEffect(() => {
+    if (!settingsLoadedRef.current) return;
+    loadSettings().then(settings => {
+      const hand = config.handsMode === 'left' ? 'left' : 'right';
+      setOctaveOffset(hand === 'left' ? settings.octaveOffsetLeft : settings.octaveOffsetRight);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.handsMode]);
 
+  // When numKeys changes, reset octave offset for the current hand
   useEffect(() => {
     if (prevNumKeysRef.current === numKeys) return;
     prevNumKeysRef.current = numKeys;
     setOctaveOffset(0);
-    try {
-      const stored = localStorage.getItem(OCTAVE_OFFSET_STORAGE_KEY);
-      const existing = stored ? JSON.parse(stored) : {};
-      const hand = config.handsMode === 'left' ? 'left' : 'right';
-      localStorage.setItem(OCTAVE_OFFSET_STORAGE_KEY, JSON.stringify({ ...existing, [hand]: 0 }));
-    } catch {}
-  }, [numKeys, config.handsMode]);
+    const hand = config.handsMode === 'left' ? 'left' : 'right';
+    saveSettings(hand === 'left' ? { octaveOffsetLeft: 0 } : { octaveOffsetRight: 0 });
+  }, [numKeys, config.handsMode, saveSettings]);
 
+  // Save config when it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(PracticeConfig.STORAGE_KEY, JSON.stringify(config.toJson()));
-    } catch {
-      // localStorage unavailable
-    }
-  }, [config]);
+    if (!settingsLoadedRef.current) return;
+    saveSettings({
+      selectedGroups: [...config.selectedGroups],
+      sharpsFilter: config.sharpsFilter,
+      handsMode: config.handsMode,
+    });
+  }, [config, saveSettings]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -127,15 +112,11 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys, onNumKeysChange, 
   const handleOctaveChange = useCallback((delta: number) => {
     setOctaveOffset(prev => {
       const next = prev + delta;
-      try {
-        const stored = localStorage.getItem(OCTAVE_OFFSET_STORAGE_KEY);
-        const existing = stored ? JSON.parse(stored) : {};
-        const hand = config.handsMode === 'left' ? 'left' : 'right';
-        localStorage.setItem(OCTAVE_OFFSET_STORAGE_KEY, JSON.stringify({ ...existing, [hand]: next }));
-      } catch {}
+      const hand = config.handsMode === 'left' ? 'left' : 'right';
+      saveSettings(hand === 'left' ? { octaveOffsetLeft: next } : { octaveOffsetRight: next });
       return next;
     });
-  }, [config.handsMode]);
+  }, [config.handsMode, saveSettings]);
 
   const handleCurrentChordChange = useCallback((chord: Chord) => {
     setCurrentChord(chord);

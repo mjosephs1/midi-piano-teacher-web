@@ -1,11 +1,12 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPlay, faStop, faRotateRight, faRankingStar, faChartLine } from '@fortawesome/free-solid-svg-icons';
-import { PracticeConfig, TimedHistory, TimedResult, TIMED_HISTORY_KEY } from '../midi/noteUtils';
+import { PracticeConfig } from '../midi/noteUtils';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
 import { ChordQueue } from '../components/ChordQueue';
+import { useStorage } from '../context/StorageContext';
 import './TimedMode.css';
 
 library.add(faPlay, faStop, faRotateRight, faRankingStar, faChartLine);
@@ -15,33 +16,38 @@ type TimedStage = 'CONFIGURE' | 'COUNTDOWN' | 'STARTED' | 'RESULTS';
 const COUNTDOWN_LABELS = ['3', '2', '1', 'Begin'];
 
 export const TimedMode: FC = () => {
-  const [config, setConfig] = useState<PracticeConfig>(() => {
-    try {
-      const stored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
-      if (stored !== null) {
-        const parsed = JSON.parse(stored);
-        const loaded = PracticeConfig.fromJson(parsed);
-        if (loaded) return loaded;
-      }
-    } catch {
-      // localStorage unavailable or invalid JSON
-    }
-    return new PracticeConfig();
-  });
-
+  const { loadSettings, saveSettings, saveTimedResult } = useStorage();
+  const [config, setConfig] = useState<PracticeConfig>(new PracticeConfig());
   const [stage, setStage] = useState<TimedStage>('CONFIGURE');
   const [countdownStep, setCountdownStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [score, setScore] = useState(0);
   const [mistakes, setMistakes] = useState(0);
+  const settingsLoadedRef = useRef(false);
 
+  // Load config on mount
   useEffect(() => {
-    try {
-      localStorage.setItem(PracticeConfig.STORAGE_KEY, JSON.stringify(config.toJson()));
-    } catch {
-      // localStorage unavailable
-    }
-  }, [config]);
+    loadSettings().then(settings => {
+      setConfig(new PracticeConfig(
+        new Set(settings.selectedGroups),
+        settings.sharpsFilter,
+        settings.handsMode,
+      ));
+      settingsLoadedRef.current = true;
+    }).catch(() => {
+      settingsLoadedRef.current = true;
+    });
+  }, [loadSettings]);
+
+  // Save config when it changes
+  useEffect(() => {
+    if (!settingsLoadedRef.current) return;
+    saveSettings({
+      selectedGroups: [...config.selectedGroups],
+      sharpsFilter: config.sharpsFilter,
+      handsMode: config.handsMode,
+    });
+  }, [config, saveSettings]);
 
   // Countdown logic
   useEffect(() => {
@@ -83,47 +89,19 @@ export const TimedMode: FC = () => {
     return () => clearInterval(interval);
   }, [stage]);
 
-  // Save results to history when entering RESULTS stage
+  // Save result when entering RESULTS stage
   useEffect(() => {
     if (stage !== 'RESULTS') return;
-    try {
-      const raw = localStorage.getItem(TIMED_HISTORY_KEY);
-      const history: TimedHistory = raw ? JSON.parse(raw) : {};
-      const key = config.toString();
-      const entry: TimedResult = { score, mistakes, timestamp: new Date().toISOString() };
-      history[key] = [...(history[key] ?? []), entry];
-      localStorage.setItem(TIMED_HISTORY_KEY, JSON.stringify(history));
-    } catch {
-      // silently ignore unavailable storage
-    }
+    saveTimedResult(score, mistakes, config);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
 
-  const handleChordMatched = () => {
-    setScore(prev => prev + 1);
-  };
-
-  const handleChordMistake = () => {
-    setMistakes(prev => prev + 1);
-  };
-
-  const handleStartClick = () => {
-    setCountdownStep(0);
-    setStage('COUNTDOWN');
-  };
-
-  const handleStopClick = () => {
-    setStage('CONFIGURE');
-  };
-
-  const handlePlayAgainClick = () => {
-    setCountdownStep(0);
-    setStage('COUNTDOWN');
-  };
-
-  const handleConfigureClick = () => {
-    setStage('CONFIGURE');
-  };
+  const handleChordMatched = () => setScore(prev => prev + 1);
+  const handleChordMistake = () => setMistakes(prev => prev + 1);
+  const handleStartClick = () => { setCountdownStep(0); setStage('COUNTDOWN'); };
+  const handleStopClick = () => setStage('CONFIGURE');
+  const handlePlayAgainClick = () => { setCountdownStep(0); setStage('COUNTDOWN'); };
+  const handleConfigureClick = () => setStage('CONFIGURE');
 
   return (
     <div className="timed-mode-page">

@@ -9,7 +9,10 @@ import timedResultsRoutes from './routes/timedResults';
 
 const server = Fastify({ logger: true });
 
-server.register(cors, { origin: 'http://localhost:3000' });
+server.register(cors, {
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+});
 server.register(settingsRoutes, { prefix: '/api/settings' });
 server.register(timedResultsRoutes, { prefix: '/api/timed-results' });
 

@@ -1,61 +1,62 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { PracticeConfig, TIMED_HISTORY_KEY, TimedHistory } from '../midi/noteUtils';
+import { PracticeConfig } from '../midi/noteUtils';
 import { PracticeConfiguration } from '../components/PracticeConfiguration';
+import { useStorage } from '../context/StorageContext';
 import './Progress.css';
 
 type ChartDataPoint = { date: string; avgScore: number };
 
-const getChartData = (config: PracticeConfig): ChartDataPoint[] => {
-  try {
-    const raw = localStorage.getItem(TIMED_HISTORY_KEY);
-    const history: TimedHistory = raw ? JSON.parse(raw) : {};
-    const entries = history[config.toString()] ?? [];
-
-    const byDay: Record<string, number[]> = {};
-    for (const entry of entries) {
-      const day = new Date(entry.timestamp).toLocaleDateString();
-      if (!byDay[day]) byDay[day] = [];
-      byDay[day].push(entry.score);
-    }
-
-    return Object.entries(byDay)
-      .map(([date, scores]) => ({
-        date,
-        avgScore: Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10,
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  } catch {
-    return [];
-  }
-};
-
 export const Progress: FC = () => {
-  const [config, setConfig] = useState<PracticeConfig>(() => {
-    try {
-      const stored = localStorage.getItem(PracticeConfig.STORAGE_KEY);
-      if (stored !== null) {
-        const parsed = JSON.parse(stored);
-        const loaded = PracticeConfig.fromJson(parsed);
-        if (loaded) return loaded;
-      }
-    } catch {
-      // localStorage unavailable or invalid JSON
-    }
-    return new PracticeConfig();
-  });
+  const { loadSettings, saveSettings, loadTimedResults } = useStorage();
+  const [config, setConfig] = useState<PracticeConfig>(new PracticeConfig());
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const settingsLoadedRef = useRef(false);
 
+  // Load config on mount
   useEffect(() => {
-    try {
-      localStorage.setItem(PracticeConfig.STORAGE_KEY, JSON.stringify(config.toJson()));
-    } catch {
-      // localStorage unavailable
-    }
-  }, [config]);
+    loadSettings().then(settings => {
+      setConfig(new PracticeConfig(
+        new Set(settings.selectedGroups),
+        settings.sharpsFilter,
+        settings.handsMode,
+      ));
+      settingsLoadedRef.current = true;
+    }).catch(() => {
+      settingsLoadedRef.current = true;
+    });
+  }, [loadSettings]);
 
-  const chartData = getChartData(config);
+  // Save config when it changes
+  useEffect(() => {
+    if (!settingsLoadedRef.current) return;
+    saveSettings({
+      selectedGroups: [...config.selectedGroups],
+      sharpsFilter: config.sharpsFilter,
+      handsMode: config.handsMode,
+    });
+  }, [config, saveSettings]);
+
+  // Load chart data whenever config changes
+  useEffect(() => {
+    loadTimedResults(config).then(results => {
+      const byDay: Record<string, number[]> = {};
+      for (const entry of results) {
+        const day = new Date(entry.timestamp).toLocaleDateString();
+        if (!byDay[day]) byDay[day] = [];
+        byDay[day].push(entry.score);
+      }
+      const data = Object.entries(byDay)
+        .map(([date, scores]) => ({
+          date,
+          avgScore: Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10,
+        }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      setChartData(data);
+    });
+  }, [config, loadTimedResults]);
 
   return (
     <div className="progress-page">
