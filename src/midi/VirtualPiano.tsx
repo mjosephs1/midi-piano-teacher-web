@@ -124,6 +124,8 @@ export function VirtualPiano({
             y={keyboardTopWidth - (keyboardHeight*0.05)}
             width={whiteKeyWidth}
             height={whiteKeyHeight}
+            rx={scaleFactor/10}
+            ry={scaleFactor/10}
           />
         })}
         {
@@ -137,6 +139,8 @@ export function VirtualPiano({
                     y={keyboardTopWidth - (keyboardHeight*0.05)}
                     width={blackKeyWidth}
                     height={blackKeyHeight}
+                    rx={scaleFactor/12}
+                    ry={scaleFactor/12}
                 />
             ) : null
         })}
