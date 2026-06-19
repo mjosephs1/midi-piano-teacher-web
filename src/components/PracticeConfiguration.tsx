@@ -30,8 +30,8 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
   };
 
   const sharpsOptions: { label: string; value: SharpsFilter }[] = [
-    { label: 'No Sharps', value: 'no-sharps' },
-    { label: 'With Sharps', value: 'with-sharps' },
+    { label: 'Exclude Sharps', value: 'no-sharps' },
+    { label: 'Include Sharps', value: 'with-sharps' },
     { label: 'Sharps Only', value: 'sharps-only' },
   ];
 
