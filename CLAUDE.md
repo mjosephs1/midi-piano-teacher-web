@@ -394,23 +394,23 @@ The `Settings` component provides a user interface for selecting keyboard size a
 `Settings` has no local state. `App.tsx` owns `numKeys` and `showNotes`, loading them async via `useStorage().loadSettings()` on mount and persisting changes via `useStorage().saveSettings({ numKeys, showNotes })`.
 
 ### ChordExplorer Component (`ChordExplorer.tsx`)
-The `ChordExplorer` component provides an interactive tool for exploring chord fingerings on the piano. It displays a grid of chord buttons that, when clicked, highlight the corresponding notes on a 25-key virtual piano.
+The `ChordExplorer` component provides an interactive tool for exploring chord fingerings on the piano. It shows a "Chord Group" dropdown to select one of the 11 chord types, then displays a row of 12 root-note buttons for that group. Clicking a button highlights the corresponding notes on a 25-key virtual piano.
 
 **Features:**
-- Interactive grid of chord buttons organized by chord type (rows) and root note (columns)
-- 11 chord types: Major, Minor, Major 7, Dominant 7, Minor 7, Diminished, Diminished 7, Half-dim 7, Augmented, Sus2, Sus4
-- 12 root notes per chord type: C through B (C, C#, D, D#, E, F, F#, G, G#, A, A#, B)
+- "Chord Group" dropdown (defaults to Major) to select which chord type to explore
+- 12 chord buttons for the selected group, one per root note (C through B)
 - Real-time visual feedback on the virtual piano when a chord button is selected
-- Selected chord button is highlighted to show active selection
+- Switching chord group clears the previous selection
 
 **State:**
 - `chordNotes: Set<number>` — MIDI note numbers to display on the piano
 - `selectedChord: { rootIndex: number; patternIndex: number } | null` — tracks the currently selected button for highlighting
+- `selectedPatternIndex: number` — index into `CHORD_PATTERNS` for the active chord group (default 0 = Major)
 
 **Implementation:**
 The component uses `KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]]` (which equals 48, C3) as the base note. When a chord button is clicked:
 1. The root note is calculated as `BASE_NOTE + rootIndex`
-2. The chord pattern's intervals are applied: `pattern.intervals.map(i => rootMidi + i)`
+2. The active pattern's intervals are applied: `pattern.intervals.map(i => rootMidi + i)`
 3. The resulting note set is passed to the `VirtualPiano` component for display
 
 **Route:**

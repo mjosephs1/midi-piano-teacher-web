@@ -2,32 +2,56 @@
   padding: 20px;
 }
 
-.chord-grid {
+.chord-row-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 28px;
   margin-top: 20px;
 }
 
-.chord-grid-header,
-.chord-row {
-  display: grid;
-  grid-template-columns: 120px repeat(12, 1fr);
-  align-items: center;
-  gap: 4px;
+.chord-section-label {
+  display: block;
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 6px;
 }
 
-.chord-row-label,
-.chord-col-header {
-  text-align: center;
-  font-weight: bold;
+.chord-group-selector .chord-section-label {
+  margin-bottom: 0;
+}
+
+.chord-group-selector {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.chord-group-selector select {
+  padding: 6px 8px;
   font-size: 14px;
-  padding: 8px 4px;
+  border: 1px solid #999;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.chord-buttons-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chord-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
 }
 
 .chord-btn {
-  padding: 8px 4px;
-  font-size: 12px;
+  padding: 12px 16px;
+  font-size: 16px;
   border: 1px solid #999;
   background-color: #f5f5f5;
   cursor: pointer;
@@ -43,4 +67,5 @@
   background-color: #E04040;
   border-color: #a20404;
   font-weight: bold;
+  color: white;
 }
