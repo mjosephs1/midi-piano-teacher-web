@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, FC, useMemo } from 'react';
 import { detectChord, Chord } from './noteUtils';
+import { startAudio, playNote, stopNote } from './AudioPlayer';
 
 // Web MIDI API types (not included in standard TypeScript DOM lib)
 interface MIDIMessageEvent extends Event {
@@ -39,6 +40,20 @@ export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
   const pressedChord = useMemo(() => detectChord(pressedNotes), [pressedNotes]);
 
   useEffect(() => {
+    const onInteraction = () => {
+      startAudio();
+      document.removeEventListener('click', onInteraction);
+      document.removeEventListener('keydown', onInteraction);
+    };
+    document.addEventListener('click', onInteraction);
+    document.addEventListener('keydown', onInteraction);
+    return () => {
+      document.removeEventListener('click', onInteraction);
+      document.removeEventListener('keydown', onInteraction);
+    };
+  }, []);
+
+  useEffect(() => {
     const setupMidi = async () => {
       try {
         const midiAccess = await (navigator as any).requestMIDIAccess();
@@ -51,10 +66,13 @@ export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
 
           // 0x90 = note on, 0x80 = note off
           if (status === 0x90 && velocity > 0) {
-            // Note on
+            // Note on — also try to start audio; works if the browser has sticky user activation
+            startAudio();
+            playNote(noteNumber, velocity);
             setPressedNotes((prev) => new Set(prev).add(noteNumber));
           } else if (status === 0x80 || (status === 0x90 && velocity === 0)) {
             // Note off
+            stopNote(noteNumber);
             setPressedNotes((prev) => {
               const next = new Set(prev);
               next.delete(noteNumber);

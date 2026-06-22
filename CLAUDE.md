@@ -69,6 +69,7 @@ src/
   │   └── PracticeConfiguration.css  # Styling for practice configuration component
   └── midi/
       ├── MidiContext.tsx    # MidiProvider and useMidi() hook
+      ├── AudioPlayer.ts     # Tone.js PolySynth singleton — playNote/stopNote/startAudio exports
       ├── VirtualPiano.tsx   # Visual piano component that displays and animates pressed keys
       ├── VirtualPiano.css   # Styling for the piano component
       └── noteUtils.ts       # Utilities: note number to name conversion and chord detection
@@ -277,6 +278,19 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - Matches intervals against known chord patterns: Major, Minor, Diminished, Augmented, Sus2, Sus4, and 7th variants (Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7)
    - Returns a `Chord` instance (call `.name()` for display string, e.g., `"C Major"`)
    - Handles inversions correctly (e.g., first-inversion C Major [E, G, C] returns `Chord { rootNote: 'C', patternName: 'Major' }`)
+
+### Audio Playback (`AudioPlayer.ts`)
+
+Piano audio plays automatically on MIDI note-on/off events via `MidiContext`. The module is a singleton wrapping a `Tone.PolySynth` — no audio files required, everything is synthesized via Web Audio API.
+
+**Synth settings:** triangle oscillator, envelope (attack 5ms / decay 600ms / sustain 0.1 / release 2.5s), light reverb (20% wet, 1.5s decay). Sounds like a mallet/music box; adjust oscillator type and envelope values to taste.
+
+**Exports:**
+- `startAudio(): Promise<void>` — resumes the Web Audio `AudioContext`; must be called from a user gesture. `MidiContext` calls this automatically on the first `click` or `keydown` on the document.
+- `playNote(midi: number, velocity: number): void` — triggers attack for a MIDI note (0–127) with the given velocity (0–127).
+- `stopNote(midi: number): void` — triggers release for a MIDI note.
+
+Both `playNote` and `stopNote` are no-ops until `startAudio()` has been called. Uses flat note name convention internally (`Eb4`, `Gb3`).
 
 ### Adding MIDI to a new component
 ```tsx
