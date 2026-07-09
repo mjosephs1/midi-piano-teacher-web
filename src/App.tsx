@@ -10,13 +10,15 @@ import { HighScores } from './pages/HighScores';
 import { Progress } from './pages/Progress';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faGear, faCircleUser, faRankingStar, faChartLine } from '@fortawesome/free-solid-svg-icons'
+import { faGear, faCircleUser, faRankingStar, faChartLine, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons'
 import { useStorage } from './context/StorageContext';
+import { useMidi } from './midi/MidiContext';
 
-library.add(faGear, faCircleUser, faRankingStar, faChartLine)
+library.add(faGear, faCircleUser, faRankingStar, faChartLine, faVolumeHigh, faVolumeXmark)
 
 const App: FC = () => {
   const { loadSettings, saveSettings, error } = useStorage();
+  const { soundEnabled, setSoundEnabled } = useMidi();
   const [numKeys, setNumKeys] = useState<number>(88);
   const [showNotes, setShowNotes] = useState<boolean>(false);
   const settingsLoadedRef = useRef(false);
@@ -63,6 +65,13 @@ const App: FC = () => {
               <Link to="/practice-chords/progress"><FontAwesomeIcon icon={faChartLine} /> Progress</Link>
             </div>
           </div>
+          <button
+            className="settings-button"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            title={soundEnabled ? 'Mute' : 'Unmute'}
+          >
+            <FontAwesomeIcon icon={soundEnabled ? faVolumeHigh : faVolumeXmark} />
+          </button>
         </nav>
       </header>
 

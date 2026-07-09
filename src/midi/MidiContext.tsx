@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, FC, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, ReactNode, FC, useMemo } from 'react';
 import { detectChord, Chord } from './noteUtils';
 import { startAudio, playNote, stopNote } from './AudioPlayer';
 
@@ -26,6 +26,8 @@ interface MidiContextValue {
   pressedNotes: Set<number>;
   status: MidiStatus;
   pressedChord: Chord | null;
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
 }
 
 const MidiContext = createContext<MidiContextValue | undefined>(undefined);
@@ -37,7 +39,21 @@ interface MidiProviderProps {
 export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
   const [pressedNotes, setPressedNotes] = useState<Set<number>>(new Set());
   const [status, setStatus] = useState<MidiStatus>('unavailable');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const soundEnabledRef = useRef(true);
+  const pressedNotesRef = useRef<Set<number>>(new Set());
   const pressedChord = useMemo(() => detectChord(pressedNotes), [pressedNotes]);
+
+  useEffect(() => {
+    pressedNotesRef.current = pressedNotes;
+  }, [pressedNotes]);
+
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+    if (!soundEnabled) {
+      pressedNotesRef.current.forEach(note => stopNote(note));
+    }
+  }, [soundEnabled]);
 
   useEffect(() => {
     const onInteraction = () => {
@@ -68,10 +84,10 @@ export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
           if (status === 0x90 && velocity > 0) {
             // Note on — also try to start audio; works if the browser has sticky user activation
             startAudio();
-            playNote(noteNumber, velocity);
+            if (soundEnabledRef.current) playNote(noteNumber, velocity);
             setPressedNotes((prev) => new Set(prev).add(noteNumber));
           } else if (status === 0x80 || (status === 0x90 && velocity === 0)) {
-            // Note off
+            // Note off — always stop even when muted, so notes don't sustain indefinitely
             stopNote(noteNumber);
             setPressedNotes((prev) => {
               const next = new Set(prev);
@@ -106,7 +122,7 @@ export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
   }, []);
 
   return (
-    <MidiContext.Provider value={{ pressedNotes, status, pressedChord }}>
+    <MidiContext.Provider value={{ pressedNotes, status, pressedChord, soundEnabled, setSoundEnabled }}>
       {children}
     </MidiContext.Provider>
   );

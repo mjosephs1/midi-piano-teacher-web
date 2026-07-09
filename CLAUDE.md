@@ -238,11 +238,13 @@ The MIDI detection system uses React Context to share MIDI state across the enti
 
 2. **`useMidi()` hook** — any component can call this to get:
    ```tsx
-   const { pressedNotes, status, pressedChord } = useMidi();
+   const { pressedNotes, status, pressedChord, soundEnabled, setSoundEnabled } = useMidi();
    ```
    - `pressedNotes`: `Set<number>` of MIDI note numbers currently pressed
    - `status`: One of `'listening' | 'denied' | 'unavailable'`
    - `pressedChord`: `Chord | null` — the detected chord (a `Chord` instance), or `null` if no valid chord is pressed. Use `pressedChord?.name()` to get the display string (e.g., `"C Major"`).
+   - `soundEnabled`: `boolean` — whether MIDI note-on/off events trigger audio playback. Defaults to `true`.
+   - `setSoundEnabled`: `(enabled: boolean) => void` — toggles audio on/off. The MIDI message handler reads this via a `useRef` to avoid stale closure issues.
 
 3. **`noteNumberToName()`** (in `src/midi/noteUtils.ts`) converts MIDI note numbers to names:
    - `noteNumberToName(60)` → `"C"`
