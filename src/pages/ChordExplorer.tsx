@@ -1,34 +1,50 @@
 import { useState, FC } from 'react';
 import { VirtualPiano } from '../midi/VirtualPiano';
 import { KEYBOARD_SIZES, KEYBOARD_OFFSETS } from './Settings';
-import { CHORD_PATTERNS, NOTE_NAMES } from '../midi/noteUtils';
+import { CHORD_GROUPS, INVERSION_LABELS, NOTE_NAMES } from '../midi/noteUtils';
 import './ChordExplorer.css';
+
+const invertIntervals = (intervals: number[], inversion: number): number[] => [
+  ...intervals.slice(inversion),
+  ...intervals.slice(0, inversion).map(i => i + 12),
+];
 
 export const ChordExplorer: FC = () => {
     const [chordNotes, setChordNotes] = useState<Set<number>>(new Set());
-    const [selectedChord, setSelectedChord] = useState<{ rootIndex: number; patternIndex: number } | null>(null);
-    const [selectedPatternIndex, setSelectedPatternIndex] = useState(0);
+    const [selectedChord, setSelectedChord] = useState<{ rootIndex: number; chordGroupIndex: number; inversion: number } | null>(null);
+    const [selectedChordGroupIndex, setSelectedChordGroupIndex] = useState(0);
+    const [selectedInversion, setSelectedInversion] = useState(0);
 
     const BASE_NOTE = KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]];
 
+    const activeChordGroup = CHORD_GROUPS[selectedChordGroupIndex];
+
+    const updateDisplayedChord = (chordGroupIndex: number, inversion: number, rootIndex?: number) => {
+      setSelectedChordGroupIndex(chordGroupIndex);
+      setSelectedInversion(inversion);
+
+      const effectiveRootIndex = rootIndex ?? selectedChord?.rootIndex;
+      if (effectiveRootIndex === undefined) return;
+
+      const rootMidi = BASE_NOTE + effectiveRootIndex;
+      const intervals = CHORD_GROUPS[chordGroupIndex].intervals;
+      setChordNotes(new Set(invertIntervals(intervals, inversion).map(i => rootMidi + i)));
+      setSelectedChord({ rootIndex: effectiveRootIndex, chordGroupIndex, inversion });
+    };
+
     const handleChordClick = (rootIndex: number) => {
-      const pattern = CHORD_PATTERNS[selectedPatternIndex];
-      const rootMidi = BASE_NOTE + rootIndex;
-      setChordNotes(new Set(pattern.intervals.map(i => rootMidi + i)));
-      setSelectedChord({ rootIndex, patternIndex: selectedPatternIndex });
+      updateDisplayedChord(selectedChordGroupIndex, selectedInversion, rootIndex);
     };
 
-    const handlePatternChange = (patternIndex: number) => {
-      setSelectedPatternIndex(patternIndex);
-      if (selectedChord !== null) {
-        const pattern = CHORD_PATTERNS[patternIndex];
-        const rootMidi = BASE_NOTE + selectedChord.rootIndex;
-        setChordNotes(new Set(pattern.intervals.map(i => rootMidi + i)));
-        setSelectedChord({ rootIndex: selectedChord.rootIndex, patternIndex });
-      }
+    const handleChordGroupChange = (chordGroupIndex: number) => {
+      const chordGroup = CHORD_GROUPS[chordGroupIndex];
+      const nextInversion = selectedInversion > chordGroup.intervals.length - 1 ? 0 : selectedInversion;
+      updateDisplayedChord(chordGroupIndex, nextInversion);
     };
 
-    const activePattern = CHORD_PATTERNS[selectedPatternIndex];
+    const handleInversionChange = (inversion: number) => {
+      updateDisplayedChord(selectedChordGroupIndex, inversion);
+    };
 
     return (
       <div className="chord-explorer-page">
@@ -39,17 +55,32 @@ export const ChordExplorer: FC = () => {
             />
 
         <div className="chord-row-container">
-          <div className="chord-group-selector">
-            <span className="chord-section-label">Chord Group</span>
-            <select
-              id="chord-group-select"
-              value={selectedPatternIndex}
-              onChange={e => handlePatternChange(Number(e.target.value))}
-            >
-              {CHORD_PATTERNS.map((pattern, pi) => (
-                <option key={pattern.name} value={pi}>{pattern.name}</option>
-              ))}
-            </select>
+          <div className="chord-selectors-row">
+            <div className="chord-group-selector">
+              <span className="chord-section-label">Chord Group</span>
+              <select
+                id="chord-group-select"
+                value={selectedChordGroupIndex}
+                onChange={e => handleChordGroupChange(Number(e.target.value))}
+              >
+                {CHORD_GROUPS.map((chordGroup, ci) => (
+                  <option key={chordGroup.name} value={ci}>{chordGroup.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="chord-inversion-selector">
+              <span className="chord-section-label">Inversion</span>
+              <select
+                id="chord-inversion-select"
+                value={selectedInversion}
+                onChange={e => handleInversionChange(Number(e.target.value))}
+              >
+                {Array.from({ length: activeChordGroup.intervals.length }, (_, i) => i).map(inversion => (
+                  <option key={inversion} value={inversion}>{INVERSION_LABELS[inversion]}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="chord-buttons-section">
@@ -58,10 +89,10 @@ export const ChordExplorer: FC = () => {
               {Array.from({ length: 12 }, (_, ri) => (
                 <button
                   key={ri}
-                  className={`chord-btn${selectedChord?.rootIndex === ri && selectedChord?.patternIndex === selectedPatternIndex ? ' selected' : ''}`}
+                  className={`chord-btn${selectedChord?.rootIndex === ri && selectedChord?.chordGroupIndex === selectedChordGroupIndex ? ' selected' : ''}`}
                   onClick={() => handleChordClick(ri)}
                 >
-                  {NOTE_NAMES[ri]}{activePattern.shorthand}
+                  {NOTE_NAMES[ri]}{activeChordGroup.shorthand}
                 </button>
               ))}
             </div>

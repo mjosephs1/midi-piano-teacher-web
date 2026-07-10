@@ -66,13 +66,13 @@ export const noteNumberToName = (noteNumber: number): string => {
   return NOTE_NAMES[noteNumber % 12];
 };
 
-export interface ChordPattern {
+export interface ChordGroup {
   name: string;
   shorthand: string;
   intervals: number[];
 }
 
-export const CHORD_PATTERNS: ChordPattern[] = [
+export const CHORD_GROUPS: ChordGroup[] = [
   { name: 'Major', shorthand: 'maj', intervals: [0, 4, 7] },
   { name: 'Minor', shorthand: 'm', intervals: [0, 3, 7] },
   { name: 'Diminished', shorthand: 'dim', intervals: [0, 3, 6] },
@@ -86,13 +86,13 @@ export const CHORD_PATTERNS: ChordPattern[] = [
   { name: 'Half-dim 7', shorthand: 'ø7', intervals: [0, 3, 6, 10] },
 ];
 
-export class Chord {
-  private static readonly INVERSION_LABELS = ['Root Inversion', '1st Inversion', '2nd Inversion', '3rd Inversion'];
+export const INVERSION_LABELS = ['Root Inversion', '1st Inversion', '2nd Inversion', '3rd Inversion'];
 
+export class Chord {
   constructor(readonly rootNote: string, readonly patternName: string, readonly inversion: number = 0) {}
 
   name(): string {
-    return `${this.rootNote} ${this.patternName} (${Chord.INVERSION_LABELS[this.inversion]})`;
+    return `${this.rootNote} ${this.patternName} (${INVERSION_LABELS[this.inversion]})`;
   }
 
   equals(other: Chord): boolean {
@@ -106,12 +106,12 @@ export class Chord {
   }
 
   shorthand(): string {
-    return CHORD_PATTERNS.find(p => p.name === this.patternName)?.shorthand ?? '';
+    return CHORD_GROUPS.find(p => p.name === this.patternName)?.shorthand ?? '';
   }
 
   getNoteIndices(baseNote = 60): Set<number> {
     const rootIndex = NOTE_NAMES.indexOf(this.rootNote);
-    const pattern = CHORD_PATTERNS.find(p => p.name === this.patternName);
+    const pattern = CHORD_GROUPS.find(p => p.name === this.patternName);
     if (rootIndex === -1 || !pattern) return new Set();
     return new Set(pattern.intervals.map(i => baseNote + rootIndex + i));
   }
@@ -138,7 +138,7 @@ export const detectChord = (pressedNotes: Set<number>): Chord | null => {
       .sort((a, b) => a - b);
 
     // Try each chord pattern
-    for (const pattern of CHORD_PATTERNS) {
+    for (const pattern of CHORD_GROUPS) {
       if (intervals.length === pattern.intervals.length &&
           intervals.every((interval, index) => interval === pattern.intervals[index])) {
         const bassPitchClass = Math.min(...pressedNotes) % 12;

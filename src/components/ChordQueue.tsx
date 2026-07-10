@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react';
-import { CHORD_PATTERNS, NOTE_NAMES, PracticeConfig, Chord } from '../midi/noteUtils';
+import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, Chord } from '../midi/noteUtils';
 import { useMidi } from '../midi/MidiContext';
 import './ChordQueue.css';
 
@@ -29,7 +29,7 @@ function getAvailableRootNotes(sharpsFilter: string): string[] {
 }
 
 function generateChordItem(selectedGroups: Set<string>, sharpsFilter: string, exclude?: Chord): ChordQueueItem {
-  const allowed = CHORD_PATTERNS.filter(p => selectedGroups.has(p.name));
+  const allowed = CHORD_GROUPS.filter(p => selectedGroups.has(p.name));
   const availableRoots = getAvailableRootNotes(sharpsFilter);
   let item: ChordQueueItem;
   do {

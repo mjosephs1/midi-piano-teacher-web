@@ -17,18 +17,28 @@
   margin-bottom: 6px;
 }
 
-.chord-group-selector .chord-section-label {
+.chord-group-selector .chord-section-label,
+.chord-inversion-selector .chord-section-label {
   margin-bottom: 0;
 }
 
-.chord-group-selector {
+.chord-selectors-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+}
+
+.chord-group-selector,
+.chord-inversion-selector {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
 }
 
-.chord-group-selector select {
+.chord-group-selector select,
+.chord-inversion-selector select {
   padding: 6px 8px;
   font-size: 14px;
   border: 1px solid #999;

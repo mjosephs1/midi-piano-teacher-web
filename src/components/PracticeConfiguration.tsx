@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { CHORD_PATTERNS, PracticeConfig, SharpsFilter, HandsMode } from '../midi/noteUtils';
+import { CHORD_GROUPS, PracticeConfig, SharpsFilter, HandsMode } from '../midi/noteUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHand } from '@fortawesome/free-solid-svg-icons';
 import './PracticeConfiguration.css';
@@ -21,7 +21,7 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
   };
 
   const selectAll = () => {
-    const allGroups = new Set(CHORD_PATTERNS.map(p => p.name));
+    const allGroups = new Set(CHORD_GROUPS.map(p => p.name));
     onPracticeConfigChange(new PracticeConfig(allGroups, config.sharpsFilter, config.handsMode));
   };
 
@@ -47,7 +47,7 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
                 <button className="chord-group-toolbar-btn" onClick={deselectAll}>Deselect All</button>
               </div>
             </div>
-            {CHORD_PATTERNS.map(pattern => {
+            {CHORD_GROUPS.map(pattern => {
               const isSelected = config.selectedGroups.has(pattern.name);
               const isOnlySelected = isSelected && config.selectedGroups.size === 1;
               return (
