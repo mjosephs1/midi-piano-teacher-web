@@ -266,8 +266,9 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `OCTAVE_OFFSET_STORAGE_KEY` constant: `'midiPianoOctaveOffset'` — localStorage key used by the StorageContext local fallback for octave offsets. Stored as `{ left: number, right: number }`. "Both" mode shares the `'right'` slot.
    - `TimedResult` type: Object with `score: number`, `mistakes: number`, and `timestamp: string` (ISO 8601 format)
    - `TimedHistory` type: Object with config string keys mapping to arrays of `TimedResult` entries (used only in the localStorage fallback path of StorageContext)
-   - `Chord` class — represents a chord with `rootNote: string` and `patternName: string`. Constructed as `new Chord('C', 'Major')`. Methods:
-     - `name()`: returns the chord name string, e.g. `"C Major"`
+   - `Chord` class — represents a chord with `rootNote: string`, `patternName: string`, and `inversion: number` (`0` = root position, `1`/`2`/`3` = 1st/2nd/3rd inversion; defaults to `0`). Constructed as `new Chord('C', 'Major')` or `new Chord('C', 'Major', 1)`. Methods:
+     - `name()`: returns the chord name string with its inversion label always appended, e.g. `"C Major (Root Inversion)"`, `"C Major (1st Inversion)"`
+     - `equals(other)`: compares `rootNote`/`patternName` only (ignores `inversion`) — two chords are equal if they're the same chord regardless of which inversion is voiced
      - `shorthand()`: returns the pattern shorthand, e.g. `"maj"`, `"m7"`
      - `getNoteIndices(baseNote?: number)`: returns `Set<number>` of MIDI note numbers (default baseNote 60). This is the canonical way to convert a chord to playable notes.
      - `matches(pressedNotes: Set<number>)`: returns `true` if the pitch classes of `pressedNotes` exactly equal this chord's pitch classes. Used for chord matching in ChordQueue — avoids name-comparison bugs where enharmonically equivalent chords (e.g. Asus2 and Esus4 share the same 3 pitch classes) would fail a name match.
@@ -278,8 +279,8 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - Returns `null` if fewer than 3 unique pitch classes are pressed
    - Normalizes notes to pitch classes (modulo 12) and tries each as a potential root
    - Matches intervals against known chord patterns: Major, Minor, Diminished, Augmented, Sus2, Sus4, and 7th variants (Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7)
-   - Returns a `Chord` instance (call `.name()` for display string, e.g., `"C Major"`)
-   - Handles inversions correctly (e.g., first-inversion C Major [E, G, C] returns `Chord { rootNote: 'C', patternName: 'Major' }`)
+   - Determines inversion from the lowest-pitched note actually played (its pitch class's index within the matched pattern's `intervals` array), e.g. first-inversion C Major [E, G, C] returns `Chord { rootNote: 'C', patternName: 'Major', inversion: 1 }`
+   - Returns a `Chord` instance (call `.name()` for display string, e.g., `"C Major (Root Inversion)"`)
 
 ### Audio Playback (`AudioPlayer.ts`)
 

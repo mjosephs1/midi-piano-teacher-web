@@ -87,14 +87,16 @@ export const CHORD_PATTERNS: ChordPattern[] = [
 ];
 
 export class Chord {
-  constructor(readonly rootNote: string, readonly patternName: string) {}
+  private static readonly INVERSION_LABELS = ['Root Inversion', '1st Inversion', '2nd Inversion', '3rd Inversion'];
+
+  constructor(readonly rootNote: string, readonly patternName: string, readonly inversion: number = 0) {}
 
   name(): string {
-    return `${this.rootNote} ${this.patternName}`;
+    return `${this.rootNote} ${this.patternName} (${Chord.INVERSION_LABELS[this.inversion]})`;
   }
 
   equals(other: Chord): boolean {
-    return this.name() === other.name();
+    return this.rootNote === other.rootNote && this.patternName === other.patternName;
   }
 
   matches(pressedNotes: Set<number>): boolean {
@@ -139,7 +141,9 @@ export const detectChord = (pressedNotes: Set<number>): Chord | null => {
     for (const pattern of CHORD_PATTERNS) {
       if (intervals.length === pattern.intervals.length &&
           intervals.every((interval, index) => interval === pattern.intervals[index])) {
-        return new Chord(NOTE_NAMES[root], pattern.name);
+        const bassPitchClass = Math.min(...pressedNotes) % 12;
+        const inversion = pattern.intervals.indexOf((bassPitchClass - root + 12) % 12);
+        return new Chord(NOTE_NAMES[root], pattern.name, inversion);
       }
     }
   }
