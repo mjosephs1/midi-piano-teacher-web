@@ -1,7 +1,7 @@
 import { useState, FC } from 'react';
 import { VirtualPiano } from '../midi/VirtualPiano';
 import { KEYBOARD_SIZES, KEYBOARD_OFFSETS } from './Settings';
-import { CHORD_GROUPS, INVERSION_LABELS, NOTE_NAMES } from '../midi/noteUtils';
+import { CHORD_GROUPS, INVERSION_LABELS, NOTE_NAMES, Chord } from '../midi/noteUtils';
 import './ChordExplorer.css';
 
 const invertIntervals = (intervals: number[], inversion: number): number[] => [
@@ -11,7 +11,7 @@ const invertIntervals = (intervals: number[], inversion: number): number[] => [
 
 export const ChordExplorer: FC = () => {
     const [chordNotes, setChordNotes] = useState<Set<number>>(new Set());
-    const [selectedChord, setSelectedChord] = useState<{ rootIndex: number; chordGroupIndex: number; inversion: number } | null>(null);
+    const [selectedChord, setSelectedChord] = useState<Chord | null>(null);
     const [selectedChordGroupIndex, setSelectedChordGroupIndex] = useState(0);
     const [selectedInversion, setSelectedInversion] = useState(0);
 
@@ -23,13 +23,15 @@ export const ChordExplorer: FC = () => {
       setSelectedChordGroupIndex(chordGroupIndex);
       setSelectedInversion(inversion);
 
-      const effectiveRootIndex = rootIndex ?? selectedChord?.rootIndex;
+      const effectiveRootIndex = rootIndex ?? (selectedChord ? NOTE_NAMES.indexOf(selectedChord.rootNote) : undefined);
       if (effectiveRootIndex === undefined) return;
 
       const rootMidi = BASE_NOTE + effectiveRootIndex;
-      const intervals = CHORD_GROUPS[chordGroupIndex].intervals;
-      setChordNotes(new Set(invertIntervals(intervals, inversion).map(i => rootMidi + i)));
-      setSelectedChord({ rootIndex: effectiveRootIndex, chordGroupIndex, inversion });
+      const chordGroup = CHORD_GROUPS[chordGroupIndex];
+      const rawNotes = invertIntervals(chordGroup.intervals, inversion).map(i => rootMidi + i);
+      const octaveShift = Math.min(...rawNotes) >= BASE_NOTE + 12 ? -12 : 0;
+      setChordNotes(new Set(rawNotes.map(note => note + octaveShift)));
+      setSelectedChord(new Chord(NOTE_NAMES[effectiveRootIndex], chordGroup.name, inversion));
     };
 
     const handleChordClick = (rootIndex: number) => {
@@ -89,7 +91,7 @@ export const ChordExplorer: FC = () => {
               {Array.from({ length: 12 }, (_, ri) => (
                 <button
                   key={ri}
-                  className={`chord-btn${selectedChord?.rootIndex === ri && selectedChord?.chordGroupIndex === selectedChordGroupIndex ? ' selected' : ''}`}
+                  className={`chord-btn${selectedChord?.rootNote === NOTE_NAMES[ri] && selectedChord?.patternName === activeChordGroup.name ? ' selected' : ''}`}
                   onClick={() => handleChordClick(ri)}
                 >
                   {NOTE_NAMES[ri]}{activeChordGroup.shorthand}
