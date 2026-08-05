@@ -7,6 +7,7 @@ export const userSettings = pgTable('user_settings', {
   selectedGroups:    text('selected_groups').array().notNull().default(['Major']),
   sharpsFilter:      text('sharps_filter').notNull().default('with-sharps'),
   handsMode:         text('hands_mode').notNull().default('right'),
+  selectedKey:       text('selected_key'),
   octaveOffsetRight: integer('octave_offset_right').notNull().default(0),
   octaveOffsetLeft:  integer('octave_offset_left').notNull().default(0),
 });
@@ -20,4 +21,5 @@ export const timedResults = pgTable('timed_results', {
   selectedGroups: text('selected_groups').array().notNull(),
   sharpsFilter:   text('sharps_filter').notNull(),
   handsMode:      text('hands_mode').notNull(),
+  selectedKey:    text('selected_key'),
 });

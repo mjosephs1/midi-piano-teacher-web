@@ -57,6 +57,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys, onNumKeysChange, 
         new Set(settings.selectedGroups),
         settings.sharpsFilter,
         settings.handsMode,
+        settings.selectedKey,
       ));
       const hand = settings.handsMode === 'left' ? 'left' : 'right';
       setOctaveOffset(hand === 'left' ? settings.octaveOffsetLeft : settings.octaveOffsetRight);
@@ -92,6 +93,7 @@ export const PracticeMode: FC<PracticeModeProps> = ({ numKeys, onNumKeysChange, 
       selectedGroups: [...config.selectedGroups],
       sharpsFilter: config.sharpsFilter,
       handsMode: config.handsMode,
+      selectedKey: config.selectedKey,
     });
   }, [config, saveSettings]);
 

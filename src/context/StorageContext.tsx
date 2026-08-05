@@ -19,6 +19,7 @@ export interface AllSettings {
   selectedGroups: string[];
   sharpsFilter: SharpsFilter;
   handsMode: HandsMode;
+  selectedKey: string | null;
   octaveOffsetRight: number;
   octaveOffsetLeft: number;
 }
@@ -29,6 +30,7 @@ const DEFAULT_SETTINGS: AllSettings = {
   selectedGroups: ['Major'],
   sharpsFilter: 'with-sharps',
   handsMode: 'right',
+  selectedKey: null,
   octaveOffsetRight: 0,
   octaveOffsetLeft: 0,
 };
@@ -68,6 +70,7 @@ function loadSettingsFromLocal(): AllSettings {
       selectedGroups: [...config.selectedGroups],
       sharpsFilter: config.sharpsFilter,
       handsMode: config.handsMode,
+      selectedKey: config.selectedKey,
       octaveOffsetRight: octaveOffsetRight ?? 0,
       octaveOffsetLeft: octaveOffsetLeft ?? 0,
     };
@@ -87,14 +90,16 @@ function saveSettingsToLocal(patch: Partial<AllSettings>): void {
       }));
     }
 
-    if ('selectedGroups' in patch || 'sharpsFilter' in patch || 'handsMode' in patch) {
+    if ('selectedGroups' in patch || 'sharpsFilter' in patch || 'handsMode' in patch || 'selectedKey' in patch) {
       const raw = localStorage.getItem(PracticeConfig.STORAGE_KEY);
       const existing = raw ? PracticeConfig.fromJson(JSON.parse(raw)) : null;
       const base = existing ?? new PracticeConfig();
+      const nextSelectedKey = 'selectedKey' in patch ? patch.selectedKey ?? null : base.selectedKey;
       const config = new PracticeConfig(
         new Set(patch.selectedGroups ?? [...base.selectedGroups]),
         patch.sharpsFilter ?? base.sharpsFilter,
         patch.handsMode ?? base.handsMode,
+        nextSelectedKey,
       );
       localStorage.setItem(PracticeConfig.STORAGE_KEY, JSON.stringify(config.toJson()));
     }
@@ -147,6 +152,7 @@ async function loadSettingsFromApi(): Promise<AllSettings> {
     selectedGroups: data.selectedGroups,
     sharpsFilter: data.sharpsFilter as SharpsFilter,
     handsMode: data.handsMode as HandsMode,
+    selectedKey: data.selectedKey ?? null,
     octaveOffsetRight: data.octaveOffsetRight,
     octaveOffsetLeft: data.octaveOffsetLeft,
   };
@@ -167,6 +173,9 @@ async function loadTimedResultsFromApi(config: PracticeConfig): Promise<TimedRes
     sharps_filter: config.sharpsFilter,
     hands_mode: config.handsMode,
   });
+  if (config.selectedKey !== null) {
+    params.set('selected_key', config.selectedKey);
+  }
   const res = await fetch(`${API_BASE}/api/timed-results?${params}`);
   if (!res.ok) throw new Error('Failed to load timed results');
   const data: { score: number; mistakes: number; createdAt: string }[] = await res.json();
@@ -183,6 +192,7 @@ async function saveTimedResultToApi(score: number, mistakes: number, config: Pra
       selectedGroups: [...config.selectedGroups].sort(),
       sharpsFilter: config.sharpsFilter,
       handsMode: config.handsMode,
+      selectedKey: config.selectedKey,
     }),
   });
   if (!res.ok) throw new Error('Failed to save timed result');

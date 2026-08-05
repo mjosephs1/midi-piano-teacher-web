@@ -1,5 +1,5 @@
-import { FC, useState, useEffect, useRef } from 'react';
-import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, Chord } from '../midi/noteUtils';
+import { FC, useState, useEffect, useMemo, useRef } from 'react';
+import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, Chord, isChordDiatonicToKey } from '../midi/noteUtils';
 import { useMidi } from '../midi/MidiContext';
 import './ChordQueue.css';
 
@@ -28,36 +28,55 @@ function getAvailableRootNotes(sharpsFilter: string): string[] {
   return [...NOTE_NAMES];
 }
 
-function generateChordItem(selectedGroups: Set<string>, sharpsFilter: string, exclude?: Chord): ChordQueueItem {
-  const allowed = CHORD_GROUPS.filter(p => selectedGroups.has(p.name));
+function getAvailableChordPool(
+  selectedGroups: Set<string>,
+  sharpsFilter: string,
+  selectedKey: string | null
+): Chord[] {
+  const allowedGroups = CHORD_GROUPS.filter(p => selectedGroups.has(p.name));
   const availableRoots = getAvailableRootNotes(sharpsFilter);
-  let item: ChordQueueItem;
-  do {
-    const pattern = allowed[Math.floor(Math.random() * allowed.length)];
-    const rootNote = availableRoots[Math.floor(Math.random() * availableRoots.length)];
-    item = { id: itemIdCounter++, chord: new Chord(rootNote, pattern.name) };
-  } while (exclude !== undefined && item.chord.equals(exclude));
-  return item;
+  const pool: Chord[] = [];
+  for (const rootNote of availableRoots) {
+    for (const chordGroup of allowedGroups) {
+      if (selectedKey === null || isChordDiatonicToKey(rootNote, chordGroup.name, selectedKey)) {
+        pool.push(new Chord(rootNote, chordGroup.name));
+      }
+    }
+  }
+  return pool;
 }
 
-function generateInitialQueue(selectedGroups: Set<string>, sharpsFilter: string): ChordQueueItem[] {
+function generateChordItem(pool: Chord[], exclude?: Chord): ChordQueueItem {
+  const candidates = (pool.length > 1 && exclude)
+    ? pool.filter(c => !(c.rootNote === exclude.rootNote && c.chordGroupName === exclude.chordGroupName))
+    : pool;
+  const choice = candidates[Math.floor(Math.random() * candidates.length)];
+  return { id: itemIdCounter++, chord: choice };
+}
+
+function generateInitialQueue(pool: Chord[]): ChordQueueItem[] {
   const items: ChordQueueItem[] = [];
   for (let i = 0; i < 5; i++) {
-    items.push(generateChordItem(selectedGroups, sharpsFilter, items[i - 1]?.chord));
+    items.push(generateChordItem(pool, items[i - 1]?.chord));
   }
   return items;
 }
 
 export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, onChordMatched, onChordMistake }) => {
-  const { selectedGroups, sharpsFilter, handsMode } = config;
+  const { selectedGroups, sharpsFilter, handsMode, selectedKey } = config;
 
   const onChordMatchedRef = useRef(onChordMatched);
   const onChordMistakeRef = useRef(onChordMistake);
   onChordMatchedRef.current = onChordMatched;
   onChordMistakeRef.current = onChordMistake;
 
+  const pool = useMemo(
+    () => getAvailableChordPool(selectedGroups, sharpsFilter, selectedKey),
+    [selectedGroups, sharpsFilter, selectedKey]
+  );
+
   const [queue, setQueue] = useState<ChordQueueItem[]>(() =>
-    generateInitialQueue(selectedGroups, sharpsFilter)
+    pool.length > 0 ? generateInitialQueue(pool) : []
   );
 
   const [isAdvancing, setIsAdvancing] = useState(false);
@@ -71,16 +90,18 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
 
   // Regenerate queue when config changes
   useEffect(() => {
-    setQueue(generateInitialQueue(selectedGroups, sharpsFilter));
-  }, [selectedGroups, sharpsFilter]);
+    setQueue(pool.length > 0 ? generateInitialQueue(pool) : []);
+  }, [pool]);
 
   // Notify parent when current chord changes
   useEffect(() => {
+    if (queue.length === 0) return;
     onCurrentChordChange(queue[0].chord);
   }, [queue, onCurrentChordChange]);
 
   // Detect chord match and trigger flash
   useEffect(() => {
+    if (queue.length === 0) return;
     if (!pressedChord && handsMode !== 'both') return;
     if (handsMode === 'both' && pressedNotes.size === 0) return;
 
@@ -115,7 +136,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
 
   // Detect if a new chord is pressed while transitioning
   useEffect(() => {
-    if (!isTransitioningRef.current || !pressedChord) return;
+    if (queue.length === 0 || !isTransitioningRef.current || !pressedChord) return;
 
     const targetChord = queue[0].chord;
     if (pressedChord.equals(targetChord) && !lastMatchedChordRef.current?.equals(pressedChord)) {
@@ -131,7 +152,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
 
     setQueue(prev => [
       ...prev.slice(1),
-      generateChordItem(selectedGroups, sharpsFilter, prev[4].chord),
+      generateChordItem(pool, prev[4].chord),
     ]);
 
     const animationTimeout = setTimeout(() => {
@@ -147,7 +168,17 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
     }, 200);
 
     return () => clearTimeout(animationTimeout);
-  }, [isAdvancing, selectedGroups, sharpsFilter]);
+  }, [isAdvancing, pool]);
+
+  if (pool.length === 0) {
+    return (
+      <div className="chord-queue-wrapper chord-queue-empty">
+        <p className="chord-queue-empty-message">
+          No chords match this configuration. Try selecting a different key or chord group.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="chord-queue-wrapper">

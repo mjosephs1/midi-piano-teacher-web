@@ -37,6 +37,7 @@ export const Progress: FC = () => {
           new Set(settings.selectedGroups),
           settings.sharpsFilter,
           settings.handsMode,
+          settings.selectedKey,
         );
         setConfig(loadedConfig);
         return loadTimedResults(loadedConfig);
@@ -51,6 +52,7 @@ export const Progress: FC = () => {
       selectedGroups: [...newConfig.selectedGroups],
       sharpsFilter: newConfig.sharpsFilter,
       handsMode: newConfig.handsMode,
+      selectedKey: newConfig.selectedKey,
     });
     loadTimedResults(newConfig).then(results => setChartData(buildChartData(results)));
   }, [loadTimedResults, saveSettings]);

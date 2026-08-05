@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { CHORD_GROUPS, PracticeConfig, SharpsFilter, HandsMode } from '../midi/noteUtils';
+import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, SharpsFilter, HandsMode } from '../midi/noteUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHand } from '@fortawesome/free-solid-svg-icons';
 import './PracticeConfiguration.css';
@@ -17,16 +17,16 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
     if (config.selectedGroups.has(name) && config.selectedGroups.size === 1) return;
     const next = new Set(config.selectedGroups);
     next.has(name) ? next.delete(name) : next.add(name);
-    onPracticeConfigChange(new PracticeConfig(next, config.sharpsFilter, config.handsMode));
+    onPracticeConfigChange(new PracticeConfig(next, config.sharpsFilter, config.handsMode, config.selectedKey));
   };
 
   const selectAll = () => {
     const allGroups = new Set(CHORD_GROUPS.map(p => p.name));
-    onPracticeConfigChange(new PracticeConfig(allGroups, config.sharpsFilter, config.handsMode));
+    onPracticeConfigChange(new PracticeConfig(allGroups, config.sharpsFilter, config.handsMode, config.selectedKey));
   };
 
   const deselectAll = () => {
-    onPracticeConfigChange(new PracticeConfig(new Set(['Major']), config.sharpsFilter, config.handsMode));
+    onPracticeConfigChange(new PracticeConfig(new Set(['Major']), config.sharpsFilter, config.handsMode, config.selectedKey));
   };
 
   const sharpsOptions: { label: string; value: SharpsFilter }[] = [
@@ -75,25 +75,46 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
                 <input
                   type="checkbox"
                   checked={config.sharpsFilter === option.value}
-                  onChange={() => onPracticeConfigChange(new PracticeConfig(config.selectedGroups, option.value, config.handsMode))}
+                  onChange={() => onPracticeConfigChange(new PracticeConfig(config.selectedGroups, option.value, config.handsMode, config.selectedKey))}
                 />
                 <span className="sharps-label">{option.label}</span>
               </label>
             ))}
+          </div>
+          <div className="key-card">
+            <h3 className="practice-config-label">Key</h3>
+            <select
+              className="key-select"
+              value={config.selectedKey ?? 'none'}
+              onChange={(e) => {
+                const value = e.target.value;
+                onPracticeConfigChange(new PracticeConfig(
+                  config.selectedGroups,
+                  config.sharpsFilter,
+                  config.handsMode,
+                  value === 'none' ? null : value,
+                ));
+              }}
+            >
+              <option value="none">None</option>
+              {NOTE_NAMES.map(note => (
+                <option key={note} value={note}>{note}</option>
+              ))}
+            </select>
           </div>
           <div className="hands-card">
             <h3 className="practice-config-label">Hands</h3>
             <div className="hands-buttons">
               <button
                 className={`hands-btn${config.handsMode === 'left' ? ' selected' : ''}`}
-                onClick={() => onPracticeConfigChange(new PracticeConfig(config.selectedGroups, config.sharpsFilter, 'left'))}
+                onClick={() => onPracticeConfigChange(new PracticeConfig(config.selectedGroups, config.sharpsFilter, 'left', config.selectedKey))}
               >
                 <FontAwesomeIcon icon={faHand} style={{ transform: 'scaleX(-1)' }} />
                 <span className="hands-btn-label">Left</span>
               </button>
               <button
                 className={`hands-btn${config.handsMode === 'both' ? ' selected' : ''}`}
-                onClick={() => onPracticeConfigChange(new PracticeConfig(config.selectedGroups, config.sharpsFilter, 'both'))}
+                onClick={() => onPracticeConfigChange(new PracticeConfig(config.selectedGroups, config.sharpsFilter, 'both', config.selectedKey))}
               >
                 <div className="both-hands-icon">
                   <FontAwesomeIcon icon={faHand} style={{ transform: 'scaleX(-1)' }} />
@@ -103,7 +124,7 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
               </button>
               <button
                 className={`hands-btn${config.handsMode === 'right' ? ' selected' : ''}`}
-                onClick={() => onPracticeConfigChange(new PracticeConfig(config.selectedGroups, config.sharpsFilter, 'right'))}
+                onClick={() => onPracticeConfigChange(new PracticeConfig(config.selectedGroups, config.sharpsFilter, 'right', config.selectedKey))}
               >
                 <FontAwesomeIcon icon={faHand} />
                 <span className="hands-btn-label">Right</span>

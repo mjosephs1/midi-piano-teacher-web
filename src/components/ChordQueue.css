@@ -59,3 +59,21 @@
   from { transform: translateX(92px); }
   to { transform: translateX(0); }
 }
+
+.chord-queue-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: 16px;
+  border: 1px dashed #999;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.chord-queue-empty-message {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+}

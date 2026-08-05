@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '../db';
 import { timedResults } from '../schema';
 
@@ -11,17 +11,19 @@ type TimedResultBody = {
   selectedGroups: string[];
   sharpsFilter: string;
   handsMode: string;
+  selectedKey: string | null;
 };
 
 type TimedResultsQuery = {
   selected_groups?: string;
   sharps_filter?: string;
   hands_mode?: string;
+  selected_key?: string;
 };
 
 const timedResultsRoutes: FastifyPluginAsync = async (server) => {
   server.post('/', async (request, reply) => {
-    const { score, mistakes, selectedGroups, sharpsFilter, handsMode } =
+    const { score, mistakes, selectedGroups, sharpsFilter, handsMode, selectedKey } =
       request.body as TimedResultBody;
 
     const [row] = await db
@@ -33,6 +35,7 @@ const timedResultsRoutes: FastifyPluginAsync = async (server) => {
         selectedGroups: [...selectedGroups].sort(),
         sharpsFilter,
         handsMode,
+        selectedKey,
       })
       .returning({ id: timedResults.id, createdAt: timedResults.createdAt });
 
@@ -41,12 +44,16 @@ const timedResultsRoutes: FastifyPluginAsync = async (server) => {
   });
 
   server.get('/', async (request) => {
-    const { selected_groups, sharps_filter, hands_mode } =
+    const { selected_groups, sharps_filter, hands_mode, selected_key } =
       request.query as TimedResultsQuery;
 
     const selectedGroups = selected_groups
       ? selected_groups.split(',').sort()
       : [];
+
+    const keyFilter = selected_key
+      ? eq(timedResults.selectedKey, selected_key)
+      : isNull(timedResults.selectedKey);
 
     const rows = await db
       .select()
@@ -57,6 +64,7 @@ const timedResultsRoutes: FastifyPluginAsync = async (server) => {
           eq(timedResults.selectedGroups, selectedGroups),
           eq(timedResults.sharpsFilter, sharps_filter ?? 'with-sharps'),
           eq(timedResults.handsMode, hands_mode ?? 'right'),
+          keyFilter,
         )
       );
 

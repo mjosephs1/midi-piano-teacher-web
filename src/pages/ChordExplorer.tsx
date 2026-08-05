@@ -91,7 +91,7 @@ export const ChordExplorer: FC = () => {
               {Array.from({ length: 12 }, (_, ri) => (
                 <button
                   key={ri}
-                  className={`chord-btn${selectedChord?.rootNote === NOTE_NAMES[ri] && selectedChord?.patternName === activeChordGroup.name ? ' selected' : ''}`}
+                  className={`chord-btn${selectedChord?.rootNote === NOTE_NAMES[ri] && selectedChord?.chordGroupName === activeChordGroup.name ? ' selected' : ''}`}
                   onClick={() => handleChordClick(ri)}
                 >
                   {NOTE_NAMES[ri]}{activeChordGroup.shorthand}

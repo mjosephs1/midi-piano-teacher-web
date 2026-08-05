@@ -165,6 +165,22 @@
   font-weight: 500;
 }
 
+.key-card {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.key-select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid #999;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
 .hands-card {
   border: 1px solid #ccc;
   border-radius: 6px;

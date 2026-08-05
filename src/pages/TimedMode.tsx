@@ -32,6 +32,7 @@ export const TimedMode: FC = () => {
         new Set(settings.selectedGroups),
         settings.sharpsFilter,
         settings.handsMode,
+        settings.selectedKey,
       ));
       settingsLoadedRef.current = true;
     }).catch(() => {
@@ -46,6 +47,7 @@ export const TimedMode: FC = () => {
       selectedGroups: [...config.selectedGroups],
       sharpsFilter: config.sharpsFilter,
       handsMode: config.handsMode,
+      selectedKey: config.selectedKey,
     });
   }, [config, saveSettings]);
 

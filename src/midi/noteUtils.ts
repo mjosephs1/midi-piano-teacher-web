@@ -22,28 +22,32 @@ export class PracticeConfig {
   selectedGroups: Set<string>;
   sharpsFilter: SharpsFilter;
   handsMode: HandsMode;
+  selectedKey: string | null;
 
   constructor(
     selectedGroups: Set<string> = new Set(['Major']),
     sharpsFilter: SharpsFilter = 'with-sharps',
-    handsMode: HandsMode = 'right'
+    handsMode: HandsMode = 'right',
+    selectedKey: string | null = null
   ) {
     this.selectedGroups = selectedGroups;
     this.sharpsFilter = sharpsFilter;
     this.handsMode = handsMode;
+    this.selectedKey = selectedKey;
   }
 
-  toJson(): { selectedGroups: string[]; sharpsFilter: SharpsFilter; handsMode: HandsMode } {
+  toJson(): { selectedGroups: string[]; sharpsFilter: SharpsFilter; handsMode: HandsMode; selectedKey: string | null } {
     return {
       selectedGroups: [...this.selectedGroups],
       sharpsFilter: this.sharpsFilter,
       handsMode: this.handsMode,
+      selectedKey: this.selectedKey,
     };
   }
 
   toString(): string {
     const groups = [...this.selectedGroups].sort().join(',');
-    return `${groups}|${this.sharpsFilter}|${this.handsMode}`;
+    return `${groups}|${this.sharpsFilter}|${this.handsMode}|${this.selectedKey ?? 'none'}`;
   }
 
   static fromJson(data: unknown): PracticeConfig | null {
@@ -53,12 +57,14 @@ export class PracticeConfig {
     const selectedGroups = obj.selectedGroups;
     const sharpsFilter = obj.sharpsFilter;
     const handsMode = obj.handsMode;
+    const selectedKey = obj.selectedKey === undefined ? null : obj.selectedKey;
 
     if (!Array.isArray(selectedGroups) || selectedGroups.length === 0) return null;
     if (sharpsFilter !== 'no-sharps' && sharpsFilter !== 'sharps-only' && sharpsFilter !== 'with-sharps') return null;
     if (handsMode !== 'left' && handsMode !== 'both' && handsMode !== 'right') return null;
+    if (selectedKey !== null && (typeof selectedKey !== 'string' || !NOTE_NAMES.includes(selectedKey))) return null;
 
-    return new PracticeConfig(new Set(selectedGroups), sharpsFilter, handsMode);
+    return new PracticeConfig(new Set(selectedGroups), sharpsFilter, handsMode, selectedKey);
   }
 }
 
@@ -88,15 +94,30 @@ export const CHORD_GROUPS: ChordGroup[] = [
 
 export const INVERSION_LABELS = ['Root Inversion', '1st Inversion', '2nd Inversion', '3rd Inversion'];
 
+export const MAJOR_SCALE_INTERVALS = [0, 2, 4, 5, 7, 9, 11];
+
+export function getDiatonicPitchClasses(keyRoot: string): Set<number> {
+  const rootIndex = NOTE_NAMES.indexOf(keyRoot);
+  return new Set(MAJOR_SCALE_INTERVALS.map(i => (rootIndex + i) % 12));
+}
+
+export function isChordDiatonicToKey(rootNote: string, chordGroupName: string, keyRoot: string): boolean {
+  const rootIndex = NOTE_NAMES.indexOf(rootNote);
+  const chordGroup = CHORD_GROUPS.find(group => group.name === chordGroupName);
+  if (rootIndex === -1 || !chordGroup) return false;
+  const diatonicPitchClasses = getDiatonicPitchClasses(keyRoot);
+  return chordGroup.intervals.every(interval => diatonicPitchClasses.has((rootIndex + interval) % 12));
+}
+
 export class Chord {
-  constructor(readonly rootNote: string, readonly patternName: string, readonly inversion: number = 0) {}
+  constructor(readonly rootNote: string, readonly chordGroupName: string, readonly inversion: number = 0) {}
 
   name(): string {
-    return `${this.rootNote} ${this.patternName} (${INVERSION_LABELS[this.inversion]})`;
+    return `${this.rootNote} ${this.chordGroupName} (${INVERSION_LABELS[this.inversion]})`;
   }
 
   equals(other: Chord): boolean {
-    return this.rootNote === other.rootNote && this.patternName === other.patternName;
+    return this.rootNote === other.rootNote && this.chordGroupName === other.chordGroupName;
   }
 
   matches(pressedNotes: Set<number>): boolean {
@@ -106,14 +127,14 @@ export class Chord {
   }
 
   shorthand(): string {
-    return CHORD_GROUPS.find(p => p.name === this.patternName)?.shorthand ?? '';
+    return CHORD_GROUPS.find(group => group.name === this.chordGroupName)?.shorthand ?? '';
   }
 
   getNoteIndices(baseNote = 60): Set<number> {
     const rootIndex = NOTE_NAMES.indexOf(this.rootNote);
-    const pattern = CHORD_GROUPS.find(p => p.name === this.patternName);
-    if (rootIndex === -1 || !pattern) return new Set();
-    return new Set(pattern.intervals.map(i => baseNote + rootIndex + i));
+    const chordGroup = CHORD_GROUPS.find(group => group.name === this.chordGroupName);
+    if (rootIndex === -1 || !chordGroup) return new Set();
+    return new Set(chordGroup.intervals.map(i => baseNote + rootIndex + i));
   }
 }
 
@@ -137,13 +158,13 @@ export const detectChord = (pressedNotes: Set<number>): Chord | null => {
       .map((pitch) => (pitch - root + 12) % 12)
       .sort((a, b) => a - b);
 
-    // Try each chord pattern
-    for (const pattern of CHORD_GROUPS) {
-      if (intervals.length === pattern.intervals.length &&
-          intervals.every((interval, index) => interval === pattern.intervals[index])) {
+    // Try each chord group
+    for (const chordGroup of CHORD_GROUPS) {
+      if (intervals.length === chordGroup.intervals.length &&
+          intervals.every((interval, index) => interval === chordGroup.intervals[index])) {
         const bassPitchClass = Math.min(...pressedNotes) % 12;
-        const inversion = pattern.intervals.indexOf((bassPitchClass - root + 12) % 12);
-        return new Chord(NOTE_NAMES[root], pattern.name, inversion);
+        const inversion = chordGroup.intervals.indexOf((bassPitchClass - root + 12) % 12);
+        return new Chord(NOTE_NAMES[root], chordGroup.name, inversion);
       }
     }
   }

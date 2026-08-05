@@ -144,6 +144,7 @@ interface AllSettings {
   selectedGroups: string[];  // chord groups selected for practice
   sharpsFilter: SharpsFilter;
   handsMode: HandsMode;
+  selectedKey: string | null; // diatonic key filter for chord generation; null = no restriction
   octaveOffsetRight: number;
   octaveOffsetLeft: number;
 }
@@ -181,7 +182,7 @@ Built with **Fastify** + **Drizzle ORM** + **pg** (PostgreSQL). Runs on port 300
 - `GET /health` — connectivity check; also exercises the DB connection
 - `GET /api/settings` — returns the `user_settings` row for `user_id = 0`
 - `PATCH /api/settings` — partial update of any settings fields
-- `GET /api/timed-results?selected_groups=Major&sharps_filter=with-sharps&hands_mode=right` — returns matching results
+- `GET /api/timed-results?selected_groups=Major&sharps_filter=with-sharps&hands_mode=right&selected_key=C` — returns matching results. `selected_key` is omitted entirely when no key is selected, which filters server-side for `selected_key IS NULL` (not `= NULL`, which would never match)
 - `POST /api/timed-results` — inserts a new result row
 
 **On startup**, the server runs `migrate()` (applies any pending Drizzle migrations) then seeds `user_id = 0` into `user_settings` if not present.
@@ -198,6 +199,7 @@ CREATE TABLE user_settings (
   selected_groups     TEXT[]   NOT NULL DEFAULT '{Major}',
   sharps_filter       TEXT     NOT NULL DEFAULT 'with-sharps',
   hands_mode          TEXT     NOT NULL DEFAULT 'right',
+  selected_key        TEXT,
   octave_offset_right INTEGER  NOT NULL DEFAULT 0,
   octave_offset_left  INTEGER  NOT NULL DEFAULT 0
 );
@@ -210,9 +212,12 @@ CREATE TABLE timed_results (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   selected_groups TEXT[]      NOT NULL,
   sharps_filter   TEXT        NOT NULL,
-  hands_mode      TEXT        NOT NULL
+  hands_mode      TEXT        NOT NULL,
+  selected_key    TEXT
 );
 ```
+
+`selected_key` is nullable with no default on both tables — `NULL` means "no key restriction," a common and valid state.
 
 ### Schema migrations
 
@@ -258,19 +263,22 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `INVERSION_LABELS: string[]` — `['Root Inversion', '1st Inversion', '2nd Inversion', '3rd Inversion']`, indexed by inversion number. Used by `Chord.name()` and by `ChordExplorer`'s Inversion dropdown so the wording stays consistent between the two.
    - `SharpsFilter` type — union type `'no-sharps' | 'with-sharps' | 'sharps-only'` used to control which root notes are available for chord generation in practice mode
    - `HandsMode` type — union type `'left' | 'both' | 'right'` used to control how many octaves of each note must be pressed simultaneously during chord matching
-   - `PracticeConfig` class — encapsulates practice session settings (`selectedGroups: Set<string>`, `sharpsFilter: SharpsFilter`, `handsMode: HandsMode`) in a single object for cleaner prop passing. Constructor accepts optional parameters with sensible defaults: `new PracticeConfig(new Set(['Major']), 'with-sharps', 'right')`. Provides:
+   - `MAJOR_SCALE_INTERVALS: number[]` — `[0, 2, 4, 5, 7, 9, 11]`, the semitone offsets of a major scale from its root pitch class
+   - `getDiatonicPitchClasses(keyRoot: string): Set<number>` — returns the 7 pitch classes (0-11) belonging to the major scale rooted at `keyRoot`, e.g. `getDiatonicPitchClasses('C')` → `{0,2,4,5,7,9,11}`
+   - `isChordDiatonicToKey(rootNote, chordGroupName, keyRoot): boolean` — checks that **every** pitch class of the given chord (root + all of the group's intervals, not just the root) is diatonic to `keyRoot`'s major scale. Used by `ChordQueue`'s chord-pool generation to implement the Key filter; a `null` key means no restriction.
+   - `PracticeConfig` class — encapsulates practice session settings (`selectedGroups: Set<string>`, `sharpsFilter: SharpsFilter`, `handsMode: HandsMode`, `selectedKey: string | null`) in a single object for cleaner prop passing. Constructor accepts optional parameters with sensible defaults: `new PracticeConfig(new Set(['Major']), 'with-sharps', 'right', null)`. `selectedKey` is either `null` (no key restriction, today's default behavior) or a single `NOTE_NAMES` entry. Provides:
      - Static constant `STORAGE_KEY = 'midiPianoPracticeConfig'` — localStorage key used by the StorageContext local fallback
      - `toJson()`: Returns a plain object with serializable fields
-     - `toString()`: Returns a deterministic string key (e.g., `"Major,Minor|with-sharps|right"`) used as a localStorage history key in the local fallback. Sorts `selectedGroups` to ensure consistent keys regardless of selection order.
-     - `fromJson(data)`: Static method that validates and deserializes from a plain object; returns `PracticeConfig | null`
+     - `toString()`: Returns a deterministic string key (e.g., `"Major,Minor|with-sharps|right|C"` or `"...|none"` when no key is selected) used as a localStorage history key in the local fallback, and as the basis for segmenting Timed Mode results by key. Sorts `selectedGroups` to ensure consistent keys regardless of selection order.
+     - `fromJson(data)`: Static method that validates and deserializes from a plain object; returns `PracticeConfig | null`. Treats a missing `selectedKey` (pre-existing serialized blobs from before this field existed) as `null` for backward compatibility.
    - `TIMED_HISTORY_KEY` constant: `'midiPianoTimedHistory'` — localStorage key used by the StorageContext local fallback for timed results
    - `OCTAVE_OFFSET_STORAGE_KEY` constant: `'midiPianoOctaveOffset'` — localStorage key used by the StorageContext local fallback for octave offsets. Stored as `{ left: number, right: number }`. "Both" mode shares the `'right'` slot.
    - `TimedResult` type: Object with `score: number`, `mistakes: number`, and `timestamp: string` (ISO 8601 format)
    - `TimedHistory` type: Object with config string keys mapping to arrays of `TimedResult` entries (used only in the localStorage fallback path of StorageContext)
-   - `Chord` class — represents a chord with `rootNote: string`, `patternName: string`, and `inversion: number` (`0` = root position, `1`/`2`/`3` = 1st/2nd/3rd inversion; defaults to `0`). Constructed as `new Chord('C', 'Major')` or `new Chord('C', 'Major', 1)`. Methods:
+   - `Chord` class — represents a chord with `rootNote: string`, `chordGroupName: string`, and `inversion: number` (`0` = root position, `1`/`2`/`3` = 1st/2nd/3rd inversion; defaults to `0`). Constructed as `new Chord('C', 'Major')` or `new Chord('C', 'Major', 1)`. Methods:
      - `name()`: returns the chord name string with its inversion label always appended, e.g. `"C Major (Root Inversion)"`, `"C Major (1st Inversion)"`
-     - `equals(other)`: compares `rootNote`/`patternName` only (ignores `inversion`) — two chords are equal if they're the same chord regardless of which inversion is voiced
-     - `shorthand()`: returns the pattern shorthand, e.g. `"maj"`, `"m7"`
+     - `equals(other)`: compares `rootNote`/`chordGroupName` only (ignores `inversion`) — two chords are equal if they're the same chord regardless of which inversion is voiced
+     - `shorthand()`: returns the chord group shorthand, e.g. `"maj"`, `"m7"`
      - `getNoteIndices(baseNote?: number)`: returns `Set<number>` of MIDI note numbers (default baseNote 60). This is the canonical way to convert a chord to playable notes.
      - `matches(pressedNotes: Set<number>)`: returns `true` if the pitch classes of `pressedNotes` exactly equal this chord's pitch classes. Used for chord matching in ChordQueue — avoids name-comparison bugs where enharmonically equivalent chords (e.g. Asus2 and Esus4 share the same 3 pitch classes) would fail a name match.
    - All exported from `src/midi/noteUtils.ts`. Used by `PracticeConfiguration`, `ChordQueue`, and both practice mode components to pass configuration consistently.
@@ -279,8 +287,8 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - Takes a `Set<number>` of MIDI note numbers and returns a `Chord | null`
    - Returns `null` if fewer than 3 unique pitch classes are pressed
    - Normalizes notes to pitch classes (modulo 12) and tries each as a potential root
-   - Matches intervals against known chord patterns: Major, Minor, Diminished, Augmented, Sus2, Sus4, and 7th variants (Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7)
-   - Determines inversion from the lowest-pitched note actually played (its pitch class's index within the matched pattern's `intervals` array), e.g. first-inversion C Major [E, G, C] returns `Chord { rootNote: 'C', patternName: 'Major', inversion: 1 }`
+   - Matches intervals against known chord groups: Major, Minor, Diminished, Augmented, Sus2, Sus4, and 7th variants (Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7)
+   - Determines inversion from the lowest-pitched note actually played (its pitch class's index within the matched group's `intervals` array), e.g. first-inversion C Major [E, G, C] returns `Chord { rootNote: 'C', chordGroupName: 'Major', inversion: 1 }`
    - Returns a `Chord` instance (call `.name()` for display string, e.g., `"C Major (Root Inversion)"`)
 
 ### Audio Playback (`AudioPlayer.ts`)
@@ -329,8 +337,8 @@ Pointers only — read the source for exact props/state/effects before editing. 
 - **TimedMode** (`pages/TimedMode.tsx`) — state machine `CONFIGURE → COUNTDOWN → STARTED → RESULTS`, each driven by its own `setInterval`. Calls `saveTimedResult()` on entering RESULTS.
 - **HighScores** (`pages/HighScores.tsx`) — top 10 for the selected config, sorted by score then accuracy.
 - **Progress** (`pages/Progress.tsx`) — Recharts line chart of daily average score for the selected config.
-- **ChordQueue** (`components/ChordQueue.tsx`) — 5-card queue of random chords. Matching logic depends on `handsMode`: `'left'`/`'right'` compare chord names; `'both'` requires every target pitch class to appear at least twice among pressed notes in different octaves — `[...targetPCs].every(pc => notes.filter(n => n % 12 === pc).length >= 2)`.
-- **PracticeConfiguration** (`components/PracticeConfiguration.tsx`) — chord-group multi-select (enforces a minimum of one selected), sharps-filter and hands-mode radio groups.
+- **ChordQueue** (`components/ChordQueue.tsx`) — 5-card queue of random chords. Generation is pool-based: `getAvailableChordPool(selectedGroups, sharpsFilter, selectedKey)` precomputes every valid `{rootNote, chordGroupName}` combination (root filtered by `sharpsFilter`, full chord filtered by `isChordDiatonicToKey` when a key is selected — the two filters apply independently with no cross-validation), memoized via `useMemo`; `generateChordItem`/`generateInitialQueue` draw from this pool instead of independently randomizing root and chord group. If the pool is empty (e.g. a chord group like Augmented or Diminished 7 that can never be diatonic to any key, combined with a selected key), the component renders an empty-state message instead of the queue, and all matching effects short-circuit on `queue.length === 0`. Matching logic depends on `handsMode`: `'left'`/`'right'` compare chord names; `'both'` requires every target pitch class to appear at least twice among pressed notes in different octaves — `[...targetPCs].every(pc => notes.filter(n => n % 12 === pc).length >= 2)`.
+- **PracticeConfiguration** (`components/PracticeConfiguration.tsx`) — chord-group multi-select (enforces a minimum of one selected), sharps-filter and hands-mode radio groups, and a Key `<select>` dropdown (`None` + the 12 `NOTE_NAMES`). Fully controlled — every interaction constructs a new `PracticeConfig` via `onPracticeConfigChange`; each call site must thread `config.selectedKey` through unchanged or the user's key selection is silently reset to `None`.
 
 ---
 

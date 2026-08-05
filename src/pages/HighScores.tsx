@@ -32,6 +32,7 @@ export const HighScores: FC = () => {
           new Set(settings.selectedGroups),
           settings.sharpsFilter,
           settings.handsMode,
+          settings.selectedKey,
         );
         setConfig(loadedConfig);
         return loadTimedResults(loadedConfig);
@@ -46,6 +47,7 @@ export const HighScores: FC = () => {
       selectedGroups: [...newConfig.selectedGroups],
       sharpsFilter: newConfig.sharpsFilter,
       handsMode: newConfig.handsMode,
+      selectedKey: newConfig.selectedKey,
     });
     loadTimedResults(newConfig).then(results => setTopScores(processResults(results)));
   }, [loadTimedResults, saveSettings]);
