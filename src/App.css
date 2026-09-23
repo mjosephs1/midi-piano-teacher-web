@@ -63,6 +63,7 @@
 
 .nav-links {
   display: flex;
+  flex: 1;
   gap: 0;
   align-self: stretch;
   list-style: none;
@@ -133,6 +134,13 @@
   padding: 0.6rem 1rem;
   white-space: nowrap;
   align-self: auto;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+  margin-left: auto;
 }
 
 .settings-button {
@@ -239,8 +247,7 @@
   display: none;
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   flex-direction: column;
   background-color: #f5f0e8;
   border: 1px solid #d0c8bc;

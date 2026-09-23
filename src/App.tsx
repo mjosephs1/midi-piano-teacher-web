@@ -59,35 +59,37 @@ const App: FC = () => {
               <Link to="/practice-chords/timed">Timed Mode</Link>
             </div>
           </div>
-          <div className="user-menu">
-            <button className="settings-button">
-              <FontAwesomeIcon icon={faCircleUser} />
+          <div className="nav-actions">
+            <div className="accidental-toggle">
+              <button
+                className={`accidental-toggle-btn${accidentalStyle === 'sharp' ? ' active' : ''}`}
+                onClick={() => setAccidentalStyle('sharp')}
+                title="Show sharps"
+              ><NoteText text="♯" raised={false} /></button>
+              <span className="accidental-toggle-divider">/</span>
+              <button
+                className={`accidental-toggle-btn${accidentalStyle === 'flat' ? ' active' : ''}`}
+                onClick={() => setAccidentalStyle('flat')}
+                title="Show flats"
+              ><NoteText text="♭" raised={false} /></button>
+            </div>
+            <button
+              className="settings-button"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              title={soundEnabled ? 'Mute' : 'Unmute'}
+            >
+              <FontAwesomeIcon icon={soundEnabled ? faVolumeHigh : faVolumeXmark} />
             </button>
-            <div className="user-menu-dropdown">
-              <Link to="/practice-chords/high-scores"><FontAwesomeIcon icon={faRankingStar} /> High Scores</Link>
-              <Link to="/practice-chords/progress"><FontAwesomeIcon icon={faChartLine} /> Progress</Link>
+            <div className="user-menu">
+              <button className="settings-button">
+                <FontAwesomeIcon icon={faCircleUser} />
+              </button>
+              <div className="user-menu-dropdown">
+                <Link to="/practice-chords/high-scores"><FontAwesomeIcon icon={faRankingStar} /> High Scores</Link>
+                <Link to="/practice-chords/progress"><FontAwesomeIcon icon={faChartLine} /> Progress</Link>
+              </div>
             </div>
           </div>
-          <div className="accidental-toggle">
-            <button
-              className={`accidental-toggle-btn${accidentalStyle === 'sharp' ? ' active' : ''}`}
-              onClick={() => setAccidentalStyle('sharp')}
-              title="Show sharps"
-            ><NoteText text="♯" raised={false} /></button>
-            <span className="accidental-toggle-divider">/</span>
-            <button
-              className={`accidental-toggle-btn${accidentalStyle === 'flat' ? ' active' : ''}`}
-              onClick={() => setAccidentalStyle('flat')}
-              title="Show flats"
-            ><NoteText text="♭" raised={false} /></button>
-          </div>
-          <button
-            className="settings-button"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            title={soundEnabled ? 'Mute' : 'Unmute'}
-          >
-            <FontAwesomeIcon icon={soundEnabled ? faVolumeHigh : faVolumeXmark} />
-          </button>
         </nav>
       </header>
 

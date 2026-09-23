@@ -343,7 +343,7 @@ React Router, defined in `App.tsx`. `index.tsx` wraps the tree in `<StorageProvi
 
 **Routes:** `/` (Home), `/chord-explorer`, `/practice-chords/practice` (PracticeMode), `/practice-chords/timed` (TimedMode), `/practice-chords/high-scores` (HighScores), `/practice-chords/progress` (Progress).
 
-The "Practice" and user-menu (`faCircleUser`) nav items are pure-CSS hover dropdowns (`.nav-dropdown`), not click-triggered — trigger and menu share one hover zone so moving the mouse between them doesn't close the menu. Adding a route: create the component, add a `<Route>` in `App.tsx`, add a `<Link>` in the header.
+The "Practice" and user-menu (`faCircleUser`) nav items are pure-CSS hover dropdowns (`.nav-dropdown`), not click-triggered — trigger and menu share one hover zone so moving the mouse between them doesn't close the menu. The ♯/♭ toggle, sound toggle, and user menu (in that order) sit in a `.nav-actions` group pushed to the right end of the header via `margin-left: auto`; the user-menu dropdown is right-anchored so it stays on-screen. Adding a route: create the component, add a `<Route>` in `App.tsx`, add a `<Link>` in the header.
 
 ### Component Reference
 
