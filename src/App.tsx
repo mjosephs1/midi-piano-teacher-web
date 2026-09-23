@@ -13,12 +13,14 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faGear, faCircleUser, faRankingStar, faChartLine, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons'
 import { useStorage } from './context/StorageContext';
 import { useMidi } from './midi/MidiContext';
+import { useAccidental } from './context/AccidentalContext';
 
 library.add(faGear, faCircleUser, faRankingStar, faChartLine, faVolumeHigh, faVolumeXmark)
 
 const App: FC = () => {
   const { loadSettings, saveSettings, error } = useStorage();
   const { soundEnabled, setSoundEnabled } = useMidi();
+  const { accidentalStyle, setAccidentalStyle } = useAccidental();
   const [numKeys, setNumKeys] = useState<number>(88);
   const [showNotes, setShowNotes] = useState<boolean>(false);
   const settingsLoadedRef = useRef(false);
@@ -64,6 +66,19 @@ const App: FC = () => {
               <Link to="/practice-chords/high-scores"><FontAwesomeIcon icon={faRankingStar} /> High Scores</Link>
               <Link to="/practice-chords/progress"><FontAwesomeIcon icon={faChartLine} /> Progress</Link>
             </div>
+          </div>
+          <div className="accidental-toggle">
+            <button
+              className={`accidental-toggle-btn${accidentalStyle === 'sharp' ? ' active' : ''}`}
+              onClick={() => setAccidentalStyle('sharp')}
+              title="Show sharps"
+            >♯</button>
+            <span className="accidental-toggle-divider">/</span>
+            <button
+              className={`accidental-toggle-btn${accidentalStyle === 'flat' ? ' active' : ''}`}
+              onClick={() => setAccidentalStyle('flat')}
+              title="Show flats"
+            >♭</button>
           </div>
           <button
             className="settings-button"

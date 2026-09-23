@@ -1,5 +1,10 @@
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+export const FLAT_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
+
+export type AccidentalStyle = 'sharp' | 'flat';
+export const ACCIDENTAL_STYLE_STORAGE_KEY = 'midiPianoAccidentalStyle';
+
 export type SharpsFilter = 'no-sharps' | 'with-sharps' | 'sharps-only';
 export type HandsMode = 'left' | 'both' | 'right';
 
@@ -68,8 +73,15 @@ export class PracticeConfig {
   }
 }
 
-export const noteNumberToName = (noteNumber: number): string => {
-  return NOTE_NAMES[noteNumber % 12];
+// Converts an internal note name (a NOTE_NAMES entry, e.g. 'C#') to its display form ('C♯' or 'D♭').
+export function displayNoteName(note: string, style: AccidentalStyle): string {
+  const index = NOTE_NAMES.indexOf(note);
+  if (index === -1) return note;
+  return style === 'flat' ? FLAT_NAMES[index] : note.replace('#', '♯');
+}
+
+export const noteNumberToName = (noteNumber: number, style: AccidentalStyle = 'sharp'): string => {
+  return displayNoteName(NOTE_NAMES[noteNumber % 12], style);
 };
 
 export interface ChordGroup {
@@ -112,8 +124,8 @@ export function isChordDiatonicToKey(rootNote: string, chordGroupName: string, k
 export class Chord {
   constructor(readonly rootNote: string, readonly chordGroupName: string, readonly inversion: number = 0) {}
 
-  name(): string {
-    return `${this.rootNote} ${this.chordGroupName} (${INVERSION_LABELS[this.inversion]})`;
+  name(style: AccidentalStyle = 'sharp'): string {
+    return `${displayNoteName(this.rootNote, style)} ${this.chordGroupName} (${INVERSION_LABELS[this.inversion]})`;
   }
 
   equals(other: Chord): boolean {

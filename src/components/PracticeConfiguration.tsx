@@ -1,5 +1,6 @@
 import { FC } from 'react';
-import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, SharpsFilter, HandsMode } from '../midi/noteUtils';
+import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, SharpsFilter, HandsMode, displayNoteName } from '../midi/noteUtils';
+import { useAccidental } from '../context/AccidentalContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHand } from '@fortawesome/free-solid-svg-icons';
 import './PracticeConfiguration.css';
@@ -13,6 +14,10 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
   config,
   onPracticeConfigChange,
 }) => {
+  const { accidentalStyle } = useAccidental();
+  // Display-only relabel; the underlying SharpsFilter values are unchanged
+  const accidentalWord = accidentalStyle === 'flat' ? 'Flats' : 'Sharps';
+
   const toggleGroup = (name: string) => {
     if (config.selectedGroups.has(name) && config.selectedGroups.size === 1) return;
     const next = new Set(config.selectedGroups);
@@ -30,9 +35,9 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
   };
 
   const sharpsOptions: { label: string; value: SharpsFilter }[] = [
-    { label: 'Exclude Sharps', value: 'no-sharps' },
-    { label: 'Include Sharps', value: 'with-sharps' },
-    { label: 'Sharps Only', value: 'sharps-only' },
+    { label: `Exclude ${accidentalWord}`, value: 'no-sharps' },
+    { label: `Include ${accidentalWord}`, value: 'with-sharps' },
+    { label: `${accidentalWord} Only`, value: 'sharps-only' },
   ];
 
   return (
@@ -68,7 +73,7 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
         <div className="config-section config-section--sharps">
           <div className="sharps-list-container">
             <div className="sharps-list-header">
-              <h3 className="practice-config-label">Sharps</h3>
+              <h3 className="practice-config-label">{accidentalWord}</h3>
             </div>
             {sharpsOptions.map(option => (
               <label key={option.value} className="sharps-item">
@@ -98,7 +103,7 @@ export const PracticeConfiguration: FC<PracticeConfigurationProps> = ({
             >
               <option value="none">None</option>
               {NOTE_NAMES.map(note => (
-                <option key={note} value={note}>{note}</option>
+                <option key={note} value={note}>{displayNoteName(note, accidentalStyle)}</option>
               ))}
             </select>
           </div>

@@ -10,6 +10,7 @@ export const userSettings = pgTable('user_settings', {
   selectedKey:       text('selected_key'),
   octaveOffsetRight: integer('octave_offset_right').notNull().default(0),
   octaveOffsetLeft:  integer('octave_offset_left').notNull().default(0),
+  accidentalStyle:   text('accidental_style').notNull().default('sharp'),
 });
 
 export const timedResults = pgTable('timed_results', {

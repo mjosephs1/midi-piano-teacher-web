@@ -154,6 +154,36 @@
   color: #b02828;
 }
 
+.accidental-toggle {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  font-size: 1.3rem;
+}
+
+.accidental-toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 0 0.2rem;
+  font-size: inherit;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.accidental-toggle-btn:hover {
+  color: #666;
+}
+
+.accidental-toggle-btn.active {
+  color: #000;
+  cursor: default;
+}
+
+.accidental-toggle-divider {
+  color: #aaa;
+}
+
 .App .status {
   margin-bottom: 2rem;
   color: #666;

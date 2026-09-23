@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import { MidiProvider } from './midi/MidiContext';
 import { StorageProvider } from './context/StorageContext';
+import { AccidentalProvider } from './context/AccidentalContext';
 import reportWebVitals from './reportWebVitals';
 
 const rootElement = document.getElementById('root');
@@ -17,11 +18,13 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <StorageProvider>
-      <BrowserRouter basename={process.env.NODE_ENV === 'production' ? process.env.PUBLIC_URL : ''}>
-        <MidiProvider>
-          <App />
-        </MidiProvider>
-      </BrowserRouter>
+      <AccidentalProvider>
+        <BrowserRouter basename={process.env.NODE_ENV === 'production' ? process.env.PUBLIC_URL : ''}>
+          <MidiProvider>
+            <App />
+          </MidiProvider>
+        </BrowserRouter>
+      </AccidentalProvider>
     </StorageProvider>
   </React.StrictMode>
 );

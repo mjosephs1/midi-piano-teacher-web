@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { useMidi } from '../midi/MidiContext';
 import { VirtualPiano } from '../midi/VirtualPiano';
 import { noteNumberToName } from '../midi/noteUtils';
+import { useAccidental } from '../context/AccidentalContext';
 
 interface HomeProps {
   numKeys: number;
@@ -12,6 +13,7 @@ interface HomeProps {
 
 export const Home: FC<HomeProps> = ({ numKeys, onNumKeysChange, showNotes, onShowNotesChange }) => {
   const { pressedNotes, status, pressedChord } = useMidi();
+  const { accidentalStyle } = useAccidental();
 
   const statusMessage = {
     unavailable: 'Web MIDI API not available in your browser',
@@ -20,7 +22,7 @@ export const Home: FC<HomeProps> = ({ numKeys, onNumKeysChange, showNotes, onSho
   }[status];
 
   const sortedNotes = Array.from(pressedNotes).sort((a, b) => a - b);
-  const noteNames = sortedNotes.map(noteNumberToName).join(' ');
+  const noteNames = sortedNotes.map(n => noteNumberToName(n, accidentalStyle)).join(' ');
 
   return (
     <>
@@ -36,7 +38,7 @@ export const Home: FC<HomeProps> = ({ numKeys, onNumKeysChange, showNotes, onSho
             {noteNames ? <p>{noteNames}</p> : <p className="empty">Play Something!</p>}
           </div>
           <div className="chord-section">
-            <p>{pressedChord?.name() || ' '}</p>
+            <p>{pressedChord?.name(accidentalStyle) || ' '}</p>
           </div>
         </div>
       )}

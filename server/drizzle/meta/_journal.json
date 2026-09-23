@@ -15,6 +15,13 @@
       "when": 1785268714242,
       "tag": "0001_funny_galactus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790173282341,
+      "tag": "0002_needy_tenebrous",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 import { FC, useState, useEffect, useMemo, useRef } from 'react';
-import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, Chord, isChordDiatonicToKey } from '../midi/noteUtils';
+import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, Chord, isChordDiatonicToKey, displayNoteName } from '../midi/noteUtils';
+import { useAccidental } from '../context/AccidentalContext';
 import { useMidi } from '../midi/MidiContext';
 import './ChordQueue.css';
 
@@ -64,6 +65,7 @@ function generateInitialQueue(pool: Chord[]): ChordQueueItem[] {
 
 export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, onChordMatched, onChordMistake }) => {
   const { selectedGroups, sharpsFilter, handsMode, selectedKey } = config;
+  const { accidentalStyle } = useAccidental();
 
   const onChordMatchedRef = useRef(onChordMatched);
   const onChordMistakeRef = useRef(onChordMistake);
@@ -185,7 +187,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
       {fadingOutCard && (
         <div key={fadingOutCard.id} className="chord-card chord-card-fading">
           <span className="chord-card-label">
-            {fadingOutCard.chord.rootNote}{fadingOutCard.chord.shorthand()}
+            {displayNoteName(fadingOutCard.chord.rootNote, accidentalStyle)}{fadingOutCard.chord.shorthand()}
           </span>
         </div>
       )}
@@ -201,7 +203,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
               style={{ opacity }}
             >
               <span className="chord-card-label">
-                {item.chord.rootNote}{item.chord.shorthand()}
+                {displayNoteName(item.chord.rootNote, accidentalStyle)}{item.chord.shorthand()}
               </span>
             </div>
           );

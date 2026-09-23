@@ -41,12 +41,13 @@ docker compose ps       # check container status
 src/
   ├── App.tsx                # Main router, layout, numKeys/showNotes state, error banner
   ├── App.css                # App styling
-  ├── index.tsx              # React root entry point (wraps app in StorageProvider, BrowserRouter, MidiProvider)
+  ├── index.tsx              # React root entry point (wraps app in StorageProvider, AccidentalProvider, BrowserRouter, MidiProvider)
   ├── App.test.tsx           # Tests for App component
   ├── setupTests.ts          # Jest configuration for tests
   ├── reportWebVitals.ts     # Web vitals reporting
   ├── context/
-  │   └── StorageContext.tsx # StorageProvider and useStorage() hook — health check + all storage operations
+  │   ├── StorageContext.tsx # StorageProvider and useStorage() hook — health check + all storage operations
+  │   └── AccidentalContext.tsx # AccidentalProvider and useAccidental() hook — global ♯/♭ display preference
   ├── pages/                 # Route-level page components
   │   ├── Home.tsx           # Home page route with piano display
   │   ├── Settings.tsx       # KEYBOARD_SIZES/KEYBOARD_OFFSETS exports + Settings component rendered inside VirtualPiano's gear-icon modal
@@ -147,8 +148,11 @@ interface AllSettings {
   selectedKey: string | null; // diatonic key filter for chord generation; null = no restriction
   octaveOffsetRight: number;
   octaveOffsetLeft: number;
+  accidentalStyle: AccidentalStyle; // 'sharp' | 'flat' — display-only ♯/♭ preference
 }
 ```
+
+In local mode `accidentalStyle` is stored as a plain string under `ACCIDENTAL_STYLE_STORAGE_KEY` (`'midiPianoAccidentalStyle'`).
 
 ### Component loading pattern
 
@@ -201,7 +205,8 @@ CREATE TABLE user_settings (
   hands_mode          TEXT     NOT NULL DEFAULT 'right',
   selected_key        TEXT,
   octave_offset_right INTEGER  NOT NULL DEFAULT 0,
-  octave_offset_left  INTEGER  NOT NULL DEFAULT 0
+  octave_offset_left  INTEGER  NOT NULL DEFAULT 0,
+  accidental_style    TEXT     NOT NULL DEFAULT 'sharp'
 );
 
 CREATE TABLE timed_results (
@@ -253,11 +258,14 @@ The MIDI detection system uses React Context to share MIDI state across the enti
 
 3. **`noteNumberToName()`** (in `src/midi/noteUtils.ts`) converts MIDI note numbers to names:
    - `noteNumberToName(60)` → `"C"`
-   - `noteNumberToName(61)` → `"C#"`
+   - `noteNumberToName(61)` → `"C♯"`; `noteNumberToName(61, 'flat')` → `"D♭"` (optional `style` param, default `'sharp'`; returns a **display** name)
    - Uses modulo 12 to get the note class, ignoring octave
 
 4. **Exported chord data** (in `src/midi/noteUtils.ts`):
-   - `NOTE_NAMES: string[]` — array of pitch class names: `['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']`
+   - `NOTE_NAMES: string[]` — array of pitch class names: `['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']`. These ASCII-`#` names are the **internal identifiers** everywhere (`Chord.rootNote`, `PracticeConfig.selectedKey`, `toString()` history keys) — never render them directly; see Accidental display below.
+   - `FLAT_NAMES: string[]` — flat-spelled display names parallel to `NOTE_NAMES` (`'D♭'`, `'E♭'`, ...)
+   - `AccidentalStyle` type — `'sharp' | 'flat'`
+   - `displayNoteName(note, style): string` — converts an internal `NOTE_NAMES` entry to its display form: `'C#'` → `'C♯'` (sharp) or `'D♭'` (flat)
    - `ChordGroup` type — interface with `name: string` and `intervals: number[]`
    - `CHORD_GROUPS: ChordGroup[]` — array of 11 chord groups: Major 7, Dominant 7, Minor 7, Diminished 7, Half-dim 7, Major, Minor, Diminished, Augmented, Sus2, Sus4
    - `INVERSION_LABELS: string[]` — `['Root Inversion', '1st Inversion', '2nd Inversion', '3rd Inversion']`, indexed by inversion number. Used by `Chord.name()` and by `ChordExplorer`'s Inversion dropdown so the wording stays consistent between the two.
@@ -276,7 +284,7 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `TimedResult` type: Object with `score: number`, `mistakes: number`, and `timestamp: string` (ISO 8601 format)
    - `TimedHistory` type: Object with config string keys mapping to arrays of `TimedResult` entries (used only in the localStorage fallback path of StorageContext)
    - `Chord` class — represents a chord with `rootNote: string`, `chordGroupName: string`, and `inversion: number` (`0` = root position, `1`/`2`/`3` = 1st/2nd/3rd inversion; defaults to `0`). Constructed as `new Chord('C', 'Major')` or `new Chord('C', 'Major', 1)`. Methods:
-     - `name()`: returns the chord name string with its inversion label always appended, e.g. `"C Major (Root Inversion)"`, `"C Major (1st Inversion)"`
+     - `name(style?: AccidentalStyle)`: returns the display chord name with its inversion label always appended, e.g. `"C Major (Root Inversion)"`, `"C♯ Major (1st Inversion)"` / `"D♭ Major (1st Inversion)"`
      - `equals(other)`: compares `rootNote`/`chordGroupName` only (ignores `inversion`) — two chords are equal if they're the same chord regardless of which inversion is voiced
      - `shorthand()`: returns the chord group shorthand, e.g. `"maj"`, `"m7"`
      - `getNoteIndices(baseNote?: number)`: returns `Set<number>` of MIDI note numbers (default baseNote 60). This is the canonical way to convert a chord to playable notes.
@@ -291,6 +299,12 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - Determines inversion from the lowest-pitched note actually played (its pitch class's index within the matched group's `intervals` array), e.g. first-inversion C Major [E, G, C] returns `Chord { rootNote: 'C', chordGroupName: 'Major', inversion: 1 }`
    - Returns a `Chord` instance (call `.name()` for display string, e.g., `"C Major (Root Inversion)"`)
 
+### Accidental display (♯/♭)
+
+`AccidentalProvider` (`src/context/AccidentalContext.tsx`) holds the global `accidentalStyle` (`'sharp'` default) and persists it via `loadSettings`/`saveSettings` using the standard `settingsLoadedRef` pattern. It sits inside `StorageProvider` since it needs `useStorage()`. The `♯/♭` toggle in the top nav (`App.tsx`, `.accidental-toggle`) shows the active symbol in black and the inactive one grayed out.
+
+This is **display-only**: internal note names stay ASCII-`#` (`NOTE_NAMES`), as do `SharpsFilter` values and saved configs, so switching styles never affects chord matching, stored settings, or timed-result history. Any component rendering a note/chord name must read `useAccidental()` and go through `displayNoteName()`, `noteNumberToName(n, style)`, or `chord.name(style)`. Current display sites: `VirtualPiano` key labels, `Home` readout, `ChordQueue` cards, `ChordExplorer` root buttons, and `PracticeConfiguration` (Key dropdown labels; "Sharps" filter header/labels become "Flats" in flat mode).
+
 ### Audio Playback (`AudioPlayer.ts`)
 
 Piano audio plays automatically on MIDI note-on/off events via `MidiContext`. The module is a singleton wrapping a `Tone.PolySynth` — no audio files required, everything is synthesized via Web Audio API.
@@ -302,7 +316,7 @@ Piano audio plays automatically on MIDI note-on/off events via `MidiContext`. Th
 - `playNote(midi: number, velocity: number): void` — triggers attack for a MIDI note (0–127) with the given velocity (0–127).
 - `stopNote(midi: number): void` — triggers release for a MIDI note.
 
-Both `playNote` and `stopNote` are no-ops until `startAudio()` has been called. Uses flat note name convention internally (`Eb4`, `Gb3`).
+Both `playNote` and `stopNote` are no-ops until `startAudio()` has been called. Uses flat note name convention internally (`Eb4`, `Gb3`) — this is Tone.js naming, unrelated to the ♯/♭ display toggle.
 
 ### Adding MIDI to a new component
 ```tsx
@@ -319,7 +333,7 @@ export const MyComponent: FC = () => {
 
 ### Routing Architecture
 
-React Router, defined in `App.tsx`. `index.tsx` wraps the tree in `<StorageProvider>`, `<BrowserRouter>`, `<MidiProvider>` (in that order).
+React Router, defined in `App.tsx`. `index.tsx` wraps the tree in `<StorageProvider>`, `<AccidentalProvider>`, `<BrowserRouter>`, `<MidiProvider>` (in that order).
 
 **Routes:** `/` (Home), `/chord-explorer`, `/practice-chords/practice` (PracticeMode), `/practice-chords/timed` (TimedMode), `/practice-chords/high-scores` (HighScores), `/practice-chords/progress` (Progress).
 

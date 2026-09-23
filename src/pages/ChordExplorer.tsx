@@ -1,7 +1,8 @@
 import { useState, FC } from 'react';
 import { VirtualPiano } from '../midi/VirtualPiano';
 import { KEYBOARD_SIZES, KEYBOARD_OFFSETS } from './Settings';
-import { CHORD_GROUPS, INVERSION_LABELS, NOTE_NAMES, Chord } from '../midi/noteUtils';
+import { CHORD_GROUPS, INVERSION_LABELS, NOTE_NAMES, Chord, displayNoteName } from '../midi/noteUtils';
+import { useAccidental } from '../context/AccidentalContext';
 import './ChordExplorer.css';
 
 const invertIntervals = (intervals: number[], inversion: number): number[] => [
@@ -14,6 +15,7 @@ export const ChordExplorer: FC = () => {
     const [selectedChord, setSelectedChord] = useState<Chord | null>(null);
     const [selectedChordGroupIndex, setSelectedChordGroupIndex] = useState(0);
     const [selectedInversion, setSelectedInversion] = useState(0);
+    const { accidentalStyle } = useAccidental();
 
     const BASE_NOTE = KEYBOARD_OFFSETS[KEYBOARD_SIZES[0]];
 
@@ -94,7 +96,7 @@ export const ChordExplorer: FC = () => {
                   className={`chord-btn${selectedChord?.rootNote === NOTE_NAMES[ri] && selectedChord?.chordGroupName === activeChordGroup.name ? ' selected' : ''}`}
                   onClick={() => handleChordClick(ri)}
                 >
-                  {NOTE_NAMES[ri]}{activeChordGroup.shorthand}
+                  {displayNoteName(NOTE_NAMES[ri], accidentalStyle)}{activeChordGroup.shorthand}
                 </button>
               ))}
             </div>

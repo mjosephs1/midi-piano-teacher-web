@@ -1,0 +1,1 @@
+ALTER TABLE "user_settings" ADD COLUMN "accidental_style" text DEFAULT 'sharp' NOT NULL;

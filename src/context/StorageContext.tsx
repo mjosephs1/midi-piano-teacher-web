@@ -3,9 +3,11 @@ import {
   PracticeConfig,
   SharpsFilter,
   HandsMode,
+  AccidentalStyle,
   TimedResult,
   TIMED_HISTORY_KEY,
   OCTAVE_OFFSET_STORAGE_KEY,
+  ACCIDENTAL_STYLE_STORAGE_KEY,
 } from '../midi/noteUtils';
 
 const API_BASE = 'http://localhost:3001';
@@ -22,6 +24,7 @@ export interface AllSettings {
   selectedKey: string | null;
   octaveOffsetRight: number;
   octaveOffsetLeft: number;
+  accidentalStyle: AccidentalStyle; // display-only: whether accidentals render as ♯ or ♭
 }
 
 const DEFAULT_SETTINGS: AllSettings = {
@@ -33,6 +36,7 @@ const DEFAULT_SETTINGS: AllSettings = {
   selectedKey: null,
   octaveOffsetRight: 0,
   octaveOffsetLeft: 0,
+  accidentalStyle: 'sharp',
 };
 
 interface StorageContextValue {
@@ -64,6 +68,9 @@ function loadSettingsFromLocal(): AllSettings {
       ? JSON.parse(octaveRaw)
       : { right: 0, left: 0 };
 
+    const accidentalRaw = localStorage.getItem(ACCIDENTAL_STYLE_STORAGE_KEY);
+    const accidentalStyle: AccidentalStyle = accidentalRaw === 'flat' ? 'flat' : 'sharp';
+
     return {
       numKeys: numKeys ?? DEFAULT_SETTINGS.numKeys,
       showNotes: showNotes ?? DEFAULT_SETTINGS.showNotes,
@@ -73,6 +80,7 @@ function loadSettingsFromLocal(): AllSettings {
       selectedKey: config.selectedKey,
       octaveOffsetRight: octaveOffsetRight ?? 0,
       octaveOffsetLeft: octaveOffsetLeft ?? 0,
+      accidentalStyle,
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -111,6 +119,10 @@ function saveSettingsToLocal(patch: Partial<AllSettings>): void {
         right: patch.octaveOffsetRight ?? current.right,
         left: patch.octaveOffsetLeft ?? current.left,
       }));
+    }
+
+    if (patch.accidentalStyle !== undefined) {
+      localStorage.setItem(ACCIDENTAL_STYLE_STORAGE_KEY, patch.accidentalStyle);
     }
   } catch {
     // localStorage unavailable
@@ -155,6 +167,7 @@ async function loadSettingsFromApi(): Promise<AllSettings> {
     selectedKey: data.selectedKey ?? null,
     octaveOffsetRight: data.octaveOffsetRight,
     octaveOffsetLeft: data.octaveOffsetLeft,
+    accidentalStyle: data.accidentalStyle === 'flat' ? 'flat' : 'sharp',
   };
 }
 
