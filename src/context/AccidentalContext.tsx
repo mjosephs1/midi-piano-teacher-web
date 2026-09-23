@@ -1,4 +1,4 @@
-import { createContext, FC, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, FC, ReactNode, useContext, useEffect, useState } from 'react';
 import { AccidentalStyle } from '../midi/noteUtils';
 import { useStorage } from './StorageContext';
 
@@ -16,21 +16,26 @@ interface AccidentalProviderProps {
 export const AccidentalProvider: FC<AccidentalProviderProps> = ({ children }) => {
   const { loadSettings, saveSettings } = useStorage();
   const [accidentalStyle, setAccidentalStyle] = useState<AccidentalStyle>('sharp');
-  const settingsLoadedRef = useRef(false);
+  // State rather than a ref: it also gates rendering, so the app never paints with the
+  // default 'sharp' before the saved style arrives (avoids a ♯→♭ flicker on load)
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   useEffect(() => {
     loadSettings().then(settings => {
       setAccidentalStyle(settings.accidentalStyle);
-      settingsLoadedRef.current = true;
     }).catch(() => {
-      settingsLoadedRef.current = true;
+      // fall back to the default
+    }).finally(() => {
+      setSettingsLoaded(true);
     });
   }, [loadSettings]);
 
   useEffect(() => {
-    if (!settingsLoadedRef.current) return;
+    if (!settingsLoaded) return;
     saveSettings({ accidentalStyle });
-  }, [accidentalStyle, saveSettings]);
+  }, [accidentalStyle, settingsLoaded, saveSettings]);
+
+  if (!settingsLoaded) return null;
 
   return (
     <AccidentalContext.Provider value={{ accidentalStyle, setAccidentalStyle }}>
