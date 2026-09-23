@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, useMemo, useRef } from 'react';
 import { CHORD_GROUPS, NOTE_NAMES, PracticeConfig, Chord, isChordDiatonicToKey, displayNoteName } from '../midi/noteUtils';
 import { useAccidental } from '../context/AccidentalContext';
+import { NoteText } from './NoteText';
 import { useMidi } from '../midi/MidiContext';
 import './ChordQueue.css';
 
@@ -187,7 +188,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
       {fadingOutCard && (
         <div key={fadingOutCard.id} className="chord-card chord-card-fading">
           <span className="chord-card-label">
-            {displayNoteName(fadingOutCard.chord.rootNote, accidentalStyle)}{fadingOutCard.chord.shorthand()}
+            <NoteText text={displayNoteName(fadingOutCard.chord.rootNote, accidentalStyle) + fadingOutCard.chord.shorthand()} />
           </span>
         </div>
       )}
@@ -203,7 +204,7 @@ export const ChordQueue: FC<ChordQueueProps> = ({ config, onCurrentChordChange, 
               style={{ opacity }}
             >
               <span className="chord-card-label">
-                {displayNoteName(item.chord.rootNote, accidentalStyle)}{item.chord.shorthand()}
+                <NoteText text={displayNoteName(item.chord.rootNote, accidentalStyle) + item.chord.shorthand()} />
               </span>
             </div>
           );

@@ -66,6 +66,8 @@ src/
   │   ├── ChordQueue.tsx     # Component displaying 5 advancing chord cards
   │   ├── ChordQueue.css     # Styling for the chord queue component
   │   ├── PianoIcon.tsx      # Piano SVG icon component (interactive hover effect)
+  │   ├── NoteText.tsx       # Renders any display string containing ♯/♭ with consistent accidental styling (HTML or SVG)
+  │   ├── NoteText.css       # Pinned accidental font + superscript sizing
   │   ├── PracticeConfiguration.tsx  # Controlled component for selecting practice chord groups
   │   └── PracticeConfiguration.css  # Styling for practice configuration component
   └── midi/
@@ -302,6 +304,8 @@ The MIDI detection system uses React Context to share MIDI state across the enti
 ### Accidental display (♯/♭)
 
 `AccidentalProvider` (`src/context/AccidentalContext.tsx`) holds the global `accidentalStyle` (`'sharp'` default) and persists it via `loadSettings`/`saveSettings` using the standard `settingsLoadedRef` pattern. It sits inside `StorageProvider` since it needs `useStorage()`. The `♯/♭` toggle in the top nav (`App.tsx`, `.accidental-toggle`) shows the active symbol in black and the inactive one grayed out.
+
+**Rendering rule — always use `<NoteText>`.** Never put a ♯/♭ display string straight into JSX. Wrap it: `<NoteText text={chord.name(accidentalStyle)} />`, or pass `svg` inside an SVG `<text>`, or `raised={false}` for a standalone symbol like the nav toggle. The reason: body text, `<button>`s and SVG text resolve to different fonts, and each draws ♯/♭ differently. San Francisco (the body font on macOS) draws them small and raised; control/fallback fonts draw them full-size, and some give ♭ wide side bearings, which shows up as a visible gap. `NoteText` wraps each accidental in `.accidental`, which pins its font (`Apple Symbols` / `Segoe UI Symbol`), resets `letter-spacing`, and raises it explicitly (full size, raised 0.25em; in SVG via `dy`, since `vertical-align` doesn't apply there). Also avoid `letter-spacing` on containers of note names — it inserts space between a letter and its accidental; use `word-spacing` instead. The one known exception is `<option>` text (the Key dropdown), which can't hold child elements, so it shows the native glyph.
 
 This is **display-only**: internal note names stay ASCII-`#` (`NOTE_NAMES`), as do `SharpsFilter` values and saved configs, so switching styles never affects chord matching, stored settings, or timed-result history. Any component rendering a note/chord name must read `useAccidental()` and go through `displayNoteName()`, `noteNumberToName(n, style)`, or `chord.name(style)`. Current display sites: `VirtualPiano` key labels, `Home` readout, `ChordQueue` cards, `ChordExplorer` root buttons, and `PracticeConfiguration` (Key dropdown labels; "Sharps" filter header/labels become "Flats" in flat mode).
 

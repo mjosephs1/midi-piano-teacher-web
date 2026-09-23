@@ -1,0 +1,13 @@
+/* Pin the accidental font so every ♯/♭ in the app comes from the same glyph set.
+   Apple Symbols (macOS) / Segoe UI Symbol (Windows) draw both at full size with tight side bearings. */
+.accidental {
+  font-family: 'Apple Symbols', 'Segoe UI Symbol', 'Arial Unicode MS', sans-serif;
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+/* HTML only — SVG tspans are raised via dy in NoteText.tsx */
+span.accidental--raised {
+  vertical-align: 0.25em;
+  line-height: 0;
+}

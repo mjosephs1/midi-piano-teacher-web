@@ -3,6 +3,7 @@ import { VirtualPiano } from '../midi/VirtualPiano';
 import { KEYBOARD_SIZES, KEYBOARD_OFFSETS } from './Settings';
 import { CHORD_GROUPS, INVERSION_LABELS, NOTE_NAMES, Chord, displayNoteName } from '../midi/noteUtils';
 import { useAccidental } from '../context/AccidentalContext';
+import { NoteText } from '../components/NoteText';
 import './ChordExplorer.css';
 
 const invertIntervals = (intervals: number[], inversion: number): number[] => [
@@ -96,7 +97,7 @@ export const ChordExplorer: FC = () => {
                   className={`chord-btn${selectedChord?.rootNote === NOTE_NAMES[ri] && selectedChord?.chordGroupName === activeChordGroup.name ? ' selected' : ''}`}
                   onClick={() => handleChordClick(ri)}
                 >
-                  {displayNoteName(NOTE_NAMES[ri], accidentalStyle)}{activeChordGroup.shorthand}
+                  <NoteText text={displayNoteName(NOTE_NAMES[ri], accidentalStyle) + activeChordGroup.shorthand} />
                 </button>
               ))}
             </div>

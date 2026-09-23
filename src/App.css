@@ -166,6 +166,8 @@
   background: transparent;
   padding: 0 0.2rem;
   font-size: inherit;
+  /* The fallback font supplying ♯/♭ has no bold weight, so thicken the glyphs with a stroke instead */
+  -webkit-text-stroke: 1px currentColor;
   color: #aaa;
   cursor: pointer;
   transition: color 0.2s;
@@ -202,7 +204,7 @@
   font-size: 1.5rem;
   font-weight: bold;
   margin: 0;
-  letter-spacing: 0.5rem;
+  word-spacing: 0.75rem;
 }
 
 .notes-display .empty {

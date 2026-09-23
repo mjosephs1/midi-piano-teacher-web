@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { useMidi } from '../midi/MidiContext';
 import { VirtualPiano } from '../midi/VirtualPiano';
 import { noteNumberToName } from '../midi/noteUtils';
+import { NoteText } from '../components/NoteText';
 import { useAccidental } from '../context/AccidentalContext';
 
 interface HomeProps {
@@ -35,10 +36,10 @@ export const Home: FC<HomeProps> = ({ numKeys, onNumKeysChange, showNotes, onSho
       {status === 'listening' && (
         <div className="notes-display">
           <div className="notes-section">
-            {noteNames ? <p>{noteNames}</p> : <p className="empty">Play Something!</p>}
+            {noteNames ? <p><NoteText text={noteNames} /></p> : <p className="empty">Play Something!</p>}
           </div>
           <div className="chord-section">
-            <p>{pressedChord?.name(accidentalStyle) || ' '}</p>
+            <p>{pressedChord ? <NoteText text={pressedChord.name(accidentalStyle)} /> : ' '}</p>
           </div>
         </div>
       )}

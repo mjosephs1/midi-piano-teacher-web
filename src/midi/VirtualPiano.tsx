@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
 import { getWhiteKeysFromTotalKeys, KEYBOARD_OFFSETS, KEYBOARD_SIZES, Settings } from '../pages/Settings';
 import { noteNumberToName } from './noteUtils';
+import { NoteText } from '../components/NoteText';
 import { useAccidental } from '../context/AccidentalContext';
 import './VirtualPiano.css';
 
@@ -156,7 +157,8 @@ export function VirtualPiano({
             y={keyboardTopWidth - (keyboardHeight*0.05) + whiteKeyHeight*0.95}
             height={whiteKeyHeight}
             fill="black"
-          >{noteNumberToName(noteNumber, accidentalStyle)}</text>) : null
+            fontSize={scaleFactor*0.36}
+          ><NoteText svg text={noteNumberToName(noteNumber, accidentalStyle)} /></text>) : null
         })}
         {Array.from({ length: numWhiteKeys }).map((_, i) => {
             const noteNumber = getKeyNumber(i) + 1;
@@ -168,8 +170,8 @@ export function VirtualPiano({
                     width={blackKeyWidth}
                     height={blackKeyHeight}
                     fill="white"
-                    fontSize={scaleFactor*0.4}
-                >{noteNumberToName(noteNumber + offset, accidentalStyle)}</text>
+                    fontSize={scaleFactor*0.44}
+                ><NoteText svg text={noteNumberToName(noteNumber + offset, accidentalStyle)} /></text>
             ) : null
         })}
 

@@ -14,6 +14,7 @@ import { faGear, faCircleUser, faRankingStar, faChartLine, faVolumeHigh, faVolum
 import { useStorage } from './context/StorageContext';
 import { useMidi } from './midi/MidiContext';
 import { useAccidental } from './context/AccidentalContext';
+import { NoteText } from './components/NoteText';
 
 library.add(faGear, faCircleUser, faRankingStar, faChartLine, faVolumeHigh, faVolumeXmark)
 
@@ -72,13 +73,13 @@ const App: FC = () => {
               className={`accidental-toggle-btn${accidentalStyle === 'sharp' ? ' active' : ''}`}
               onClick={() => setAccidentalStyle('sharp')}
               title="Show sharps"
-            >♯</button>
+            ><NoteText text="♯" raised={false} /></button>
             <span className="accidental-toggle-divider">/</span>
             <button
               className={`accidental-toggle-btn${accidentalStyle === 'flat' ? ' active' : ''}`}
               onClick={() => setAccidentalStyle('flat')}
               title="Show flats"
-            >♭</button>
+            ><NoteText text="♭" raised={false} /></button>
           </div>
           <button
             className="settings-button"
