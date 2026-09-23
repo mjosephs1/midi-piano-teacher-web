@@ -1,0 +1,177 @@
+{
+  "id": "9acd8a3a-f951-4aa4-9d0d-a7facf751abf",
+  "prevId": "97ff7bf5-f855-47ad-a9d2-374d80655500",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.timed_results": {
+      "name": "timed_results",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mistakes": {
+          "name": "mistakes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "selected_groups": {
+          "name": "selected_groups",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sharps_filter": {
+          "name": "sharps_filter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hands_mode": {
+          "name": "hands_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "selected_key": {
+          "name": "selected_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_settings": {
+      "name": "user_settings",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "default": 0
+        },
+        "num_keys": {
+          "name": "num_keys",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 88
+        },
+        "show_notes": {
+          "name": "show_notes",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "selected_groups": {
+          "name": "selected_groups",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{\"Major\"}'"
+        },
+        "sharps_filter": {
+          "name": "sharps_filter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'with-sharps'"
+        },
+        "hands_mode": {
+          "name": "hands_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'right'"
+        },
+        "selected_key": {
+          "name": "selected_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "octave_offset_right": {
+          "name": "octave_offset_right",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "octave_offset_left": {
+          "name": "octave_offset_left",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "accidental_style": {
+          "name": "accidental_style",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'sharp'"
+        },
+        "sound_enabled": {
+          "name": "sound_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

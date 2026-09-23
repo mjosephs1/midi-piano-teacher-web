@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, ReactNode, FC, useMemo } from 'react';
 import { detectChord, Chord } from './noteUtils';
 import { startAudio, playNote, stopNote } from './AudioPlayer';
+import { useStorage } from '../context/StorageContext';
 
 // Web MIDI API types (not included in standard TypeScript DOM lib)
 interface MIDIMessageEvent extends Event {
@@ -37,12 +38,31 @@ interface MidiProviderProps {
 }
 
 export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
+  const { loadSettings, saveSettings } = useStorage();
   const [pressedNotes, setPressedNotes] = useState<Set<number>>(new Set());
   const [status, setStatus] = useState<MidiStatus>('unavailable');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const soundEnabledRef = useRef(true);
   const pressedNotesRef = useRef<Set<number>>(new Set());
   const pressedChord = useMemo(() => detectChord(pressedNotes), [pressedNotes]);
+  // State rather than a ref: it also gates rendering, so the nav mute icon never paints
+  // with the default before the saved preference arrives
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    loadSettings().then(settings => {
+      setSoundEnabled(settings.soundEnabled);
+    }).catch(() => {
+      // fall back to the default
+    }).finally(() => {
+      setSettingsLoaded(true);
+    });
+  }, [loadSettings]);
+
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    saveSettings({ soundEnabled });
+  }, [soundEnabled, settingsLoaded, saveSettings]);
 
   useEffect(() => {
     pressedNotesRef.current = pressedNotes;
@@ -120,6 +140,8 @@ export const MidiProvider: FC<MidiProviderProps> = ({ children }) => {
 
     setupMidi();
   }, []);
+
+  if (!settingsLoaded) return null;
 
   return (
     <MidiContext.Provider value={{ pressedNotes, status, pressedChord, soundEnabled, setSoundEnabled }}>

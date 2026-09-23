@@ -4,6 +4,7 @@ export const FLAT_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A�
 
 export type AccidentalStyle = 'sharp' | 'flat';
 export const ACCIDENTAL_STYLE_STORAGE_KEY = 'midiPianoAccidentalStyle';
+export const SOUND_ENABLED_STORAGE_KEY = 'midiPianoSoundEnabled';
 
 export type SharpsFilter = 'no-sharps' | 'with-sharps' | 'sharps-only';
 export type HandsMode = 'left' | 'both' | 'right';

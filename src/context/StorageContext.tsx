@@ -8,6 +8,7 @@ import {
   TIMED_HISTORY_KEY,
   OCTAVE_OFFSET_STORAGE_KEY,
   ACCIDENTAL_STYLE_STORAGE_KEY,
+  SOUND_ENABLED_STORAGE_KEY,
 } from '../midi/noteUtils';
 
 const API_BASE = 'http://localhost:3001';
@@ -25,6 +26,7 @@ export interface AllSettings {
   octaveOffsetRight: number;
   octaveOffsetLeft: number;
   accidentalStyle: AccidentalStyle; // display-only: whether accidentals render as ♯ or ♭
+  soundEnabled: boolean; // whether MIDI input plays audio (nav-bar mute toggle)
 }
 
 const DEFAULT_SETTINGS: AllSettings = {
@@ -37,6 +39,7 @@ const DEFAULT_SETTINGS: AllSettings = {
   octaveOffsetRight: 0,
   octaveOffsetLeft: 0,
   accidentalStyle: 'sharp',
+  soundEnabled: true,
 };
 
 interface StorageContextValue {
@@ -71,6 +74,8 @@ function loadSettingsFromLocal(): AllSettings {
     const accidentalRaw = localStorage.getItem(ACCIDENTAL_STYLE_STORAGE_KEY);
     const accidentalStyle: AccidentalStyle = accidentalRaw === 'flat' ? 'flat' : 'sharp';
 
+    const soundEnabled = localStorage.getItem(SOUND_ENABLED_STORAGE_KEY) !== 'false';
+
     return {
       numKeys: numKeys ?? DEFAULT_SETTINGS.numKeys,
       showNotes: showNotes ?? DEFAULT_SETTINGS.showNotes,
@@ -81,6 +86,7 @@ function loadSettingsFromLocal(): AllSettings {
       octaveOffsetRight: octaveOffsetRight ?? 0,
       octaveOffsetLeft: octaveOffsetLeft ?? 0,
       accidentalStyle,
+      soundEnabled,
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -123,6 +129,10 @@ function saveSettingsToLocal(patch: Partial<AllSettings>): void {
 
     if (patch.accidentalStyle !== undefined) {
       localStorage.setItem(ACCIDENTAL_STYLE_STORAGE_KEY, patch.accidentalStyle);
+    }
+
+    if (patch.soundEnabled !== undefined) {
+      localStorage.setItem(SOUND_ENABLED_STORAGE_KEY, String(patch.soundEnabled));
     }
   } catch {
     // localStorage unavailable
@@ -168,6 +178,7 @@ async function loadSettingsFromApi(): Promise<AllSettings> {
     octaveOffsetRight: data.octaveOffsetRight,
     octaveOffsetLeft: data.octaveOffsetLeft,
     accidentalStyle: data.accidentalStyle === 'flat' ? 'flat' : 'sharp',
+    soundEnabled: data.soundEnabled ?? true,
   };
 }
 

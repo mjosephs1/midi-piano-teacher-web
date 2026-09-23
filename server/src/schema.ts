@@ -11,6 +11,7 @@ export const userSettings = pgTable('user_settings', {
   octaveOffsetRight: integer('octave_offset_right').notNull().default(0),
   octaveOffsetLeft:  integer('octave_offset_left').notNull().default(0),
   accidentalStyle:   text('accidental_style').notNull().default('sharp'),
+  soundEnabled:      boolean('sound_enabled').notNull().default(true),
 });
 
 export const timedResults = pgTable('timed_results', {

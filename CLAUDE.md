@@ -151,10 +151,11 @@ interface AllSettings {
   octaveOffsetRight: number;
   octaveOffsetLeft: number;
   accidentalStyle: AccidentalStyle; // 'sharp' | 'flat' — display-only ♯/♭ preference
+  soundEnabled: boolean;     // nav-bar mute toggle; default true
 }
 ```
 
-In local mode `accidentalStyle` is stored as a plain string under `ACCIDENTAL_STYLE_STORAGE_KEY` (`'midiPianoAccidentalStyle'`).
+In local mode `accidentalStyle` is stored as a plain string under `ACCIDENTAL_STYLE_STORAGE_KEY` (`'midiPianoAccidentalStyle'`), and `soundEnabled` as `'true'`/`'false'` under `SOUND_ENABLED_STORAGE_KEY` (`'midiPianoSoundEnabled'`; anything other than `'false'` loads as `true`).
 
 ### Component loading pattern
 
@@ -208,7 +209,8 @@ CREATE TABLE user_settings (
   selected_key        TEXT,
   octave_offset_right INTEGER  NOT NULL DEFAULT 0,
   octave_offset_left  INTEGER  NOT NULL DEFAULT 0,
-  accidental_style    TEXT     NOT NULL DEFAULT 'sharp'
+  accidental_style    TEXT     NOT NULL DEFAULT 'sharp',
+  sound_enabled       BOOLEAN  NOT NULL DEFAULT true
 );
 
 CREATE TABLE timed_results (
@@ -255,7 +257,7 @@ The MIDI detection system uses React Context to share MIDI state across the enti
    - `pressedNotes`: `Set<number>` of MIDI note numbers currently pressed
    - `status`: One of `'listening' | 'denied' | 'unavailable'`
    - `pressedChord`: `Chord | null` — the detected chord (a `Chord` instance), or `null` if no valid chord is pressed. Use `pressedChord?.name()` to get the display string (e.g., `"C Major"`).
-   - `soundEnabled`: `boolean` — whether MIDI note-on/off events trigger audio playback. Defaults to `true`.
+   - `soundEnabled`: `boolean` — whether MIDI note-on/off events trigger audio playback. Defaults to `true`. Persisted via `loadSettings`/`saveSettings` (`AllSettings.soundEnabled`); like `AccidentalProvider`, `MidiProvider` uses a `settingsLoaded` state flag that also gates rendering (returns `null` until the load resolves) so the nav mute icon never flashes the default. `MidiProvider` therefore must stay inside `StorageProvider`.
    - `setSoundEnabled`: `(enabled: boolean) => void` — toggles audio on/off. The MIDI message handler reads this via a `useRef` to avoid stale closure issues.
 
 3. **`noteNumberToName()`** (in `src/midi/noteUtils.ts`) converts MIDI note numbers to names:
